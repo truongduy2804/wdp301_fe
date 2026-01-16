@@ -1,11 +1,68 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   1) VITE DEFAULT (base styles from template)
+   ========================================================================== */
+
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+
+/* ==========================================================================
+   2) THEME (fonts / tokens)
+   ========================================================================== */
+
 @theme inline {
   --font-sans: "Geist", "Geist Fallback";
   --font-mono: "Geist Mono", "Geist Mono Fallback";
 }
 
-/* Animations */
+/* ==========================================================================
+   3) ANIMATIONS (keyframes)
+   ========================================================================== */
+
 @keyframes float {
   0%,
   100% {
@@ -79,6 +136,10 @@
   }
 }
 
+/* ==========================================================================
+   4) ANIMATION UTILITY CLASSES (apply animation)
+   ========================================================================== */
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
@@ -103,6 +164,9 @@
   animation: bounce-soft 0.5s ease-in-out;
 }
 
+/* ==========================================================================
+   5) COMPONENT CLASSES (animated borders)
+   ========================================================================== */
 
 .animated-border {
   position: relative;
@@ -110,16 +174,17 @@
   padding: 2px;
   background: conic-gradient(
     from 0deg,
-    #ef4444,  /* Đỏ */
-    #f97316,  /* Cam */
-    #eab308,  /* Vàng */
-    #22c55e,  /* Xanh lá */
-    #3b82f6,  /* Xanh dương */
-    #6366f1,  /* Indigo */
-    #a855f7,  /* Tím */
-    #ef4444   /* Quay lại đỏ */
+    #ef4444,
+    #f97316,
+    #eab308,
+    #22c55e,
+    #3b82f6,
+    #6366f1,
+    #a855f7,
+    #ef4444
   );
-  animation: border-rotate 3s linear infinite;
+  /* đổi từ border-rotate -> border-gradient để chắc chắn có keyframes */
+  animation: border-gradient 3s linear infinite;
 }
 
 .animated-border > * {
@@ -137,20 +202,20 @@
 }
 
 .animated-border-small::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -2px;
   border-radius: 0.75rem;
   background: linear-gradient(
     90deg,
-    #ef4444,  /* Đỏ */
-    #f97316,  /* Cam */
-    #eab308,  /* Vàng */
-    #22c55e,  /* Xanh lá */
-    #3b82f6,  /* Xanh dương */
-    #6366f1,  /* Indigo */
-    #a855f7,  /* Tím */
-    #ef4444   /* Quay lại đỏ */
+    #ef4444,
+    #f97316,
+    #eab308,
+    #22c55e,
+    #3b82f6,
+    #6366f1,
+    #a855f7,
+    #ef4444
   );
   background-size: 400% 100%;
   animation: border-gradient 3s ease infinite;
@@ -166,7 +231,7 @@
 }
 
 .animated-border-small::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: calc(0.75rem - 2px);

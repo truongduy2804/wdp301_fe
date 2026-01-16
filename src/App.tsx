@@ -1,13 +1,12 @@
-import { BrowserRouter } from 'react-router-dom'
-import AppRouter from './router/ProtectRouter'
-import './App.css'
+import { Routes, Route } from "react-router-dom";
+import LoginPage from "@/pages/LoginPage";
+import endPoint from "@/router/endPoint";
 
-function App() {
+export default function App() {
   return (
-    <BrowserRouter>
-      <AppRouter />
-    </BrowserRouter>
-  )
+    <Routes>
+      <Route path={endPoint.HOMEPAGE} element={<LoginPage />} />
+      <Route path={endPoint.AUTH} element={<LoginPage />} />
+    </Routes>
+  );
 }
-
-export default App
