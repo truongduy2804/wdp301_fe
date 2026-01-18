@@ -57,9 +57,7 @@ export default function PortalLayout({
         <section className="flex min-w-0 flex-1 flex-col">
           <Header role={finalRole} userName={user?.name} />
 
-          <div className="grow px-4 sm:px-6 py-6 min-w-0 overflow-y-auto">
-            {children ?? <Outlet />}
-          </div>
+          <div className=" overflow-y-auto">{children ?? <Outlet />}</div>
         </section>
       </div>
     </div>

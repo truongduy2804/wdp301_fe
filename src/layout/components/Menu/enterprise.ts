@@ -21,13 +21,13 @@ export function enterpriseMenu(
   const t = getMessages(locale).menuEnterprise.items;
 
   const RAWS: RawItem[] = [
-    [t.dashboard, LayoutDashboard, ""],
+    [t.dashboard, BarChart3, ""],
     [t.requestsInbox, Inbox, "/requests"], // nhận/duyệt yêu cầu
     [t.mapDispatch, MapPinned, "/dispatch"], // điều phối theo bản đồ/khu vực
     [t.collectors, Users, "/collectors"], // quản lý collector thuộc DN
     [t.assignments, Truck, "/assignments"], // phân công / theo dõi tiến độ
     [t.rewardRules, BadgePercent, "/reward-rules"], // cấu hình điểm thưởng
-    [t.reports, BarChart3, "/reports"], // khối lượng theo loại/khu vực/time
+
     [t.settings, Settings, "/settings"],
   ];
 

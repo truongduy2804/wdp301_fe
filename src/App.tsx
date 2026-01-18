@@ -4,9 +4,20 @@ import LoginPage from "@/pages/Login/LoginPage";
 import endPoint from "@/router/endPoint";
 // layouts
 import PortalLayout from "@/layout/PortalLayout";
-// Pages
+// Admin Pages
 import AdminDashboard from "@/pages/Admin";
-import EnterpriseDashboard from "@/pages/Enterprise";
+// Enterprise Pages
+import EnterpriseDashboard from "@/pages/Enterprise/Statistics";
+import EnterpriseRequest from "@/pages/Enterprise/Request";
+import EnterpriseDispatch from "@/pages/Enterprise/Dispatch";
+import EnterpriseCollectors from "@/pages/Enterprise/Collector";
+import EnterpriseAssignments from "@/pages/Enterprise/Assignment";
+import EnterpriseRewardRules from "@/pages/Enterprise/RewardRules";
+import EnterpriseSettings from "@/pages/Enterprise/Settings";
+{
+  /*-----------------------------------------------------------
+   */
+}
 import CollectorDashboard from "@/pages/Collector";
 import CitizenDashboard from "@/pages/Citizen";
 
@@ -29,7 +40,31 @@ export default function App() {
         element={<PortalLayout role="ENTERPRISE" />}
       >
         <Route index element={<EnterpriseDashboard />} />
-        {/* <Route path="requests" element={<EnterpriseRequests />} /> */}
+
+        <Route
+          path={endPoint.ENTERPRISE_REQUESTS}
+          element={<EnterpriseRequest />}
+        />
+        <Route
+          path={endPoint.ENTERPRISE_DISPATCH}
+          element={<EnterpriseDispatch />}
+        />
+        <Route
+          path={endPoint.ENTERPRISE_COLLECTORS}
+          element={<EnterpriseCollectors />}
+        />
+        <Route
+          path={endPoint.ENTERPRISE_ASSIGNMENTS}
+          element={<EnterpriseAssignments />}
+        />
+        <Route
+          path={endPoint.ENTERPRISE_REWARD_RULES}
+          element={<EnterpriseRewardRules />}
+        />
+        <Route
+          path={endPoint.ENTERPRISE_SETTINGS}
+          element={<EnterpriseSettings />}
+        />
       </Route>
 
       <Route

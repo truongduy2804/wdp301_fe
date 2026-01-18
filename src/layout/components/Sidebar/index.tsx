@@ -16,7 +16,7 @@ import { createPortal } from "react-dom";
 import { buildMenu } from "../Menu";
 import type { Role } from "@/lib/role";
 import { ROLES } from "@/lib/role";
-import { pickLocaleFromPath, DEFAULT_LOCALE } from "@/lib/i18n";
+import { DEFAULT_LOCALE } from "@/lib/i18n";
 import { LOGO, LOGO_ONLY } from "@/lib/theme/theme";
 
 /* ===== Theme (GREEN / WHITE) ===== */
@@ -63,13 +63,40 @@ const stripTrailing = (p: string) => (p === "/" ? "/" : p.replace(/\/+$/, ""));
 const isSamePath = (a: string, b: string) =>
   stripTrailing(a) === stripTrailing(b);
 
-/** Localize path kiểu /vi/... /en/... (tránh double prefix) */
-function withLocalePath(path: string, locale: "vi" | "en") {
-  const p = path?.length ? path : "/";
-  const normalized = p.startsWith("/") ? p : `/${p}`;
-  if (/^\/(vi|en)(\/|$)/.test(normalized)) return normalized; // đã có locale
-  if (normalized === "/") return `/${locale}`;
-  return `/${locale}${normalized}`;
+/** ✅ bỏ /vi|/en khỏi path (nếu lỡ còn) */
+const stripLocalePrefix = (p?: string) => {
+  const s = typeof p === "string" && p.length ? p : "/";
+  return s.replace(/^\/(vi|en)(?=\/|$)/, "") || "/";
+};
+
+const ensureLeadingSlash = (p: string) => (p.startsWith("/") ? p : `/${p}`);
+
+/** Lấy locale từ cookie/localStorage (URL không còn /vi/en) */
+function getLocaleNoPath(): "vi" | "en" {
+  const fromStorage = (localStorage.getItem("locale") || "") as "vi" | "en";
+  if (fromStorage === "vi" || fromStorage === "en") return fromStorage;
+
+  const m = document.cookie.match(/(?:^|;\s*)locale=(vi|en)/);
+  if (m?.[1] === "vi" || m?.[1] === "en") return m[1];
+
+  // fallback i18n default
+  return (DEFAULT_LOCALE as "vi" | "en") ?? "vi";
+}
+
+/** Resolve href thành absolute path sạch locale */
+function resolveHref(rawHref: string, roleRootRaw: string) {
+  const baseRoot = stripTrailing(stripLocalePrefix(roleRootRaw || "/"));
+  let h = stripLocalePrefix(rawHref || "");
+
+  // nếu empty => về root theo role
+  if (!h || h === "/") return ensureLeadingSlash(baseRoot || "/");
+
+  // nếu relative => join với baseRoot
+  if (!h.startsWith("/")) {
+    h = `${baseRoot}/${h}`.replace(/\/+/g, "/");
+  }
+
+  return ensureLeadingSlash(h);
 }
 
 /* ===== NavLink ===== */
@@ -88,14 +115,17 @@ function NavLink({
   depth?: number;
   collapsed?: boolean;
 }) {
+  const basePadY = collapsed ? "py-2.5" : "py-2.5 lg:py-3";
+  const baseText = "text-lg lg:text-[16px]";
+
   const core = (
     <Link
       to={href}
       aria-current={active ? "page" : undefined}
-      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out
+      className={`group relative flex items-center gap-3 rounded-lg px-3 ${basePadY} ${baseText} font-medium transition-all duration-300 ease-out
         ${active ? UI.activeBg : UI.idleText}`}
       style={{
-        paddingLeft: collapsed ? 12 : 12 + depth * 16,
+        paddingLeft: collapsed ? 12 : 12 + depth * 18,
         justifyContent: collapsed ? "center" : "flex-start",
       }}
       title={!collapsed ? undefined : label}
@@ -107,7 +137,6 @@ function NavLink({
         }`}
       />
 
-      {/* Icon / Dot */}
       {Icon ? (
         <Icon
           size={18}
@@ -210,7 +239,7 @@ function Flyout({
   return createPortal(
     <div
       ref={panelRef}
-      className="fixed z-[1200] w-64 max-h-[80vh] overflow-auto rounded-xl border border-slate-200 bg-white shadow-2xl p-2 animate-in fade-in slide-in-from-left-2"
+      className="fixed z-[1200] w-72 max-h-[80vh] overflow-auto rounded-xl border border-slate-200 bg-white shadow-2xl p-2 animate-in fade-in slide-in-from-left-2"
       style={{ top: pos.top, left: pos.left }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -221,7 +250,7 @@ function Flyout({
         style={{ top: pos.arrowTop }}
       />
 
-      <div className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+      <div className="px-2 py-2 text-[11px] lg:text-[12px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
         {Icon ? <Icon size={14} className="text-slate-400" /> : null}
         {title}
       </div>
@@ -289,7 +318,8 @@ function Group({
         onMouseLeave={() => {
           if (collapsed) onCollapsedLeave?.();
         }}
-        className={`relative w-full flex items-center justify-between px-3 py-2.5 rounded-r-lg text-[11px] font-semibold uppercase tracking-wider transition-all duration-300 ease-out group
+        className={`relative w-full flex items-center justify-between px-3 py-2.5 lg:py-3 rounded-r-lg 
+          text-[11px] lg:text-[12px] font-semibold uppercase tracking-wider transition-all duration-300 ease-out group
           ${collapsed ? "justify-center" : ""}
           ${
             open && !collapsed
@@ -380,27 +410,31 @@ export default function Sidebar({
 }) {
   const { pathname } = useLocation();
 
-  const locale = (pickLocaleFromPath(pathname) ?? DEFAULT_LOCALE) as
-    | "vi"
-    | "en";
+  const roleRootRaw = ROLES[role] || "/";
+
+  // ✅ URL không dùng locale nữa, nhưng vẫn có thể dùng locale để đổi label menu
+  const locale = useMemo(() => getLocaleNoPath(), []);
+
   const items = useMemo(
     () => buildMenu(role, locale) as AnyItem[],
     [role, locale],
   );
 
-  const roleRootRaw = ROLES[role] || "/";
+  const normalizeForCompare = (p?: string) =>
+    stripTrailing(stripLocalePrefix(p));
 
   const isActive = (href: string) => {
-    const raw = href && href.length > 0 ? href : roleRootRaw;
+    const target = normalizeForCompare(resolveHref(href, roleRootRaw));
+    const current = normalizeForCompare(pathname);
 
-    const target = stripTrailing(withLocalePath(raw, locale));
-    const current = stripTrailing(pathname);
-
-    const isRoot = raw === roleRootRaw || raw === "" || raw === "/";
-    if (isRoot) return isSamePath(current, target);
+    const root = normalizeForCompare(roleRootRaw);
+    if (target === root) return isSamePath(current, target);
 
     return isSamePath(current, target) || current.startsWith(target + "/");
   };
+
+  // ✅ Link luôn sạch: /enterprise/... (không /vi /en)
+  const makeHref = (p: string) => resolveHref(p, roleRootRaw);
 
   const [branch, setBranch] = useState(
     initialBranch || branches?.[0] || "Khu vực Quận 1",
@@ -455,10 +489,8 @@ export default function Sidebar({
     );
   };
 
-  // Close mobile on route changes
   useEffect(() => setMobileOpen(false), [pathname]);
 
-  // Lock scroll when mobile open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => {
@@ -472,16 +504,16 @@ export default function Sidebar({
     return () => window.removeEventListener("portal:sidebar-open", open);
   }, []);
 
-  const makeHref = (p: string) =>
-    withLocalePath(p && p.length ? p : roleRootRaw, locale);
+  const mobileWidth = collapsed ? "w-20" : "w-70"; // rộng hơn trên mobile
+  const desktopWidth = collapsed ? "lg:w-19" : "lg:w-65"; // desktop giữ nguyên
 
   const sidebarContent = (
     <>
       {/* Header */}
-      <div className="relative h-16 md:h-16 flex items-center justify-start lg:justify-center px-4 pl-5 lg:pl-0">
+      <div className="relative h-16 flex items-center justify-start lg:justify-center px-4 pl-5 lg:pl-0">
         {/* Full logo */}
         <div
-          className={`absolute inset-0 flex items-center justify-start lg:justify-center pl-1 transition-all duration-500 ease-out ${
+          className={`absolute inset-0 flex items-center justify-start lg:justify-center pl-4 sm:pl-0 pt-1 transition-all duration-500 ease-out ${
             collapsed
               ? "opacity-0 scale-90 pointer-events-none"
               : "opacity-100 scale-100 delay-100"
@@ -489,10 +521,10 @@ export default function Sidebar({
         >
           <img
             src={LOGO}
-            alt="EcoCollect"
-            width={100}
-            height={100}
-            className="h-15 w-auto"
+            alt="EcoNet"
+            width={120}
+            height={120}
+            className="h-11 lg:h-11 w-auto"
             draggable={false}
           />
         </div>
@@ -507,10 +539,10 @@ export default function Sidebar({
         >
           <img
             src={LOGO_ONLY}
-            alt="EcoCollect"
-            width={48}
-            height={48}
-            className="h-12 w-13"
+            alt="EcoNet"
+            width={56}
+            height={56}
+            className="h-10 lg:h-11 w-auto"
             draggable={false}
           />
         </div>
@@ -550,7 +582,7 @@ export default function Sidebar({
           <div className="relative">
             <button
               onClick={() => setBranchOpen((v) => !v)}
-              className={`w-full inline-flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm hover:shadow-sm transition-all duration-300 ease-out group ${UI.branchBtn}`}
+              className={`w-full inline-flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 lg:py-3 text-sm lg:text-[14px] hover:shadow-sm transition-all duration-300 ease-out group ${UI.branchBtn}`}
               type="button"
             >
               <span className="inline-flex items-center gap-2 min-w-0">
@@ -585,15 +617,11 @@ export default function Sidebar({
                           setBranch(b);
                           setBranchOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-all duration-200 ease-out ${
+                        className={`w-full text-left px-4 py-3 text-sm lg:text-[14px] font-medium transition-all duration-200 ease-out ${
                           b === branch
                             ? "bg-linear-to-r from-emerald-50 via-emerald-50/80 to-transparent text-emerald-800"
                             : "text-slate-700 hover:bg-linear-to-r hover:from-slate-50 hover:to-transparent hover:text-slate-900"
-                        } ${
-                          idx !== branches.length - 1
-                            ? "border-b border-slate-100"
-                            : ""
-                        }`}
+                        } ${idx !== branches.length - 1 ? "border-b border-slate-100" : ""}`}
                         type="button"
                       >
                         <span className="flex items-center gap-2.5">
@@ -694,13 +722,13 @@ export default function Sidebar({
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span
-                className={`text-[11px] font-semibold uppercase tracking-wide ${UI.footerTitle}`}
+                className={`text-[12px] lg:text-[13px] font-semibold uppercase tracking-wide ${UI.footerTitle}`}
               >
-                Hệ thống EcoCollect
+                Hệ thống EcoNet
               </span>
             </div>
 
-            <div className={`text-[10px] ${UI.footerSub}`}>
+            <div className={`text-[11px] lg:text-[12px] ${UI.footerSub}`}>
               Phiên bản{" "}
               <span className="font-medium text-slate-500">{version}</span>
             </div>
@@ -708,7 +736,7 @@ export default function Sidebar({
         ) : (
           <div className="flex flex-col items-center justify-center gap-1">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[9px] text-slate-400 font-medium">
+            <span className="text-[10px] text-slate-400 font-medium">
               {version}
             </span>
           </div>
@@ -741,20 +769,16 @@ export default function Sidebar({
       )}
 
       {/* Sidebar Container */}
+
       <aside
         className={`bg-white
-          h-screen shrink-0 flex flex-col shadow-xl transition-all duration-500 ease-out border-r border-slate-200 
-          ${collapsed ? "w-[72px]" : "w-[280px]"}
-          
-          /* Mobile: overlay */
-          fixed top-0 left-0 z-80
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
-
-          /* Desktop */
-          lg:sticky lg:translate-x-0 lg:z-60
-        `}
+    h-screen shrink-0 flex flex-col shadow-xl transition-all duration-500 ease-out border-r border-slate-200
+    ${mobileWidth} ${desktopWidth}
+    fixed top-0 left-0 z-80
+    ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+    lg:sticky lg:translate-x-0 lg:z-60
+  `}
       >
-        {/* Close button for mobile */}
         <button
           onClick={() => setMobileOpen(false)}
           className="lg:hidden absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all duration-300 ease-out z-10"

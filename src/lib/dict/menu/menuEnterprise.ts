@@ -2,7 +2,7 @@
 export const menuEnterprise = {
   vi: {
     items: {
-      dashboard: "Dashboard",
+      dashboard: "Bảng thống kê",
       requestsInbox: "Yêu cầu thu gom",
       mapDispatch: "Điều phối theo khu vực",
       collectors: "Quản lý nhân sự thu gom",

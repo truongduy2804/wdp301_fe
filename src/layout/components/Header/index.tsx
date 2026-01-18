@@ -40,12 +40,12 @@ type Props = {
 /* ============== Helpers: Path & Role & I18n ============== */
 
 /** Bỏ prefix locale (/vi|/en) khỏi pathname để so khớp ACCESS_MAP */
-function stripLocalePrefix(pathname: string): string {
-  return pathname.replace(/^\/(vi|en)(?=\/|$)/, "");
+function stripLocalePrefix(pathname?: string): string {
+  return (pathname ?? "/").replace(/^\/(vi|en)(?=\/|$)/, "");
 }
 
-/** So khớp chuẩn (trùng nguyên cụm hoặc prefix có /) */
-function matchPrefix(path: string, prefix: string): boolean {
+function matchPrefix(path: string, prefix?: string): boolean {
+  if (!prefix) return false; //  chặn undefined/null/""
   const p = prefix.replace(/\/+$/, "");
   return path === p || path.startsWith(p + "/");
 }
@@ -55,10 +55,10 @@ function getRoleFromPathname(
   pathname: string,
   fallback?: PortalRole,
 ): PortalRole {
-  const noLocale = stripLocalePrefix(pathname || "/") || "/";
+  const noLocale = stripLocalePrefix(pathname) || "/";
 
   for (const roleKey of Object.keys(ACCESS_MAP) as Role[]) {
-    const prefixes = ACCESS_MAP[roleKey] || [];
+    const prefixes = (ACCESS_MAP[roleKey] ?? []).filter(Boolean); // ✅ loại undefined/null
     for (const pref of prefixes) {
       if (matchPrefix(noLocale, pref)) return roleKey;
     }
