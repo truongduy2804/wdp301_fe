@@ -6,39 +6,44 @@ const endPoint = {
   REGISTER: "/auth?view=register",
   FORGOTPASSWORD: "/auth?view=forgotpass",
 
-  // ===== Waste Platform Portals =====
+  // ===== Root Portals =====
   ADMIN: "/admin",
+  ENTERPRISE: "/enterprise",
   COLLECTOR: "/collector",
   CITIZEN: "/citizen",
 
-  // ===== Enterprise Routes =====
-  ENTERPRISE: "/enterprise",
-  ENTERPRISE_REQUESTS: "/enterprise/requests",
-  ENTERPRISE_DISPATCH: "/enterprise/dispatch",
-  ENTERPRISE_COLLECTORS: "/enterprise/collectors",
-  ENTERPRISE_ASSIGNMENTS: "/enterprise/assignments",
-  ENTERPRISE_REWARD_RULES: "/enterprise/reward-rules",
-  ENTERPRISE_REPORTS: "/enterprise/reports",
-  ENTERPRISE_SETTINGS: "/enterprise/settings",
+  // ===== Enterprise (relative children) =====
+  ENTERPRISE_CHILD: {
+    REQUESTS: "requests",
+    DISPATCH: "dispatch",
+    COLLECTORS: "collectors",
+    ASSIGNMENTS: "assignments",
+    REWARD_RULES: "reward-rules",
+    REPORTS: "reports",
+    SETTINGS: "settings",
+  },
 
-  // ===== Collector Routes =====
-  COLLECTOR_DASHBOARD: "/collector",
-  COLLECTOR_JOBS: "/collector/jobs",
-  COLLECTOR_HISTORY: "/collector/history",
-  COLLECTOR_PROFILE: "/collector/profile",
+  // ===== Collector (relative children) =====
+  COLLECTOR_CHILD: {
+    JOBS: "jobs",
+    HISTORY: "history",
+    PROFILE: "profile",
+  },
 
-  // ===== Citizen Routes =====
-  CITIZEN_DASHBOARD: "/citizen",
-  CITIZEN_REPORT: "/citizen/report",
-  CITIZEN_REQUEST: "/citizen/request",
-  CITIZEN_HISTORY: "/citizen/history",
+  // ===== Citizen (relative children) =====
+  CITIZEN_CHILD: {
+    REPORT: "report",
+    REQUEST: "request",
+    HISTORY: "history",
+  },
 
-  // ===== Admin Routes =====
-  ADMIN_DASHBOARD: "/admin",
-  ADMIN_USERS: "/admin/users",
-  ADMIN_ENTERPRISES: "/admin/enterprises",
-  ADMIN_REPORTS: "/admin/reports",
-  ADMIN_SETTINGS: "/admin/settings",
-};
+  // ===== Admin (relative children) =====
+  ADMIN_CHILD: {
+    USERS: "users",
+    ENTERPRISES: "enterprises",
+    REPORTS: "reports",
+    SETTINGS: "settings",
+  },
+} as const;
 
 export default endPoint;
