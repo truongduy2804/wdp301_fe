@@ -1,36 +1,50 @@
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { Eye, EyeOff, Leaf, Mail, Lock, ArrowRight, Shield, CheckCircle2 } from "lucide-react"
-import { Link } from "react-router-dom"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button/button";
+import { Input } from "@/components/ui/input/input";
+import { Card } from "@/components/ui/card/card";
+import {
+  Eye,
+  EyeOff,
+  Leaf,
+  Mail,
+  Lock,
+  ArrowRight,
+  Shield,
+  CheckCircle2,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function LoginBackground() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
-  }
+    e.preventDefault();
+    setIsLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsLoading(false);
+  };
 
   return (
     <div className="w-full max-w-6xl px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         <div className="hidden lg:flex flex-col justify-center space-y-8">
-          <div className="animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+          <div
+            className="animate-fade-in-up"
+            style={{ animationDelay: "0.1s" }}
+          >
             <div className="flex items-center gap-3 mb-6">
               <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl p-4 shadow-lg hover:shadow-2xl transition-shadow duration-300 animate-glow">
                 <Leaf className="w-8 h-8 text-white animate-float" />
               </div>
               <div>
                 <h1 className="text-4xl font-bold text-gray-900">GreenPoint</h1>
-                <p className="text-gray-600 text-sm">Thu gom rác chuyên nghiệp</p>
+                <p className="text-gray-600 text-sm">
+                  Thu gom rác chuyên nghiệp
+                </p>
               </div>
             </div>
           </div>
@@ -44,8 +58,12 @@ export default function LoginBackground() {
                 <CheckCircle2 className="w-6 h-6 text-emerald-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Dịch vụ tin cậy</h3>
-                <p className="text-gray-600 text-sm">Hơn 10 năm phục vụ cộng đồng bảo vệ môi trường</p>
+                <h3 className="font-semibold text-gray-900 mb-1">
+                  Dịch vụ tin cậy
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Hơn 10 năm phục vụ cộng đồng bảo vệ môi trường
+                </p>
               </div>
             </div>
 
@@ -57,8 +75,12 @@ export default function LoginBackground() {
                 <Shield className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Bảo mật hàng đầu</h3>
-                <p className="text-gray-600 text-sm">Dữ liệu của bạn được mã hóa và bảo vệ an toàn</p>
+                <h3 className="font-semibold text-gray-900 mb-1">
+                  Bảo mật hàng đầu
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Dữ liệu của bạn được mã hóa và bảo vệ an toàn
+                </p>
               </div>
             </div>
 
@@ -70,25 +92,44 @@ export default function LoginBackground() {
                 <Leaf className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Bảo vệ môi trường</h3>
-                <p className="text-gray-600 text-sm">Cùng nhau xây dựng một tương lai xanh</p>
+                <h3 className="font-semibold text-gray-900 mb-1">
+                  Bảo vệ môi trường
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Cùng nhau xây dựng một tương lai xanh
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="animate-slide-in-right" style={{ animationDelay: "0.2s" }}>
+        <div
+          className="animate-slide-in-right"
+          style={{ animationDelay: "0.2s" }}
+        >
           <Card className="border-0 shadow-2xl bg-white rounded-2xl overflow-hidden hover:shadow-2xl transition-shadow duration-500">
             <div className="p-8 sm:p-10">
-              <div className="mb-8 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">Đăng nhập</h2>
-                <p className="text-gray-500 text-base">Vào hệ thống quản lý dịch vụ của bạn</p>
+              <div
+                className="mb-8 animate-fade-in-up"
+                style={{ animationDelay: "0.3s" }}
+              >
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Đăng nhập
+                </h2>
+                <p className="text-gray-500 text-base">
+                  Vào hệ thống quản lý dịch vụ của bạn
+                </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Email Field */}
-                <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-                  <label className="block text-sm font-semibold text-gray-700">Email</label>
+                <div
+                  className="space-y-2 animate-fade-in-up"
+                  style={{ animationDelay: "0.4s" }}
+                >
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Email
+                  </label>
                   <div className="relative group">
                     <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-emerald-600 group-hover:text-emerald-500 transition-colors duration-300" />
                     <Input
@@ -103,8 +144,13 @@ export default function LoginBackground() {
                 </div>
 
                 {/* Password Field */}
-                <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
-                  <label className="block text-sm font-semibold text-gray-700">Mật khẩu</label>
+                <div
+                  className="space-y-2 animate-fade-in-up"
+                  style={{ animationDelay: "0.5s" }}
+                >
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Mật khẩu
+                  </label>
                   <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-emerald-600 group-hover:text-emerald-500 transition-colors duration-300" />
                     <Input
@@ -120,7 +166,11 @@ export default function LoginBackground() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-emerald-600 transition-all duration-300 hover:scale-110"
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -164,19 +214,29 @@ export default function LoginBackground() {
               </form>
 
               {/* Divider */}
-              <div className="my-8 flex items-center gap-4 animate-fade-in-up" style={{ animationDelay: "0.8s" }}>
+              <div
+                className="my-8 flex items-center gap-4 animate-fade-in-up"
+                style={{ animationDelay: "0.8s" }}
+              >
                 <div className="flex-1 h-px bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200" />
                 <span className="text-xs text-gray-500 font-medium">hoặc</span>
                 <div className="flex-1 h-px bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200" />
               </div>
 
               {/* Social Login Buttons */}
-              <div className="grid grid-cols-2 gap-3 animate-fade-in-up" style={{ animationDelay: "0.9s" }}>
+              <div
+                className="grid grid-cols-2 gap-3 animate-fade-in-up"
+                style={{ animationDelay: "0.9s" }}
+              >
                 <Button
                   variant="outline"
                   className="h-11 rounded-lg border-2 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 bg-white text-gray-700 hover:shadow-md hover:scale-105 active:scale-95"
                 >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
                     <path
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                       fill="#4285F4"
@@ -199,7 +259,11 @@ export default function LoginBackground() {
                   variant="outline"
                   className="h-11 rounded-lg border-2 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 bg-white text-gray-700 hover:shadow-md hover:scale-105 active:scale-95"
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                 </Button>
@@ -230,5 +294,5 @@ export default function LoginBackground() {
         </div>
       </div>
     </div>
-  )
+  );
 }

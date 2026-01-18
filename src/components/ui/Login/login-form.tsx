@@ -1,32 +1,35 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Eye, EyeOff, Mail, Lock, Leaf, Github, Chrome } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
+import { useState } from "react";
+import { Eye, EyeOff, Mail, Lock, Leaf, Github, Chrome } from "lucide-react";
+import { Button } from "@/components/ui/button/button";
+import { Input } from "@/components/ui/input/input";
+import { Card } from "@/components/ui/card/card";
 
 export default function LoginForm() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
     setTimeout(() => {
-      setIsLoading(false)
-      console.log("Login:", { email, password })
-    }, 2000)
-  }
+      setIsLoading(false);
+      console.log("Login:", { email, password });
+    }, 2000);
+  };
 
   return (
     <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 px-4">
       {/* Left Section - Brand Info */}
-      <div className="hidden lg:flex flex-col justify-center animate-slide-in-right" style={{ animationDelay: "0.1s" }}>
+      <div
+        className="hidden lg:flex flex-col justify-center animate-slide-in-right"
+        style={{ animationDelay: "0.1s" }}
+      >
         <div className="space-y-8">
           {/* Logo Section */}
           <div className="flex items-center gap-3">
@@ -35,23 +38,37 @@ export default function LoginForm() {
               <div className="absolute inset-0 bg-emerald-400 rounded-full blur-xl opacity-20"></div>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-emerald-700">GreenPoint</h1>
+              <h1 className="text-3xl font-bold text-emerald-700">
+                GreenPoint
+              </h1>
               <p className="text-sm text-gray-600">Bảo vệ Môi Trường</p>
             </div>
           </div>
 
           {/* Main Description */}
           <div className="space-y-4">
-            <h2 className="text-4xl font-bold text-gray-900 leading-tight">Quản lý rác thải thông minh</h2>
-            <p className="text-lg text-gray-600">Giải pháp thu gom rác tiên tiến để bảo vệ hành tinh chúng ta</p>
+            <h2 className="text-4xl font-bold text-gray-900 leading-tight">
+              Quản lý rác thải thông minh
+            </h2>
+            <p className="text-lg text-gray-600">
+              Giải pháp thu gom rác tiên tiến để bảo vệ hành tinh chúng ta
+            </p>
           </div>
 
           {/* Trust Badges */}
           <div className="space-y-4">
             {[
-              { icon: Leaf, title: "Bảo vệ Môi trường", desc: "Giải pháp xanh 100%" },
+              {
+                icon: Leaf,
+                title: "Bảo vệ Môi trường",
+                desc: "Giải pháp xanh 100%",
+              },
               { icon: Lock, title: "Bảo mật Dữ liệu", desc: "Mã hóa đầu cuối" },
-              { icon: Mail, title: "Tin cậy & Minh bạch", desc: "Dịch vụ uy tín" },
+              {
+                icon: Mail,
+                title: "Tin cậy & Minh bạch",
+                desc: "Dịch vụ uy tín",
+              },
             ].map((badge, idx) => (
               <div
                 key={idx}
@@ -72,8 +89,14 @@ export default function LoginForm() {
       </div>
 
       {/* Right Section - Login Form */}
-      <div className="flex flex-col justify-center animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
-        <Card className="p-8 shadow-2xl border-0 bg-white" style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.08)" }}>
+      <div
+        className="flex flex-col justify-center animate-fade-in-up"
+        style={{ animationDelay: "0.2s" }}
+      >
+        <Card
+          className="p-8 shadow-2xl border-0 bg-white"
+          style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.08)" }}
+        >
           <div className="space-y-6">
             {/* Header */}
             <div className="space-y-2 text-center">
@@ -84,8 +107,13 @@ export default function LoginForm() {
             {/* Login Form */}
             <form onSubmit={handleLogin} className="space-y-4">
               {/* Email Input */}
-              <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
+              <div
+                className="space-y-2 animate-fade-in-up"
+                style={{ animationDelay: "0.3s" }}
+              >
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <Input
@@ -99,10 +127,18 @@ export default function LoginForm() {
               </div>
 
               {/* Password Input */}
-              <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
+              <div
+                className="space-y-2 animate-fade-in-up"
+                style={{ animationDelay: "0.4s" }}
+              >
                 <div className="flex items-center justify-between">
-                  <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                  <a href="#" className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Mật khẩu
+                  </label>
+                  <a
+                    href="#"
+                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
                     Quên mật khẩu?
                   </a>
                 </div>
@@ -120,13 +156,20 @@ export default function LoginForm() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
 
               {/* Remember Me */}
-              <div className="flex items-center gap-2 animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
+              <div
+                className="flex items-center gap-2 animate-fade-in-up"
+                style={{ animationDelay: "0.5s" }}
+              >
                 <input
                   type="checkbox"
                   id="remember"
@@ -156,17 +199,25 @@ export default function LoginForm() {
             </form>
 
             {/* Divider */}
-            <div className="relative my-6 animate-fade-in-up" style={{ animationDelay: "0.7s" }}>
+            <div
+              className="relative my-6 animate-fade-in-up"
+              style={{ animationDelay: "0.7s" }}
+            >
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-white text-gray-500">Hoặc tiếp tục với</span>
+                <span className="px-3 bg-white text-gray-500">
+                  Hoặc tiếp tục với
+                </span>
               </div>
             </div>
 
             {/* Social Login */}
-            <div className="grid grid-cols-2 gap-3 animate-fade-in-up" style={{ animationDelay: "0.8s" }}>
+            <div
+              className="grid grid-cols-2 gap-3 animate-fade-in-up"
+              style={{ animationDelay: "0.8s" }}
+            >
               <Button
                 type="button"
                 variant="outline"
@@ -186,10 +237,16 @@ export default function LoginForm() {
             </div>
 
             {/* Footer */}
-            <div className="text-center pt-4 animate-pulse-light animate-fade-in-up" style={{ animationDelay: "0.9s" }}>
+            <div
+              className="text-center pt-4 animate-pulse-light animate-fade-in-up"
+              style={{ animationDelay: "0.9s" }}
+            >
               <p className="text-gray-600">
                 Chưa có tài khoản?{" "}
-                <a href="#" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
+                <a
+                  href="#"
+                  className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors"
+                >
                   Đăng ký ngay
                 </a>
               </p>
@@ -198,5 +255,5 @@ export default function LoginForm() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
