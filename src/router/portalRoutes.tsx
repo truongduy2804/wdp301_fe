@@ -1,12 +1,13 @@
 import React from "react";
+import { Navigate } from "react-router-dom";
 import endPoint from "@/router/endPoint";
 import type { Role } from "@/lib/role";
 
 // layouts
 import PortalLayout from "@/layout/PortalLayout";
 
-// Auth
-import LoginPage from "@/pages/Login/LoginPage";
+// Auth Layout
+import AuthLayout from "@/pages/Auth/Layout";
 
 // Admin Pages
 import AdminDashboard from "@/pages/Admin";
@@ -34,8 +35,11 @@ type PortalRoute = {
 };
 
 export const authRoutes: ChildRoute[] = [
-  { path: endPoint.HOMEPAGE, element: <LoginPage /> },
-  { path: endPoint.AUTH, element: <LoginPage /> },
+  {
+    path: endPoint.HOMEPAGE,
+    element: <Navigate to={endPoint.LOGIN} replace />,
+  },
+  { path: endPoint.AUTH, element: <AuthLayout /> },
 ];
 
 export const portalRoutes: PortalRoute[] = [
