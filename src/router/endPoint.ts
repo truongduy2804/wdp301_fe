@@ -1,11 +1,13 @@
 const endPoint = {
-  // ===== Auth =====
+  // ===== Public =====
   HOMEPAGE: "/",
+
+  // ===== Auth =====
+
   AUTH: "/auth",
   LOGIN: "/auth?view=login",
   REGISTER: "/auth?view=register",
   FORGOTPASSWORD: "/auth?view=forgotpass",
-
   // ===== Root Portals =====
   ADMIN: "/admin",
   ENTERPRISE: "/enterprise",

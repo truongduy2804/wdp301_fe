@@ -1,8 +1,8 @@
 // layouts/PortalLayout.tsx
 import React from "react";
 import { Outlet } from "react-router-dom";
-import Sidebar from "@/layout/components/Sidebar";
-import Header from "@/layout/components/Header";
+import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
 import { normalizeRole, type Role } from "@/lib/role";
 import type { Locale } from "@/lib/i18n";
 
