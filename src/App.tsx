@@ -7,58 +7,34 @@ import {
   authRoutes,
   portalRoutes,
   PortalRouteWrapper,
-  PublicLayoutChildren,
-  AuthLayoutChildren,
 } from "@/router/portalRoutes";
-
-type LayoutChild =
-  | { index: true; element: React.ReactNode }
-  | { path: string; element: React.ReactNode };
 
 export default function App() {
   return (
     <Routes>
-      {/* ================= PUBLIC ================= */}
+      {/* ================= PUBLIC (TEMP: redirect HOME) ================= */}
       {publicRoutes.map((r) => (
-        <Route key={r.path} path={r.path} element={r.element as any}>
-          {(PublicLayoutChildren as LayoutChild[]).map((c, idx) =>
-            "index" in c ? (
-              <Route
-                key={`public-index-${idx}`}
-                index
-                element={c.element as any}
-              />
-            ) : (
-              <Route
-                key={`public-${c.path}-${idx}`}
-                path={c.path}
-                element={c.element as any}
-              />
-            ),
-          )}
-        </Route>
+        <Route key={r.path} path={r.path} element={r.element as any} />
       ))}
 
-      {/* ================= AUTH ================= */}
+      {/* ================= AUTH (query-based) ================= */}
       {authRoutes.map((r) => (
-        <Route key={r.path} path={r.path} element={r.element as any}>
-          {(AuthLayoutChildren as LayoutChild[]).map((c, idx) =>
-            "index" in c ? (
-              <Route
-                key={`auth-index-${idx}`}
-                index
-                element={c.element as any}
-              />
-            ) : (
-              <Route
-                key={`auth-${c.path}-${idx}`}
-                path={c.path}
-                element={c.element as any}
-              />
-            ),
-          )}
-        </Route>
+        <Route key={r.path} path={r.path} element={r.element as any} />
       ))}
+
+      {/* ✅ Redirect path-style -> query-style */}
+      <Route
+        path={`${endPoint.AUTH}/login`}
+        element={<Navigate to={`${endPoint.AUTH}?view=login`} replace />}
+      />
+      <Route
+        path={`${endPoint.AUTH}/register`}
+        element={<Navigate to={`${endPoint.AUTH}?view=register`} replace />}
+      />
+      <Route
+        path={`${endPoint.AUTH}/forgot-password`}
+        element={<Navigate to={`${endPoint.AUTH}?view=forgot`} replace />}
+      />
 
       {/* ================= PORTALS ================= */}
       {portalRoutes.map((p) => (
@@ -86,7 +62,10 @@ export default function App() {
       ))}
 
       {/* ================= FALLBACK ================= */}
-      <Route path="*" element={<Navigate to={endPoint.HOMEPAGE} replace />} />
+      <Route
+        path="*"
+        element={<Navigate to={`${endPoint.AUTH}?view=login`} replace />}
+      />
     </Routes>
   );
 }

@@ -1,253 +1,252 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  FaUser,
-  FaEnvelope,
-  FaLock,
-  FaFacebookF,
-  FaApple,
-} from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
-import { LuLeaf, LuRecycle, LuShieldCheck, LuSparkles } from "react-icons/lu";
+  FiMail,
+  FiLock,
+  FiUser,
+  FiAlertCircle,
+  FiArrowRight,
+  FiUserPlus,
+} from "react-icons/fi";
+
+import LoadingSpinner from "@/components/ui/loadingSpinner";
 import {
   CustomTextInput,
   CustomPasswordInput,
 } from "@/components/ui/Form_Input";
 
 interface RegisterProps {
-  toggleView: () => void;
-  onRegister?: (data: {
-    fullname: string;
-    email: string;
-    password: string;
-  }) => void;
-  onSocialRegister?: (platform: string) => void;
+  toggleView: () => void; // -> login
 }
 
-const Register: React.FC<RegisterProps> = ({
-  toggleView,
-  onRegister,
-  onSocialRegister,
-}) => {
+const validateEmail = (email: string) => {
+  if (!email) return "Email là bắt buộc";
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!re.test(email)) return "Định dạng email không hợp lệ";
+  return null;
+};
+
+const Register: React.FC<RegisterProps> = ({ toggleView }) => {
   const [fullname, setFullname] = useState("");
   const [email, setEmail] = useState("");
-
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [agree, setAgree] = useState(false);
+  const [confirm, setConfirm] = useState("");
+  const [agree, setAgree] = useState(true);
 
-  const passMismatch =
-    confirmPassword.length > 0 && password !== confirmPassword;
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [shakeKey, setShakeKey] = useState(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passMismatch) return;
+  const triggerError = (msg: string) => {
+    setError(msg);
+    setShakeKey((k) => k + 1);
+  };
 
-    const payload = { fullname, email, password };
-    console.log("REGISTER DEMO:", payload);
-    onRegister?.(payload);
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+
+    if (!fullname.trim()) return triggerError("Họ và tên là bắt buộc");
+    const eErr = validateEmail(email);
+    if (eErr) return triggerError(eErr);
+    if (!password) return triggerError("Mật khẩu là bắt buộc");
+    if (password.length < 6) return triggerError("Mật khẩu tối thiểu 6 ký tự");
+    if (confirm !== password)
+      return triggerError("Xác nhận mật khẩu không khớp");
+    if (!agree) return triggerError("Bạn cần đồng ý Điều khoản & Chính sách");
+
+    setIsLoading(true);
+    setError(null);
+
+    window.setTimeout(() => {
+      setIsLoading(false);
+      toggleView();
+    }, 800);
   };
 
   return (
-    <div className="flex items-center justify-center px-3 py-3 sm:py-6">
-      <motion.div
-        initial={{ opacity: 0, y: 14, scale: 0.995 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md"
-      >
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-green-100 bg-white/85 shadow-lg sm:shadow-xl backdrop-blur">
-          {/* Header */}
-          <div className="relative px-5 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="grid h-11 w-11 sm:h-12 sm:w-12 place-items-center rounded-2xl bg-gradient-to-br from-green-700 via-green-600 to-emerald-500 shadow-md">
-                    <LuRecycle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                  </div>
-                  <div className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-white shadow">
-                    <LuSparkles className="h-3.5 w-3.5 text-emerald-600" />
-                  </div>
-                </div>
+    <div className="w-full">
+      {/* ✅ Title + subtitle + line giống Login */}
+      <div className="mb-4 text-center">
+        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          Đăng ký
+        </h2>
+        <p className="mt-1 text-slate-700">
+          Tạo tài khoản để bắt đầu đóng góp cho khu vực của bạn{" "}
+          <span className="ml-1">🌿</span>
+        </p>
+        <div className="mx-auto mt-4 h-px w-20 bg-emerald-200/80" />
+      </div>
 
-                <div>
-                  <h1 className="text-base sm:text-lg font-extrabold text-gray-900 leading-tight">
-                    ECONET
-                  </h1>
-                  <p className="text-[11px] sm:text-xs text-gray-600">
-                    Tham gia hệ sinh thái thu gom & tái chế
-                  </p>
-                </div>
+      {/* Error outside + shake */}
+      <AnimatePresence mode="wait">
+        {error && (
+          <motion.div
+            key={`err-${shakeKey}`}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              x: [0, -10, 10, -8, 8, -6, 6, 0],
+            }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.45 }}
+            className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700"
+          >
+            <div className="flex items-start gap-2">
+              <FiAlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-semibold">Có lỗi xảy ra</p>
+                <p className="text-sm opacity-90">{error}</p>
               </div>
-
-              <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-800">
-                <LuLeaf className="h-3.5 w-3.5" />
-                Sống xanh
-              </span>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            <div className="mt-3 sm:mt-4 flex flex-wrap gap-1.5 sm:gap-2">
-              <span className="rounded-full bg-emerald-50 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-medium text-emerald-800 ring-1 ring-emerald-100">
-                Kết nối thu gom
-              </span>
-              <span className="rounded-full bg-green-50 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-medium text-green-800 ring-1 ring-green-100">
-                Tái chế minh bạch
-              </span>
-              <span className="rounded-full bg-lime-50 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-medium text-lime-800 ring-1 ring-lime-100">
-                Theo dõi lịch sử
-              </span>
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <CustomTextInput
+              label="Họ và tên"
+              name="fullname"
+              icon={FiUser as any}
+              value={fullname}
+              onChange={(e) => {
+                setFullname(e.target.value);
+                setError(null);
+              }}
+              autoComplete="name"
+              error={
+                error
+                  ? !fullname.trim()
+                    ? "Họ và tên là bắt buộc"
+                    : undefined
+                  : undefined
+              }
+              showErrorText={false}
+            />
           </div>
 
-          {/* Form */}
-          <form
-            onSubmit={handleSubmit}
-            className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-4"
-          >
-            <div className="text-center">
-              <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
-                Tạo tài khoản
-              </h2>
-              <p className="mt-1 text-xs sm:text-sm text-gray-600">
-                Đăng ký để đặt lịch thu gom và kết nối điểm tái chế gần bạn.
-              </p>
-            </div>
+          <div className="space-y-1.5">
+            <CustomTextInput
+              label="Email"
+              name="email"
+              icon={FiMail as any}
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError(null);
+              }}
+              autoComplete="username"
+              error={error ? (validateEmail(email) ?? undefined) : undefined}
+              showErrorText={false}
+            />
+          </div>
 
-            <div className="space-y-3">
-              <CustomTextInput
-                label="Họ và tên"
-                name="fullname"
-                icon={FaUser}
-                required
-                value={fullname}
-                onChange={(e) => setFullname(e.target.value)}
-              />
+          <div className="space-y-1.5">
+            <CustomPasswordInput
+              label="Mật khẩu"
+              name="password"
+              icon={FiLock as any}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError(null);
+              }}
+              autoComplete="new-password"
+              error={
+                error
+                  ? !password
+                    ? "Mật khẩu là bắt buộc"
+                    : password.length < 6
+                      ? "Mật khẩu tối thiểu 6 ký tự"
+                      : undefined
+                  : undefined
+              }
+              showErrorText={false}
+            />
+          </div>
 
-              <CustomTextInput
-                label="Email"
-                name="email"
-                icon={FaEnvelope}
-                type="email"
-                required
-                autoComplete="username"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+          <div className="space-y-1.5">
+            <CustomPasswordInput
+              label="Xác nhận mật khẩu"
+              name="confirm"
+              icon={FiLock as any}
+              value={confirm}
+              onChange={(e) => {
+                setConfirm(e.target.value);
+                setError(null);
+              }}
+              autoComplete="new-password"
+              error={
+                error
+                  ? confirm !== password
+                    ? "Xác nhận mật khẩu không khớp"
+                    : undefined
+                  : undefined
+              }
+              showErrorText={false}
+            />
+          </div>
 
-              <CustomPasswordInput
-                label="Mật khẩu"
-                name="password"
-                icon={FaLock}
-                required
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-
-              <div>
-                <CustomPasswordInput
-                  label="Xác nhận mật khẩu"
-                  name="confirmPassword"
-                  icon={FaLock}
-                  required
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  inputProps={{ "aria-invalid": passMismatch }}
-                />
-                {passMismatch && (
-                  <p className="mt-1 text-sm text-red-600">
-                    Mật khẩu xác nhận chưa khớp.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <label className="flex items-start gap-2 text-[12px] sm:text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={agree}
-                onChange={(e) => setAgree(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-green-300 text-emerald-600 focus:ring-emerald-500"
-                required
-              />
-              <span>
-                Tôi đồng ý với{" "}
-                <a
-                  href="/terms"
-                  className="font-medium text-emerald-700 hover:brightness-75 hover:underline"
-                >
-                  Điều khoản sử dụng
-                </a>{" "}
-                và{" "}
-                <a
-                  href="/privacy"
-                  className="font-medium text-emerald-700 hover:brightness-75 hover:underline"
-                >
-                  Chính sách bảo mật
-                </a>
-                .
+          <label className="flex items-start gap-2 text-sm text-slate-700 select-none pt-1">
+            <input
+              type="checkbox"
+              checked={agree}
+              onChange={(e) => setAgree(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded-full border-slate-300 text-emerald-600 focus:ring-emerald-200"
+            />
+            <span>
+              Tôi đồng ý với{" "}
+              <span className="font-medium hover:brightness-75 hover:underline text-emerald-700">
+                Điều khoản
+              </span>{" "}
+              và{" "}
+              <span className="font-medium hover:brightness-75 hover:underline text-emerald-700">
+                Chính sách
               </span>
-            </label>
-
-            <button
-              type="submit"
-              className="
-                w-full rounded-xl py-3 text-sm sm:text-base font-semibold text-white shadow-md transition
-                bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600
-                hover:brightness-95 hover:shadow-lg
-                focus:outline-none focus:ring-4 focus:ring-emerald-300/40
-              "
-            >
-              Đăng ký
-            </button>
-
-            <div className="flex items-start gap-2 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-[12px] sm:text-xs text-emerald-900">
-              <LuShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
-              <span>
-                Tài khoản giúp bạn kết nối dịch vụ thu gom & tái chế. Bạn có thể
-                cập nhật thông tin sau.
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="h-px flex-1 bg-green-100" />
-              <span className="text-xs font-medium text-gray-500">
-                Hoặc đăng ký bằng
-              </span>
-              <div className="h-px flex-1 bg-green-100" />
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {/* Facebook */}
-              <button className="flex h-9 items-center justify-center rounded-lg bg-[#1877F2] text-white hover:bg-[#166FE5] transition">
-                <FaFacebookF className="text-lg" />
-              </button>
-
-              {/* Google */}
-              <button className="flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white hover:bg-neutral-50 transition">
-                <FcGoogle className="text-xl" />
-              </button>
-
-              {/* Apple */}
-              <button className="flex h-9 items-center justify-center rounded-lg bg-black text-white hover:bg-neutral-800 transition">
-                <FaApple className="text-lg" />
-              </button>
-            </div>
-
-            <p className="text-center text-sm text-gray-700">
-              Đã có tài khoản?{" "}
-              <button
-                type="button"
-                onClick={toggleView}
-                className="font-medium text-emerald-700 hover:brightness-75 hover:underline"
-              >
-                Đăng nhập ngay
-              </button>
-            </p>
-          </form>
+              .
+            </span>
+          </label>
         </div>
-      </motion.div>
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="
+    group w-full rounded-2xl py-3 font-semibold text-white shadow-md transition
+    bg-emerald-600
+    hover:brightness-90 hover:shadow-lg
+    active:brightness-70
+    disabled:opacity-70 disabled:cursor-not-allowed
+    focus:outline-none focus:ring-4 focus:ring-emerald-300/40
+  "
+        >
+          {isLoading ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <LoadingSpinner color="white" size="5" inline />
+              Đang tạo tài khoản...
+            </span>
+          ) : (
+            <span className="inline-flex items-center justify-center gap-2">
+              Tạo tài khoản
+              <FiArrowRight className="transition-transform duration-200 group-hover:translate-x-1" />
+            </span>
+          )}
+        </button>
+
+        <p className="pt-2 text-center text-sm text-slate-600">
+          Đã có tài khoản?{" "}
+          <button
+            type="button"
+            onClick={toggleView}
+            className="font-semibold text-emerald-700 hover:underline hover:brightness-75 underline-offset-4"
+          >
+            Đăng nhập
+          </button>
+        </p>
+      </form>
     </div>
   );
 };

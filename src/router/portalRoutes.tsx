@@ -6,16 +6,7 @@ import type { Role } from "@/lib/role";
 
 // layouts
 import PortalLayout from "@/layout/Dashboard/PortalLayout";
-import MainLayout from "@/layout/Home/mainLayout";
 import AuthLayout from "@/pages/Auth/Layout";
-
-// Public
-import Homepage from "@/pages/HomePage/Home/mainSection";
-
-// Auth pages
-import Login from "@/pages/Auth/Login";
-import Register from "@/pages/Auth/Register";
-import ForgotPassword from "@/pages/Auth/ForgotPassword";
 
 // Admin Pages
 import AdminDashboard from "@/pages/Admin";
@@ -35,18 +26,29 @@ import CollectorDashboard from "@/pages/Collector";
 // Citizen Pages
 import CitizenDashboard from "@/pages/Citizen";
 
-type ChildRoute = { index?: boolean; path?: string; element: React.ReactNode };
-type PortalRoute = { path: string; role: Role; children: ChildRoute[] };
+type ChildRoute = { path: string; element: React.ReactNode };
+type PortalChildRoute = {
+  index?: boolean;
+  path?: string;
+  element: React.ReactNode;
+};
+type PortalRoute = { path: string; role: Role; children: PortalChildRoute[] };
 
-/** PUBLIC routes (MainLayout) */
+/**
+ * TEMP: Đóng HOME
+ * "/" -> "/auth?view=login"
+ */
 export const publicRoutes: ChildRoute[] = [
   {
     path: endPoint.HOMEPAGE, // "/"
-    element: <MainLayout />,
+    element: <Navigate to={`${endPoint.AUTH}?view=login`} replace />,
   },
 ];
 
-/** AUTH routes (AuthLayout) */
+/**
+ * AUTH root
+ * "/auth" -> render AuthLayout (bên trong đọc query view)
+ */
 export const authRoutes: ChildRoute[] = [
   {
     path: endPoint.AUTH, // "/auth"
@@ -106,20 +108,3 @@ export const portalRoutes: PortalRoute[] = [
 export function PortalRouteWrapper({ role }: { role: Role }) {
   return <PortalLayout role={role} />;
 }
-
-/**  Helpers export để App dùng nested children */
-export const PublicLayoutChildren = [
-  { index: true, element: <Homepage /> },
-  // nếu bạn có thêm public pages thì add ở đây:
-  // { path: endPoint.ABOUT, element: <About /> },
-];
-
-export const AuthLayoutChildren = [
-  { index: true, element: <Navigate to={endPoint.LOGIN} replace /> },
-
-  //  Quan trọng: đây là PATH RELATIVE (không có /auth)
-  // => endPoint.LOGIN nên là "/auth/login" nhưng ở đây phải là "login"
-  { path: "login", element: <Login /> },
-  { path: "register", element: <Register toggleView={() => {}} /> },
-  { path: "forgot-password", element: <ForgotPassword /> },
-];

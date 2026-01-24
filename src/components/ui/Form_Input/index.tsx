@@ -1,37 +1,33 @@
-// components/Form_Input.tsx
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import type { UseFormRegisterReturn } from "react-hook-form";
 
-interface InputProps {
+export interface InputProps {
   label: string;
   name: string;
   icon?: React.ElementType;
   type?: string;
   required?: boolean;
   error?: string;
-
-  // NEW ✅
-  hideErrorText?: boolean;
+  showErrorText?: boolean; // default true
+  hideErrorText?: boolean; // default false
 
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-
   register?: UseFormRegisterReturn;
-
   autoComplete?: string;
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
 }
 
 const baseInput =
-  "peer w-full border rounded-lg text-sm transition-all duration-200 " +
+  "peer w-full border border-2 rounded-lg text-sm transition-all duration-200 " +
   "bg-white text-slate-800 placeholder-transparent " +
   "outline-none focus:outline-none focus-visible:outline-none focus-visible:outline-offset-0 " +
   "shadow-none focus:shadow-none focus-visible:shadow-none";
 
 const okState =
-  "border-slate-200 hover:border-emerald-300 " +
-  "focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200/40 focus:ring-offset-0 " +
+  "border-slate-200 hover:border-slate-300 " +
+  "focus:border-emerald-700 focus:ring-1 focus:ring-emerald-200/40 focus:ring-offset-0 " +
   "focus-visible:border-emerald-500 focus-visible:ring-1 focus-visible:ring-emerald-200/40 focus-visible:ring-offset-0";
 
 const errState =
@@ -46,6 +42,17 @@ const labelBase =
   "peer-[&:not(:placeholder-shown)]:top-0 peer-[&:not(:placeholder-shown)]:-translate-y-2.5 peer-[&:not(:placeholder-shown)]:text-xs " +
   "bg-white peer-focus:bg-white peer-[&:not(:placeholder-shown)]:bg-white";
 
+function shouldShowErrorText(
+  error?: string,
+  showErrorText?: boolean,
+  hideErrorText?: boolean,
+) {
+  if (!error) return false;
+  if (hideErrorText) return false;
+  if (showErrorText === false) return false;
+  return true;
+}
+
 export const CustomTextInput: React.FC<InputProps> = ({
   label,
   name,
@@ -53,7 +60,8 @@ export const CustomTextInput: React.FC<InputProps> = ({
   type = "text",
   required = false,
   error,
-  hideErrorText,
+  showErrorText = true,
+  hideErrorText = false,
   value,
   onChange,
   register,
@@ -61,6 +69,7 @@ export const CustomTextInput: React.FC<InputProps> = ({
   inputProps,
 }) => {
   const hasIcon = !!Icon;
+  const showErr = shouldShowErrorText(error, showErrorText, hideErrorText);
 
   return (
     <div className="relative group">
@@ -75,15 +84,16 @@ export const CustomTextInput: React.FC<InputProps> = ({
         name={name}
         type={type}
         required={required}
-        value={value}
-        onChange={onChange}
         placeholder=" "
         autoComplete={autoComplete}
         autoCapitalize="off"
         spellCheck={false}
         aria-invalid={!!error}
-        {...inputProps}
-        {...register}
+        //  Nếu có react-hook-form register => dùng register (uncontrolled)
+        //  Nếu không => dùng value/onChange (controlled)
+        {...(inputProps ?? {})}
+        {...(register ?? {})}
+        {...(!register ? { value, onChange } : {})}
         className={[
           baseInput,
           hasIcon ? "pl-10 pr-3 py-3" : "px-3 py-3",
@@ -105,10 +115,7 @@ export const CustomTextInput: React.FC<InputProps> = ({
         {label}
       </label>
 
-      {/* ✅ hide internal error text when requested */}
-      {error && !hideErrorText && (
-        <p className="text-sm text-red-600 mt-1">{error}</p>
-      )}
+      {showErr && <p className="text-sm text-red-600 mt-1">{error}</p>}
     </div>
   );
 };
@@ -119,7 +126,8 @@ export const CustomPasswordInput: React.FC<InputProps> = ({
   icon: Icon,
   required = false,
   error,
-  hideErrorText,
+  showErrorText = true,
+  hideErrorText = false,
   value,
   onChange,
   register,
@@ -128,6 +136,7 @@ export const CustomPasswordInput: React.FC<InputProps> = ({
 }) => {
   const [show, setShow] = useState(false);
   const hasIcon = !!Icon;
+  const showErr = shouldShowErrorText(error, showErrorText, hideErrorText);
 
   return (
     <div className="relative group">
@@ -142,15 +151,14 @@ export const CustomPasswordInput: React.FC<InputProps> = ({
         name={name}
         type={show ? "text" : "password"}
         required={required}
-        value={value}
-        onChange={onChange}
         placeholder=" "
         autoComplete={autoComplete}
         autoCapitalize="off"
         spellCheck={false}
         aria-invalid={!!error}
-        {...inputProps}
-        {...register}
+        {...(inputProps ?? {})}
+        {...(register ?? {})}
+        {...(!register ? { value, onChange } : {})}
         className={[
           baseInput,
           hasIcon ? "pl-10 pr-10 py-3" : "pl-3 pr-10 py-3",
@@ -183,10 +191,7 @@ export const CustomPasswordInput: React.FC<InputProps> = ({
         {label}
       </label>
 
-      {/* ✅ hide internal error text when requested */}
-      {error && !hideErrorText && (
-        <p className="text-sm text-red-600 mt-1">{error}</p>
-      )}
+      {showErr && <p className="text-sm text-red-600 mt-1">{error}</p>}
     </div>
   );
 };

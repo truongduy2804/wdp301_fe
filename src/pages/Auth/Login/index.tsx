@@ -1,198 +1,227 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  FaEnvelope,
-  FaLock,
-  FaFacebookF,
-  FaApple,
-  FaGoogle,
-} from "react-icons/fa";
+import React, { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FiMail, FiLock, FiArrowRight, FiAlertCircle } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
-import { LuLeaf, LuRecycle, LuShieldCheck, LuSparkles } from "react-icons/lu";
+import { FaFacebook } from "react-icons/fa";
+
+import LoadingSpinner from "@/components/ui/loadingSpinner";
 import {
   CustomTextInput,
   CustomPasswordInput,
 } from "@/components/ui/Form_Input";
 
+import BrandMark from "@/components/ui/BrandMark";
+
 interface LoginProps {
-  toggleView?: () => void;
-  onForgotPassword?: () => void;
+  toggleView: () => void;
+  onForgotPassword: () => void;
 }
+
+const validateEmail = (email: string) => {
+  if (!email) return "Email là bắt buộc";
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!re.test(email)) return "Định dạng email không hợp lệ";
+  return null;
+};
 
 const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(true);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log({ email, password, remember });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [shakeKey, setShakeKey] = useState(0);
+
+  const emailErr = useMemo(
+    () => (error ? validateEmail(email) : null),
+    [email, error],
+  );
+
+  const triggerError = (msg: string) => {
+    setError(msg);
+    setShakeKey((k) => k + 1);
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const eErr = validateEmail(email);
+    if (eErr) return triggerError(eErr);
+    if (!password) return triggerError("Mật khẩu là bắt buộc");
+
+    setIsLoading(true);
+    setError(null);
+
+    window.setTimeout(() => {
+      setIsLoading(false);
+    }, 700);
   };
 
   return (
-    <div className="flex items-center justify-center px-3 py-3 sm:py-6">
-      <motion.div
-        initial={{ opacity: 0, y: 14, scale: 0.995 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md"
-      >
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-green-100 bg-white/85 shadow-lg sm:shadow-xl backdrop-blur">
-          {/* Header */}
-          <div className="relative px-5 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="grid h-11 w-11 sm:h-12 sm:w-12 place-items-center rounded-2xl bg-gradient-to-br from-green-700 via-green-600 to-emerald-500 shadow-md">
-                    <LuRecycle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                  </div>
-                  <div className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-white shadow">
-                    <LuSparkles className="h-3.5 w-3.5 text-emerald-600" />
-                  </div>
-                </div>
+    <div className="w-full">
+      <div className="mb-4 text-center">
+        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          Đăng nhập
+        </h2>
+        <p className="mt-1 text-slate-700">
+          Chào mừng bạn quay trở lại! <span className="ml-1">🌱</span>
+        </p>
+        <div className="mx-auto mt-4 h-px w-20 bg-emerald-200/80" />
+      </div>
 
-                <div>
-                  <h1 className="text-base sm:text-lg font-extrabold text-gray-900 leading-tight">
-                    ECONET
-                  </h1>
-                  <p className="text-[11px] sm:text-xs text-gray-600">
-                    Kết nối người dân • thu gom • tái chế theo khu vực
-                  </p>
-                </div>
+      {/* Error outside + shake */}
+      <AnimatePresence mode="wait">
+        {error && (
+          <motion.div
+            key={`err-${shakeKey}`}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              x: [0, -10, 10, -8, 8, -6, 6, 0],
+            }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.45 }}
+            className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700"
+          >
+            <div className="flex items-start gap-2">
+              <FiAlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-semibold">Có lỗi xảy ra</p>
+                <p className="text-sm opacity-90">{error}</p>
               </div>
-              <span className="hidden sm:flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-800 leading-none">
-                <LuLeaf className="h-3.5 w-3.5 shrink-0" />
-                <span className="flex items-center">Sống xanh</span>
-              </span>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            {/* chips */}
-            <div className="mt-3 sm:mt-4 flex flex-wrap gap-1.5 sm:gap-2">
-              <span className="rounded-full bg-emerald-50 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-medium text-emerald-800 ring-1 ring-emerald-100">
-                Đặt lịch thu gom
-              </span>
-              <span className="rounded-full bg-green-50 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-medium text-green-800 ring-1 ring-green-100">
-                Điểm tái chế
-              </span>
-              <span className="rounded-full bg-lime-50 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-medium text-lime-800 ring-1 ring-lime-100">
-                Kết nối doanh nghiệp
-              </span>
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <CustomTextInput
+              label="Email"
+              name="email"
+              icon={FiMail as any}
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError(null);
+              }}
+              error={error ? (emailErr ?? undefined) : undefined}
+              showErrorText={false}
+            />
           </div>
 
-          {/* Body */}
-          <form
-            onSubmit={handleSubmit}
-            className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-4"
-          >
-            <div className="text-center">
-              <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
-                Đăng nhập
-              </h2>
-              <p className="mt-1 text-xs sm:text-sm text-gray-600">
-                Theo dõi yêu cầu thu gom và hoạt động tái chế của bạn.
-              </p>
-            </div>
+          <div className="space-y-1.5">
+            <CustomPasswordInput
+              label="Mật khẩu"
+              name="password"
+              icon={FiLock as any}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError(null);
+              }}
+              error={
+                error
+                  ? !password
+                    ? "Mật khẩu là bắt buộc"
+                    : undefined
+                  : undefined
+              }
+              showErrorText={false}
+            />
+          </div>
 
-            <div className="space-y-3">
-              <CustomTextInput
-                label="Email"
-                name="email"
-                icon={FaEnvelope}
-                type="email"
-                required
-                autoComplete="username"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+          <div className="flex items-center justify-between pt-1">
+            <label className="inline-flex items-center gap-2 text-sm text-slate-700 select-none">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200"
               />
-
-              <CustomPasswordInput
-                label="Mật khẩu"
-                name="password"
-                icon={FaLock}
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between text-[13px] sm:text-sm">
-              <label className="inline-flex items-center gap-2 text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  className="h-4 w-4 rounded border-green-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                Ghi nhớ đăng nhập
-              </label>
-
-              <button
-                type="button"
-                onClick={onForgotPassword}
-                className="font-medium text-emerald-700 hover:text-emerald-600 hover:underline hover:brightness-75"
-              >
-                Quên mật khẩu?
-              </button>
-            </div>
+              Ghi nhớ đăng nhập
+            </label>
 
             <button
-              type="submit"
-              className="
-                w-full rounded-xl py-3 text-sm sm:text-base font-semibold text-white shadow-md transition
-                bg-gradient-to-r from-emerald-600 via-green-600 to-lime-600
-                hover:brightness-95 hover:shadow-lg
-                focus:outline-none focus:ring-4 focus:ring-emerald-300/40
-              "
+              type="button"
+              onClick={onForgotPassword}
+              className="text-sm font-medium text-emerald-700 hover:underline hover:brightness-75 underline-offset-4"
             >
-              Đăng nhập
+              Quên mật khẩu?
             </button>
-
-            <div className="flex items-start gap-2 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-[12px] sm:text-xs text-emerald-900">
-              <LuShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
-              <span>
-                Dữ liệu dùng để kết nối dịch vụ môi trường. Bạn có thể cập nhật
-                hồ sơ sau.
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="h-px flex-1 bg-green-100" />
-              <span className="text-xs font-medium text-gray-500">Hoặc</span>
-              <div className="h-px flex-1 bg-green-100" />
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {/* Facebook */}
-              <button className="flex h-9 items-center justify-center rounded-lg bg-[#1877F2] text-white hover:bg-[#166FE5] transition">
-                <FaFacebookF className="text-lg" />
-              </button>
-
-              {/* Google */}
-              <button className="flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white hover:bg-neutral-50 transition">
-                <FcGoogle className="text-xl" />
-              </button>
-
-              {/* Apple */}
-              <button className="flex h-9 items-center justify-center rounded-lg bg-black text-white hover:bg-neutral-800 transition">
-                <FaApple className="text-lg" />
-              </button>
-            </div>
-
-            <p className="text-center text-sm text-gray-700">
-              Chưa có tài khoản?{" "}
-              <button
-                type="button"
-                onClick={toggleView}
-                className="font-medium text-emerald-700 hover:brightness-75 hover:underline"
-              >
-                Đăng ký ngay
-              </button>
-            </p>
-          </form>
+          </div>
         </div>
-      </motion.div>
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="
+    group w-full rounded-2xl py-3 font-semibold text-white shadow-md transition
+    bg-emerald-600
+    hover:brightness-90 hover:shadow-lg
+    active:brightness-70
+    disabled:opacity-70 disabled:cursor-not-allowed
+    focus:outline-none focus:ring-4 focus:ring-emerald-300/40
+  "
+        >
+          {isLoading ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <LoadingSpinner color="white" size="5" inline />
+              Đang đăng nhập...
+            </span>
+          ) : (
+            <span className="inline-flex items-center justify-center gap-2">
+              Đăng nhập
+              <FiArrowRight className="transition-transform duration-200 group-hover:translate-x-1" />
+            </span>
+          )}
+        </button>
+
+        {/* Divider */}
+        <div className="my-3 flex items-center gap-4">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs font-semibold text-slate-500">
+            HOẶC TIẾP TỤC VỚI
+          </span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        {/* Social */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            type="button"
+            className="w-full rounded-2xl border border-slate-200 bg-white py-3 font-semibold text-slate-700
+                       hover:brightness-90 transition flex items-center justify-center gap-2"
+          >
+            <FcGoogle className="h-5 w-5" />
+            Google
+          </button>
+          <button
+            type="button"
+            className="w-full rounded-2xl border border-slate-200 bg-white py-3 font-semibold text-slate-700
+                        hover:brightness-90 transition flex items-center justify-center gap-2"
+          >
+            <FaFacebook className="h-5 w-5 text-[#1877F2]" />
+            Facebook
+          </button>
+        </div>
+
+        <p className="pt-2 text-center text-sm text-slate-600">
+          Chưa có tài khoản?{" "}
+          <button
+            type="button"
+            onClick={toggleView}
+            className="font-semibold text-emerald-700 hover:underline hover:brightness-75 underline-offset-4"
+          >
+            Đăng ký ngay
+          </button>
+        </p>
+      </form>
     </div>
   );
 };
