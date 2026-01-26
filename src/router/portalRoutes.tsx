@@ -13,10 +13,10 @@ import AdminDashboard from "@/pages/Admin";
 
 // Enterprise Pages
 import EnterpriseDashboard from "@/pages/Enterprise/Statistics";
-import EnterpriseRequest from "@/pages/Enterprise/Request";
-import EnterpriseDispatch from "@/pages/Enterprise/Dispatch";
-import EnterpriseCollectors from "@/pages/Enterprise/Collector";
-import EnterpriseAssignments from "@/pages/Enterprise/Assignment";
+import EnterpriseRequestPending from "@/pages/Enterprise/PendingRequests";
+import EnterpriseRequestProcessing from "@/pages/Enterprise/ProcessingRequests";
+import EnterpriseRequestHistory from "@/pages/Enterprise/RequestHistory";
+import EnterpriseCollectors from "@/pages/Enterprise/Collectors";
 import EnterpriseRewardRules from "@/pages/Enterprise/RewardRules";
 import EnterpriseSettings from "@/pages/Enterprise/Settings";
 
@@ -68,20 +68,20 @@ export const portalRoutes: PortalRoute[] = [
     children: [
       { index: true, element: <EnterpriseDashboard /> },
       {
-        path: endPoint.ENTERPRISE_CHILD.REQUESTS,
-        element: <EnterpriseRequest />,
-      },
-      {
-        path: endPoint.ENTERPRISE_CHILD.DISPATCH,
-        element: <EnterpriseDispatch />,
-      },
-      {
         path: endPoint.ENTERPRISE_CHILD.COLLECTORS,
         element: <EnterpriseCollectors />,
       },
       {
-        path: endPoint.ENTERPRISE_CHILD.ASSIGNMENTS,
-        element: <EnterpriseAssignments />,
+        path: endPoint.ENTERPRISE_CHILD.PENDING_REQUEST,
+        element: <EnterpriseRequestPending />,
+      },
+      {
+        path: endPoint.ENTERPRISE_CHILD.PROCESSING_REQUEST,
+        element: <EnterpriseRequestProcessing />,
+      },
+      {
+        path: endPoint.ENTERPRISE_CHILD.REQUEST_HISTORY,
+        element: <EnterpriseRequestHistory />,
       },
       {
         path: endPoint.ENTERPRISE_CHILD.REWARD_RULES,

@@ -16,12 +16,11 @@ const endPoint = {
 
   // ===== Enterprise (relative children) =====
   ENTERPRISE_CHILD: {
-    REQUESTS: "requests",
-    DISPATCH: "dispatch",
+    PENDING_REQUEST: "pending-requests",
+    PROCESSING_REQUEST: "processing-requests",
+    REQUEST_HISTORY: "request-history",
     COLLECTORS: "collectors",
-    ASSIGNMENTS: "assignments",
     REWARD_RULES: "reward-rules",
-    REPORTS: "reports",
     SETTINGS: "settings",
   },
 

@@ -12,18 +12,16 @@ import { ChevronDown, MapPin, X, ChevronLeft } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Tooltip from "@mui/material/Tooltip";
 import { createPortal } from "react-dom";
-
+import BrandMark from "@/components/ui/BrandMark";
 import { buildMenu } from "../Menu";
 import type { Role } from "@/lib/role";
 import { ROLES } from "@/lib/role";
 import { DEFAULT_LOCALE } from "@/lib/i18n";
-import { LOGO, LOGO_ONLY } from "@/lib/theme/theme";
 
 /* ===== Theme (GREEN / WHITE) ===== */
 const UI = {
-  activeBg:
-    "bg-linear-to-r from-emerald-50 via-transparent to-emerald-50 text-emerald-800 shadow-sm rounded-l-none",
-  idleText: "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+  activeBg: "bg-emerald-50 text-emerald-800 shadow-sm rounded-l-none",
+  idleText: "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
   indicatorBar: "bg-linear-to-b from-emerald-400 via-emerald-500 to-teal-500",
   iconActive: "text-emerald-600 scale-110",
   iconIdle: "text-slate-400 group-hover:text-emerald-600 group-hover:scale-105",
@@ -513,37 +511,34 @@ export default function Sidebar({
       <div className="relative h-16 flex items-center justify-start lg:justify-center px-4 pl-5 lg:pl-0">
         {/* Full logo */}
         <div
-          className={`absolute inset-0 flex items-center justify-start lg:justify-center pl-4 sm:pl-0 pt-1 transition-all duration-500 ease-out ${
-            collapsed
-              ? "opacity-0 scale-90 pointer-events-none"
-              : "opacity-100 scale-100 delay-100"
-          }`}
+          className={`absolute inset-0 flex items-center justify-start lg:justify-center
+    pl-5 sm:pl-0 pt-1 transition-all duration-500 ease-out ${
+      collapsed
+        ? "opacity-0 scale-90 pointer-events-none"
+        : "opacity-100 scale-100 delay-100"
+    }`}
         >
-          <img
-            src={LOGO}
-            alt="EcoNet"
-            width={120}
-            height={120}
-            className="h-11 lg:h-11 w-auto"
-            draggable={false}
+          <BrandMark
+            textMode="inline"
+            brandName="ECONET"
+            accentSuffix="NET"
+            accentClassName="text-emerald-600"
           />
         </div>
 
         {/* Icon-only */}
         <div
-          className={`absolute inset-0 flex items-center justify-start lg:justify-center transition-all duration-500 ease-out ${
-            collapsed
-              ? "opacity-100 scale-100 -translate-x-1.5 delay-100"
-              : "opacity-0 scale-90 pointer-events-none"
-          }`}
+          className={`absolute inset-0 flex items-center justify-start lg:justify-center
+    pl-6 sm:pl-0 transition-all duration-500 ease-out ${
+      collapsed
+        ? "opacity-100 scale-100 -translate-x-1.5 delay-100"
+        : "opacity-0 scale-90 pointer-events-none"
+    }`}
         >
-          <img
-            src={LOGO_ONLY}
-            alt="EcoNet"
-            width={56}
-            height={56}
-            className="h-10 lg:h-11 w-auto"
-            draggable={false}
+          <BrandMark
+            sizeClassName="h-10 w-10 lg:h-11 lg:w-11"
+            textMode="none"
+            showBadge={false}
           />
         </div>
 
@@ -551,9 +546,9 @@ export default function Sidebar({
         <button
           onClick={() => setCollapsed((v) => !v)}
           className={`hidden lg:flex absolute -right-4 top-1/2 -translate-y-1/2 z-80 pointer-events-auto
-               w-8 h-8 rounded-full items-center justify-center
-               ${UI.toggleBtn}
-               transition-all duration-300 ease-out`}
+         w-8 h-8 rounded-full items-center justify-center
+         ${UI.toggleBtn}
+         transition-all duration-300 ease-out`}
           type="button"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -570,9 +565,9 @@ export default function Sidebar({
         <hr
           aria-hidden="true"
           className={`pointer-events-none absolute inset-x-0 -bottom-px m-0 
-                border-0 border-t border-slate-200 
-                transition-opacity duration-200 
-                ${topScrolled ? "opacity-100" : "opacity-0"}`}
+          border-0 border-t border-slate-200 
+          transition-opacity duration-200 
+          ${topScrolled ? "opacity-100" : "opacity-0"}`}
         />
       </div>
 

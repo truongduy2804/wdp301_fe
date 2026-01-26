@@ -1,18 +1,18 @@
 // components/portal/menu/enterprise.ts
 import {
-  LayoutDashboard,
   Inbox,
-  MapPinned,
   Users,
   Truck,
   BadgePercent,
   BarChart3,
   Settings,
+  History,
 } from "lucide-react";
 import { makeMenu, type RawItem } from "./utils";
 import type { MenuItem } from "./type";
 import type { Locale } from "@/lib/i18n";
 import { getMessages } from "@/lib/dict";
+import endPoint from "@/router/endPoint";
 
 export function enterpriseMenu(
   root: string,
@@ -22,13 +22,22 @@ export function enterpriseMenu(
 
   const RAWS: RawItem[] = [
     [t.dashboard, BarChart3, ""],
-    [t.requestsInbox, Inbox, "/requests"], // nhận/duyệt yêu cầu
-    [t.mapDispatch, MapPinned, "/dispatch"], // điều phối theo bản đồ/khu vực
-    [t.collectors, Users, "/collectors"], // quản lý collector thuộc DN
-    [t.assignments, Truck, "/assignments"], // phân công / theo dõi tiến độ
-    [t.rewardRules, BadgePercent, "/reward-rules"], // cấu hình điểm thưởng
 
-    [t.settings, Settings, "/settings"],
+    [t.pendingRequests, Inbox, `/${endPoint.ENTERPRISE_CHILD.PENDING_REQUEST}`],
+    [
+      t.processingRequests,
+      Truck,
+      `/${endPoint.ENTERPRISE_CHILD.PROCESSING_REQUEST}`,
+    ],
+    [
+      t.requestHistory,
+      History,
+      `/${endPoint.ENTERPRISE_CHILD.REQUEST_HISTORY}`,
+    ],
+
+    [t.collectors, Users, `/${endPoint.ENTERPRISE_CHILD.COLLECTORS}`],
+    [t.rewardRules, BadgePercent, `/${endPoint.ENTERPRISE_CHILD.REWARD_RULES}`],
+    [t.settings, Settings, `/${endPoint.ENTERPRISE_CHILD.SETTINGS}`],
   ];
 
   return makeMenu(root, RAWS);

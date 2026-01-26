@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
 import Login from "./Login";
@@ -8,8 +8,8 @@ import AuthShowcase from "./AuthShowcase";
 
 const AuthPage: React.FC = () => {
   const reduced = useReducedMotion();
-
   const [searchParams, setSearchParams] = useSearchParams();
+
   const viewParam = searchParams.get("view");
   const [view, setView] = useState<"login" | "register" | "forgot">("login");
 
@@ -23,35 +23,7 @@ const AuthPage: React.FC = () => {
     setSearchParams({ view: v });
   };
 
-  // Banner images (đặt trong /public/image/...)
-  const bgImages = useMemo(
-    () => [
-      "/image/bg1.jpg",
-      "/image/bg2.jpg",
-      "/image/bg3.jpg",
-      "/image/bg4.jpg",
-    ],
-    [],
-  );
-
-  const [bgIndex, setBgIndex] = useState(0);
-
-  //  Preload ảnh để tránh nháy/khựng khi đổi
-  useEffect(() => {
-    bgImages.forEach((src) => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, [bgImages]);
-
-  //  Auto change every 5s
-  useEffect(() => {
-    if (bgImages.length <= 1) return;
-    const t = window.setInterval(() => {
-      setBgIndex((i) => (i + 1) % bgImages.length);
-    }, 5000);
-    return () => window.clearInterval(t);
-  }, [bgImages.length]);
+  const bgImage = "/image/bg1.jpg";
 
   return (
     <div className="fixed inset-0 z-0 overflow-hidden bg-gradient-to-br from-slate-50 via-white to-emerald-50">
@@ -69,40 +41,22 @@ const AuthPage: React.FC = () => {
 
         {/* RIGHT */}
         <div className="relative h-full min-h-0 flex items-center justify-center">
-          {/* ✅ Background banner slider (crossfade + Ken Burns nhẹ) */}
+          {/* ✅ Static background (no slider) */}
           <div className="absolute inset-0">
-            <AnimatePresence initial={false} mode="sync">
-              <motion.img
-                key={bgImages[bgIndex]}
-                src={bgImages[bgIndex]}
-                alt="background"
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{ willChange: "transform, opacity" }}
-                initial={reduced ? { opacity: 1 } : { opacity: 0, scale: 1.08 }}
-                animate={
-                  reduced
-                    ? { opacity: 1 }
-                    : {
-                        opacity: 1,
-                        // Ken Burns nhẹ: zoom chậm trong 5s
-                        scale: [1.08, 1.02, 1.0],
-                      }
-                }
-                exit={reduced ? { opacity: 1 } : { opacity: 0, scale: 1.02 }}
-                transition={
-                  reduced
-                    ? undefined
-                    : {
-                        opacity: { duration: 1.35, ease: "easeInOut" },
-                        scale: { duration: 5.2, ease: "linear" },
-                      }
-                }
-              />
-            </AnimatePresence>
+            <motion.img
+              src={bgImage}
+              alt="background"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ willChange: "transform" }}
+              initial={reduced ? { opacity: 1 } : { opacity: 1, scale: 1.03 }}
+              animate={reduced ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+              transition={
+                reduced ? undefined : { duration: 2.0, ease: "easeOut" }
+              }
+            />
 
-            {/* Overlay for readability */}
+            {/* Overlay for readability (✅ bỏ backdrop-blur để nhẹ) */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-900/55 via-slate-900/35 to-emerald-900/35" />
-            <div className="absolute inset-0 backdrop-blur-[2px]" />
           </div>
 
           {/* Card */}
