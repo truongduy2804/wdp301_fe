@@ -8,6 +8,7 @@ const endPoint = {
   LOGIN: "/auth?view=login",
   REGISTER: "/auth?view=register",
   FORGOTPASSWORD: "/auth?view=forgotpass",
+
   // ===== Root Portals =====
   ADMIN: "/admin",
   ENTERPRISE: "/enterprise",
@@ -40,10 +41,9 @@ const endPoint = {
 
   // ===== Admin (relative children) =====
   ADMIN_CHILD: {
-    USERS: "users",
-    ENTERPRISES: "enterprises",
-    REPORTS: "reports",
-    SETTINGS: "settings",
+    MONITOR: "monitor", // giám sát hệ thống
+    ACCOUNTS: "accounts", // quản lý tài khoản + phân quyền
+    COMPLAINTS: "complaints", // tranh chấp / khiếu nại
   },
 } as const;
 

@@ -12,7 +12,7 @@ import {
   cx,
   formatNumber,
   Button,
-} from "../ui/enterpriseUI";
+} from "../../../components/ui/page/componentUI";
 
 import {
   mockRequests,

@@ -10,7 +10,7 @@ import {
   cx,
   formatNumber,
   Modal,
-} from "../ui/enterpriseUI";
+} from "../../../components/ui/page/componentUI";
 
 type WasteType = "Plastic" | "Paper" | "Metal" | "Organic" | "Other";
 type RuleStatus = "ACTIVE" | "INACTIVE";

@@ -27,7 +27,7 @@ import {
   EmptyState,
   Modal,
   cx,
-} from "../ui/enterpriseUI";
+} from "../../../components/ui/page/componentUI";
 
 /* ===================== Types ===================== */
 type Zone = "District 1" | "District 3" | "District 7" | "Thu Duc";

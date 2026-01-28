@@ -13,7 +13,7 @@ import {
   cx,
   formatNumber,
   Modal,
-} from "../ui/enterpriseUI";
+} from "../../../components/ui/page/componentUI";
 
 import {
   mockCollectors,

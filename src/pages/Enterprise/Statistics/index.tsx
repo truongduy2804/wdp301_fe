@@ -35,7 +35,7 @@ import {
   StatCard,
   Dropdown,
   DateRangePill,
-} from "../ui/enterpriseUI";
+} from "../../../components/ui/page/componentUI";
 
 /* ===================== Types ===================== */
 type DatePreset = "7d" | "30d" | "90d" | "custom";

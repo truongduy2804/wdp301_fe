@@ -9,7 +9,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import AvatarUserImage from "@/components/ui/Avatar_User_Image";
+import AvatarUserImage from "@/components/Avatar_User_Image";
 import type { Role } from "@/lib/role";
 import { ROLE_LABEL, ROLES } from "@/lib/role";
 

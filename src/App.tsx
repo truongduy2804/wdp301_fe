@@ -22,7 +22,7 @@ export default function App() {
         <Route key={r.path} path={r.path} element={r.element as any} />
       ))}
 
-      {/* ✅ Redirect path-style -> query-style */}
+      {/* Redirect path-style -> query-style */}
       <Route
         path={`${endPoint.AUTH}/login`}
         element={<Navigate to={`${endPoint.AUTH}?view=login`} replace />}
