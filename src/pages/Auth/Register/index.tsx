@@ -6,7 +6,6 @@ import {
   FiUser,
   FiAlertCircle,
   FiArrowRight,
-  FiUserPlus,
 } from "react-icons/fi";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";

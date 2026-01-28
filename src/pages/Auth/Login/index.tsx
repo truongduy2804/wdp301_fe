@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiMail, FiLock, FiArrowRight, FiAlertCircle } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import endPoint from "@/router/endPoint";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
 import {
@@ -10,22 +13,56 @@ import {
   CustomPasswordInput,
 } from "@/components/ui/Form_Input";
 
-import BrandMark from "@/components/ui/BrandMark";
-
 interface LoginProps {
   toggleView: () => void;
   onForgotPassword: () => void;
 }
 
-const validateEmail = (email: string) => {
-  if (!email) return "Email là bắt buộc";
+type MockRole = "ADMIN" | "ENTERPRISE";
+
+const normalize = (s: string) => s.trim().toLowerCase();
+
+const isEmail = (value: string) => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!re.test(email)) return "Định dạng email không hợp lệ";
-  return null;
+  return re.test(value);
 };
 
+//  Cho phép nhập "admin" / "enterprise" dù field là Email
+const validateIdentifier = (value: string) => {
+  if (!value) return "Email là bắt buộc";
+  const v = normalize(value);
+
+  if (v === "admin" || v === "enterprise") return null;
+  if (isEmail(value)) return null;
+
+  return "Định dạng email không hợp lệ";
+};
+
+function mockLoginApi(identifier: string, password: string): Promise<MockRole> {
+  return new Promise((resolve, reject) => {
+    window.setTimeout(() => {
+      const id = normalize(identifier);
+
+      const adminOk =
+        (id === "admin@gmail.com" || id === "admin@econet.vn") &&
+        password === "1234";
+
+      const enterpriseOk =
+        (id === "enterprise@gmail.com" || id === "enterprise@econet.vn") &&
+        password === "1234";
+
+      if (adminOk) return resolve("ADMIN");
+      if (enterpriseOk) return resolve("ENTERPRISE");
+
+      return reject(new Error("Sai tài khoản hoặc mật khẩu"));
+    }, 650);
+  });
+}
+
 const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
-  const [email, setEmail] = useState("");
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState(""); // thực tế: email/username
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
 
@@ -34,27 +71,43 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
   const [shakeKey, setShakeKey] = useState(0);
 
   const emailErr = useMemo(
-    () => (error ? validateEmail(email) : null),
+    () => (error ? validateIdentifier(email) : null),
     [email, error],
   );
 
   const triggerError = (msg: string) => {
     setError(msg);
     setShakeKey((k) => k + 1);
+    toast.error(msg, { autoClose: 2000 });
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    const eErr = validateEmail(email);
-    if (eErr) return triggerError(eErr);
+    if (isLoading) return;
+
+    const idErr = validateIdentifier(email);
+    if (idErr) return triggerError(idErr);
     if (!password) return triggerError("Mật khẩu là bắt buộc");
 
     setIsLoading(true);
     setError(null);
 
-    window.setTimeout(() => {
+    try {
+      const role = await mockLoginApi(email, password);
+
+      const store = remember ? localStorage : sessionStorage;
+      store.setItem("mock_user", normalize(email));
+      store.setItem("mock_role", role);
+
+      toast.success("Đăng nhập thành công!", { autoClose: 1400 });
+
+      const target = role === "ADMIN" ? endPoint.ADMIN : endPoint.ENTERPRISE;
+      navigate(target, { replace: true });
+    } catch (err: any) {
+      triggerError(err?.message ?? "Đăng nhập thất bại");
+    } finally {
       setIsLoading(false);
-    }, 700);
+    }
   };
 
   return (
@@ -102,7 +155,7 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
               label="Email"
               name="email"
               icon={FiMail as any}
-              type="email"
+              type="text" // ✅ cho phép admin/enterprise
               autoComplete="username"
               value={email}
               onChange={(e) => {
@@ -161,13 +214,13 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
           type="submit"
           disabled={isLoading}
           className="
-    group w-full rounded-2xl py-3 font-semibold text-white shadow-md transition
-    bg-emerald-600
-    hover:brightness-90 hover:shadow-lg
-    active:brightness-70
-    disabled:opacity-70 disabled:cursor-not-allowed
-    focus:outline-none focus:ring-4 focus:ring-emerald-300/40
-  "
+            group w-full rounded-2xl py-3 font-semibold text-white shadow-md transition
+            bg-emerald-600
+            hover:brightness-90 hover:shadow-lg
+            active:brightness-70
+            disabled:opacity-70 disabled:cursor-not-allowed
+            focus:outline-none focus:ring-4 focus:ring-emerald-300/40
+          "
         >
           {isLoading ? (
             <span className="inline-flex items-center justify-center gap-2">
@@ -197,6 +250,9 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
             type="button"
             className="w-full rounded-2xl border border-slate-200 bg-white py-3 font-semibold text-slate-700
                        hover:brightness-90 transition flex items-center justify-center gap-2"
+            onClick={() =>
+              toast.info("Demo: Social login chưa nối API", { autoClose: 1500 })
+            }
           >
             <FcGoogle className="h-5 w-5" />
             Google
@@ -205,6 +261,9 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
             type="button"
             className="w-full rounded-2xl border border-slate-200 bg-white py-3 font-semibold text-slate-700
                         hover:brightness-90 transition flex items-center justify-center gap-2"
+            onClick={() =>
+              toast.info("Demo: Social login chưa nối API", { autoClose: 1500 })
+            }
           >
             <FaFacebook className="h-5 w-5 text-[#1877F2]" />
             Facebook

@@ -181,12 +181,42 @@ const UserMenu: React.FC<UserMenuProps> = ({
   // đóng khi đổi route
   useEffect(() => setOpen(false), [pathname]);
 
+  const clearAllClientStorage = () => {
+    try {
+      localStorage.clear();
+    } catch {}
+    try {
+      sessionStorage.clear();
+    } catch {}
+
+    // best-effort: xóa cookie (chỉ xóa được cookie không HttpOnly)
+    try {
+      document.cookie.split(";").forEach((c) => {
+        const eq = c.indexOf("=");
+        const name = (eq > -1 ? c.slice(0, eq) : c).trim();
+        if (!name) return;
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+      });
+    } catch {}
+  };
+
   const handleLogout = async () => {
     if (isLoggingOut) return;
     setOpen(false);
     setIsLoggingOut(true);
-    await new Promise((r) => setTimeout(r, 700));
-    window.location.replace(homeHref);
+
+    // demo delay để UI mượt
+    await new Promise((r) => setTimeout(r, 450));
+
+    // ✅ xóa hết storage
+    clearAllClientStorage();
+
+    // ✅ về trang login và refresh lại app
+    // (giữ locale nếu có, ví dụ /vi/auth?view=login)
+    const loginUrl = `${localePrefix}/auth?view=login`;
+
+    // replace -> không back lại được trang cũ
+    window.location.replace(loginUrl);
   };
 
   const { label: roleText, grad } = roleBadge(user.role);
@@ -328,17 +358,6 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
               {/* Items */}
               <nav className="py-1.5 px-2">
-                {/* Link về đúng portal role */}
-                <Link
-                  to={portalHref}
-                  className="group flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700"
-                >
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-emerald-100 transition-colors duration-200">
-                    <ChevronRight className="w-4 h-4" />
-                  </div>
-                  <span>Vào portal</span>
-                </Link>
-
                 {menuItems.map((item, idx) => (
                   <motion.div
                     key={item.to}
