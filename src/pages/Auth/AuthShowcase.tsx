@@ -270,7 +270,7 @@ const AuthShowcase: React.FC = () => {
             100%{ transform: translate3d(0,0,0); opacity:.25; }
           }
 
-          /* ✅ Force override nếu project có global reduced-motion kill animations */
+          /*  Force override nếu project có global reduced-motion kill animations */
           @media (prefers-reduced-motion: reduce) {
             .force-motion .animate-spin-slow { animation: spin-slow 20s linear infinite !important; }
             .force-motion .animate-spin-reverse { animation: spin-reverse 28s linear infinite !important; }
@@ -322,7 +322,7 @@ const AuthShowcase: React.FC = () => {
 
           {/*  GIỮ BỐ CỤC TRÊN/DƯỚI */}
           <div className="mt-5 items-center">
-            {/* TOP CONTENT */}
+            {/* TOP CONTENT
             <motion.div
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
@@ -347,7 +347,7 @@ const AuthShowcase: React.FC = () => {
                 theo khu vực — mang đến quy trình quản lý rác thải minh bạch,
                 nhanh chóng và dễ sử dụng.
               </p>
-            </motion.div>
+            </motion.div> */}
 
             {/* BOTTOM ORBIT */}
             <div className="mt-8 flex-1 flex flex-col items-center">
@@ -355,7 +355,7 @@ const AuthShowcase: React.FC = () => {
                 initial={{ opacity: 0, y: 10, scale: 0.99 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="relative w-full max-w-115 -mt-2"
+                className="relative w-full max-w-120 -mt-2"
               >
                 <div className="relative w-full aspect-square mx-auto overflow-visible">
                   <div
@@ -453,16 +453,6 @@ const AuthShowcase: React.FC = () => {
                   </div>
                 </div>
               </motion.div>
-            </div>
-
-            <div className="mt-7 flex items-center justify-between text-xs text-slate-800">
-              <span className="inline-flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-700" />
-                Trạng thái: hoạt động
-              </span>
-              <span className="font-medium text-slate-800">
-                Minh bạch • Nhanh gọn • Mượt mà
-              </span>
             </div>
           </div>
         </div>

@@ -5,20 +5,22 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import endPoint from "@/router/endPoint";
 
+import endPoint from "@/router/endPoint";
 import LoadingSpinner from "@/components/ui/loadingSpinner";
 import {
   CustomTextInput,
   CustomPasswordInput,
 } from "@/components/ui/Form_Input";
 
+import { useLoginMutation } from "@/redux/api/auth/authApi";
+import { setLoggedIn } from "@/redux/feature/authSlice";
+import { useAppDispatch } from "@/redux/store/hooks";
+
 interface LoginProps {
   toggleView: () => void;
   onForgotPassword: () => void;
 }
-
-type MockRole = "ADMIN" | "ENTERPRISE";
 
 const normalize = (s: string) => s.trim().toLowerCase();
 
@@ -27,86 +29,79 @@ const isEmail = (value: string) => {
   return re.test(value);
 };
 
-//  Cho phép nhập "admin" / "enterprise" dù field là Email
-const validateIdentifier = (value: string) => {
+const validateEmailOnly = (value: string) => {
   if (!value) return "Email là bắt buộc";
-  const v = normalize(value);
-
-  if (v === "admin" || v === "enterprise") return null;
-  if (isEmail(value)) return null;
-
-  return "Định dạng email không hợp lệ";
+  if (!isEmail(value)) return "Định dạng email không hợp lệ";
+  return null;
 };
 
-function mockLoginApi(identifier: string, password: string): Promise<MockRole> {
-  return new Promise((resolve, reject) => {
-    window.setTimeout(() => {
-      const id = normalize(identifier);
-
-      const adminOk =
-        (id === "admin@gmail.com" || id === "admin@econet.vn") &&
-        password === "1234";
-
-      const enterpriseOk =
-        (id === "enterprise@gmail.com" || id === "enterprise@econet.vn") &&
-        password === "1234";
-
-      if (adminOk) return resolve("ADMIN");
-      if (enterpriseOk) return resolve("ENTERPRISE");
-
-      return reject(new Error("Sai tài khoản hoặc mật khẩu"));
-    }, 650);
-  });
+function getApiErrorMessage(err: any): string {
+  // unwrap() sẽ throw FetchBaseQueryError / SerializedError
+  return (
+    err?.data?.message || err?.error || err?.message || "Đăng nhập thất bại"
+  );
 }
 
 const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
-  const [email, setEmail] = useState(""); // thực tế: email/username
+  const [loginApi, { isLoading }] = useLoginMutation();
+
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
 
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shakeKey, setShakeKey] = useState(0);
 
   const emailErr = useMemo(
-    () => (error ? validateIdentifier(email) : null),
+    () => (error ? validateEmailOnly(email) : null),
     [email, error],
   );
 
   const triggerError = (msg: string) => {
     setError(msg);
     setShakeKey((k) => k + 1);
-    toast.error(msg, { autoClose: 2000 });
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (isLoading) return;
 
-    const idErr = validateIdentifier(email);
-    if (idErr) return triggerError(idErr);
+    const eErr = validateEmailOnly(email);
+    if (eErr) return triggerError(eErr);
     if (!password) return triggerError("Mật khẩu là bắt buộc");
 
-    setIsLoading(true);
     setError(null);
 
     try {
-      const role = await mockLoginApi(email, password);
+      const res = await loginApi({
+        email: normalize(email),
+        password,
+      }).unwrap();
 
-      const store = remember ? localStorage : sessionStorage;
-      store.setItem("mock_user", normalize(email));
-      store.setItem("mock_role", role);
+      // res.data đã được transformResponse normalize thành:
+      // { accessToken, refreshToken, expiresIn, user: { id, fullname, email, role, permissions } }
+      dispatch(
+        setLoggedIn({
+          accessToken: res.data.accessToken,
+          refreshToken: res.data.refreshToken,
+          user: res.data.user,
+          remember,
+        }),
+      );
 
       toast.success("Đăng nhập thành công!", { autoClose: 1400 });
 
-      const target = role === "ADMIN" ? endPoint.ADMIN : endPoint.ENTERPRISE;
+      const role = (res.data.user.role || "").toUpperCase();
+      const target = role.includes("ADMIN")
+        ? endPoint.ADMIN
+        : endPoint.ENTERPRISE;
+
       navigate(target, { replace: true });
     } catch (err: any) {
-      triggerError(err?.message ?? "Đăng nhập thất bại");
-    } finally {
-      setIsLoading(false);
+      triggerError(getApiErrorMessage(err));
     }
   };
 
@@ -122,7 +117,6 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
         <div className="mx-auto mt-4 h-px w-20 bg-emerald-200/80" />
       </div>
 
-      {/* Error outside + shake */}
       <AnimatePresence mode="wait">
         {error && (
           <motion.div
@@ -155,7 +149,7 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
               label="Email"
               name="email"
               icon={FiMail as any}
-              type="text" // ✅ cho phép admin/enterprise
+              type="email"
               autoComplete="username"
               value={email}
               onChange={(e) => {
@@ -235,7 +229,6 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
           )}
         </button>
 
-        {/* Divider */}
         <div className="my-3 flex items-center gap-4">
           <div className="h-px flex-1 bg-slate-200" />
           <span className="text-xs font-semibold text-slate-500">
@@ -244,7 +237,6 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
           <div className="h-px flex-1 bg-slate-200" />
         </div>
 
-        {/* Social */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             type="button"

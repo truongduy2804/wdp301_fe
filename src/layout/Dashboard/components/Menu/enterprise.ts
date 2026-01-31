@@ -2,8 +2,7 @@
 import {
   Inbox,
   Users,
-  Truck,
-  BadgePercent,
+  CheckCircle2,
   BarChart3,
   Settings,
   History,
@@ -22,21 +21,22 @@ export function enterpriseMenu(
 
   const RAWS: RawItem[] = [
     [t.dashboard, BarChart3, ""],
-
-    [t.pendingRequests, Inbox, `/${endPoint.ENTERPRISE_CHILD.PENDING_REQUEST}`],
+    [t.collectors, Users, `/${endPoint.ENTERPRISE_CHILD.COLLECTORS}`],
     [
-      t.processingRequests,
-      Truck,
-      `/${endPoint.ENTERPRISE_CHILD.PROCESSING_REQUEST}`,
+      t.pendingRequests,
+      Inbox,
+      `/${endPoint.ENTERPRISE_CHILD.PENDING_REQUESTS}`,
+    ],
+    [
+      t.acceptedRequests,
+      CheckCircle2,
+      `/${endPoint.ENTERPRISE_CHILD.ACCEPTED_REQUESTS}`,
     ],
     [
       t.requestHistory,
       History,
       `/${endPoint.ENTERPRISE_CHILD.REQUEST_HISTORY}`,
     ],
-
-    [t.collectors, Users, `/${endPoint.ENTERPRISE_CHILD.COLLECTORS}`],
-    [t.rewardRules, BadgePercent, `/${endPoint.ENTERPRISE_CHILD.REWARD_RULES}`],
     [t.settings, Settings, `/${endPoint.ENTERPRISE_CHILD.SETTINGS}`],
   ];
 

@@ -17,8 +17,8 @@ const endPoint = {
 
   // ===== Enterprise (relative children) =====
   ENTERPRISE_CHILD: {
-    PENDING_REQUEST: "pending-requests",
-    PROCESSING_REQUEST: "processing-requests",
+    PENDING_REQUESTS: "pending-requests",
+    ACCEPTED_REQUESTS: "accepted-requests",
     REQUEST_HISTORY: "request-history",
     COLLECTORS: "collectors",
     REWARD_RULES: "reward-rules",

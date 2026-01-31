@@ -17,7 +17,7 @@ import AdminComplaints from "@/pages/Admin/Complaints";
 // Enterprise Pages
 import EnterpriseDashboard from "@/pages/Enterprise/Statistics";
 import EnterpriseRequestPending from "@/pages/Enterprise/PendingRequests";
-import EnterpriseRequestProcessing from "@/pages/Enterprise/ProcessingRequests";
+import EnterpriseRequestAccepted from "@/pages/Enterprise/AcceptedRequests";
 import EnterpriseRequestHistory from "@/pages/Enterprise/RequestHistory";
 import EnterpriseCollectors from "@/pages/Enterprise/Collectors";
 import EnterpriseRewardRules from "@/pages/Enterprise/RewardRules";
@@ -79,13 +79,14 @@ export const portalRoutes: PortalRoute[] = [
         path: endPoint.ENTERPRISE_CHILD.COLLECTORS,
         element: <EnterpriseCollectors />,
       },
+
       {
-        path: endPoint.ENTERPRISE_CHILD.PENDING_REQUEST,
+        path: endPoint.ENTERPRISE_CHILD.PENDING_REQUESTS,
         element: <EnterpriseRequestPending />,
       },
       {
-        path: endPoint.ENTERPRISE_CHILD.PROCESSING_REQUEST,
-        element: <EnterpriseRequestProcessing />,
+        path: endPoint.ENTERPRISE_CHILD.ACCEPTED_REQUESTS,
+        element: <EnterpriseRequestAccepted />,
       },
       {
         path: endPoint.ENTERPRISE_CHILD.REQUEST_HISTORY,

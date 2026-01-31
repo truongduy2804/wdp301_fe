@@ -3,9 +3,9 @@ export const menuEnterprise = {
   vi: {
     items: {
       dashboard: "Bảng thống kê",
-      pendingRequests: "Chờ duyệt đơn",
-      processingRequests: "Đang xử lý",
-      requestHistory: "Lịch sử đơn",
+      pendingRequests: "Đơn chờ duyệt",
+      acceptedRequests: "Đơn đã duyệt",
+      requestHistory: "Lịch sử đơn đã hoàn thành",
       collectors: "Quản lý nhân sự thu gom",
       rewardRules: "Quy tắc điểm thưởng",
       settings: "Cài đặt doanh nghiệp",
@@ -14,11 +14,11 @@ export const menuEnterprise = {
   en: {
     items: {
       dashboard: "Dashboard",
-      pendingRequests: "Pending Approval",
-      processingRequests: "Processing",
+      pendingRequests: "pending Requests",
+      acceptedRequests: "accepted Requests",
       requestHistory: "Completed History",
       collectors: "Collector Management",
-      rewardRules: "Reward Rules",
+
       settings: "Enterprise Settings",
     },
   },
