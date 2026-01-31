@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bell } from "lucide-react";
+import {
+  Bell,
+  Check,
+  CheckCheck,
+  Inbox,
+  Loader2,
+  ChevronRight,
+  ShieldCheck,
+  Package,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
 import LoadingSpinner from "@/components/ui/loadingSpinner";
 import {
   useGetNotificationsQuery,
@@ -20,18 +28,61 @@ function formatTimeAgo(iso?: string) {
   if (Number.isNaN(d.getTime())) return "";
   const diff = Date.now() - d.getTime();
   const mins = Math.floor(diff / 60000);
-
   if (mins < 1) return "Vừa xong";
   if (mins < 60) return `${mins} phút trước`;
-
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours} giờ trước`;
-
   const days = Math.floor(hours / 24);
   if (days === 1) return "Hôm qua";
   if (days < 7) return `${days} ngày trước`;
-
   return d.toLocaleDateString("vi-VN");
+}
+
+/**
+ * Map visual theo loại thông báo.
+ * Ưu tiên lấy type từ: n.type | n.category | n.meta.type
+ * - order/đơn: icon Package (màu xanh)
+ * - system: icon ShieldCheck (màu emerald)
+ */
+function pickType(n: any) {
+  const raw =
+    n?.eventCode ?? n?.type ?? n?.category ?? n?.meta?.type ?? "SYSTEM";
+
+  // nếu raw là object thì cố lấy field code/name/type
+  const value =
+    raw && typeof raw === "object"
+      ? (raw.code ?? raw.type ?? raw.name ?? "SYSTEM")
+      : raw;
+
+  return String(value).toUpperCase();
+}
+
+function getNotiVisual(n: any) {
+  const raw = n?.type ?? "SYSTEM";
+  const type = String(raw).toUpperCase();
+  const isOrder =
+    type === "REPORT_STATUS_CHANGED" ||
+    type === "REPORT_ASSIGNED" ||
+    type.startsWith("REPORT_");
+
+  if (isOrder) {
+    return {
+      Icon: Package,
+      wrapUnread: "bg-blue-100 ring-2 ring-blue-200",
+      iconUnread: "text-blue-600",
+      dotUnread: "bg-blue-600",
+      barUnread: "bg-blue-600",
+    };
+  }
+
+  // SYSTEM
+  return {
+    Icon: ShieldCheck,
+    wrapUnread: "bg-emerald-100 ring-2 ring-emerald-200",
+    iconUnread: "text-emerald-600",
+    dotUnread: "bg-emerald-600",
+    barUnread: "bg-emerald-600",
+  };
 }
 
 export default function NotificationPanel({
@@ -42,13 +93,11 @@ export default function NotificationPanel({
   onClose?: () => void;
 }) {
   const navigate = useNavigate();
-
   const [filter, setFilter] = useState<Filter>("ALL");
   const [page, setPage] = useState(1);
-
   const limit = variant === "dropdown" ? 8 : 20;
 
-  // ✅ badge count (tổng unread)
+  // badge count (tổng unread)
   const unreadQ = useGetNotificationsQuery({
     page: 1,
     limit: 1,
@@ -56,7 +105,7 @@ export default function NotificationPanel({
   });
   const unreadCount = unreadQ.data?.data?.pagination?.total ?? 0;
 
-  // ✅ list: dùng lazy để load more
+  // list: dùng lazy để load more
   const [trigger, list] = useLazyGetNotificationsQuery();
   const [items, setItems] = useState<any[]>([]);
 
@@ -81,7 +130,7 @@ export default function NotificationPanel({
     if (page === 1) setItems(newItems);
     else {
       setItems((prev) => {
-        const map = new Map<number, any>();
+        const map = new Map();
         [...prev, ...newItems].forEach((x) => map.set(x.id, x));
         return Array.from(map.values());
       });
@@ -104,150 +153,207 @@ export default function NotificationPanel({
     } catch {
       // không chặn UX
     } finally {
-      // dropdown thì đóng lại cho “mượt”
+      // dropdown thì đóng lại cho "mượt"
       if (variant === "dropdown") onClose?.();
       // nếu muốn điều hướng theo meta/type thì xử lý ở đây
     }
   };
 
+  const tabBase =
+    "flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap " +
+    "outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 " +
+    "[-webkit-tap-highlight-color:transparent]";
+
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+    <div
+      className={[
+        "flex flex-col bg-white",
+        variant === "dropdown"
+          ? "w-full max-w-md shadow-2xl rounded-xl overflow-hidden border border-slate-200"
+          : "w-full max-w-3xl mx-auto",
+      ].join(" ")}
+    >
       {/* Header */}
-      <div className="p-4 border-b border-slate-100">
+      <div className="px-5 py-4 border-b border-slate-200 bg-emerald-50/40">
         <div className="flex items-center justify-between">
-          <h3 className="text-[17px] font-extrabold text-slate-900">
-            Thông báo
-          </h3>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-100 rounded-xl">
+              <Bell className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">Thông báo</h2>
+              {unreadCount > 0 && (
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {unreadCount} thông báo mới
+                </p>
+              )}
+            </div>
+          </div>
 
-          {/* {variant === "dropdown" ? (
-            <button
-              type="button"
-              onClick={() => {
-                onClose?.();
-                navigate(NOTI_ROUTE);
-              }}
-              className="text-[13px] font-extrabold text-emerald-700 hover:text-emerald-800"
-            >
-              Xem tất cả
-            </button>
-          ) : (
-            <span className="text-xs font-semibold text-slate-500">
-              {marking ? "Đang cập nhật..." : ""}
-            </span>
-          )} */}
-        </div>
-
-        {/* Filter kiểu Facebook (to hơn + không wrap) */}
-        <div className="mt-3 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setFilter("ALL")}
-            className={[
-              "px-3 py-1.5 rounded-full text-[12px] md:text-sm font-semibold transition whitespace-nowrap leading-none",
-              filter === "ALL"
-                ? "bg-emerald-600 text-white"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200",
-            ].join(" ")}
-          >
-            Tất cả
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setFilter("UNREAD")}
-            className={[
-              "px-3 py-1.5 rounded-full text-[12px] md:text-sm font-semibold transition whitespace-nowrap leading-none",
-              filter === "UNREAD"
-                ? "bg-emerald-600 text-white"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200",
-            ].join(" ")}
-          >
-            Chưa đọc
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setFilter("READ")}
-            className={[
-              "px-3 py-1.5 rounded-full text-[12px] md:text-sm font-semibold transition whitespace-nowrap leading-none",
-              filter === "READ"
-                ? "bg-emerald-600 text-white"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200",
-            ].join(" ")}
-          >
-            Đã đọc
-          </button>
-
-          {unreadCount > 0 && (
-            <span className="ml-auto text-sm font-semibold text-rose-600 whitespace-nowrap">
-              {unreadCount} chưa đọc
+          {unreadCount > 0 && filter !== "UNREAD" && (
+            <span className="px-2 py-0.5 bg-red-500/90 text-white text-xs rounded-full">
+              {unreadCount} Chưa đọc
             </span>
           )}
+        </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          <button
+            onClick={() => setFilter("ALL")}
+            className={[
+              tabBase,
+              filter === "ALL"
+                ? "bg-emerald-600/90 text-white"
+                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200",
+            ].join(" ")}
+          >
+            <Inbox className="w-4 h-4" />
+            Tất cả
+          </button>
+          <button
+            onClick={() => setFilter("UNREAD")}
+            className={[
+              tabBase,
+              filter === "UNREAD"
+                ? "bg-emerald-600/90 text-white"
+                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200",
+            ].join(" ")}
+          >
+            <Bell className="w-4 h-4" />
+            Chưa đọc
+          </button>
+          <button
+            onClick={() => setFilter("READ")}
+            className={[
+              tabBase,
+              filter === "READ"
+                ? "bg-emerald-600/90 text-white"
+                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200",
+            ].join(" ")}
+          >
+            <CheckCheck className="w-4 h-4" />
+            Đã đọc
+          </button>
         </div>
       </div>
 
       {/* List */}
       <div
         className={[
-          "overflow-y-auto custom-scrollbar",
-          variant === "dropdown" ? "max-h-[50vh]" : "max-h-[calc(100vh-210px)]",
-          "p-3", // inset để không dính sát viền
+          "bg-white overflow-y-auto custom-scrollbar",
+          variant === "dropdown" ? "max-h-[400px]" : "min-h-[60vh]",
         ].join(" ")}
       >
         {list.isFetching && page === 1 ? (
-          <div className="p-8 text-center text-slate-500">
-            <LoadingSpinner color="blue" size="6" />
-            <div className="mt-2 text-sm font-semibold">Đang tải...</div>
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mb-3" />
+            <p className="text-sm text-slate-500">Đang tải thông báo...</p>
           </div>
         ) : list.isError ? (
-          <div className="p-8 text-center text-rose-600 font-extrabold">
-            Lỗi tải thông báo
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="p-3 bg-red-100 rounded-full mb-3">
+              <Bell className="w-6 h-6 text-red-600" />
+            </div>
+            <p className="text-sm font-medium text-slate-700">
+              Lỗi tải thông báo
+            </p>
+            <p className="text-xs text-slate-500 mt-1">Vui lòng thử lại sau</p>
           </div>
         ) : items.length ? (
-          <div className="space-y-2">
+          <div className="divide-y divide-slate-100">
             {items.map((n) => {
               const unread = !n.isRead;
+              const v = getNotiVisual(n);
+              const Icon = v.Icon;
+
               return (
                 <button
                   key={n.id}
-                  type="button"
                   onClick={() => onClickItem(n)}
                   className={[
-                    "w-full text-left rounded-2xl p-3 transition",
-                    "hover:bg-slate-50 active:scale-[0.99]",
-                    unread ? "bg-emerald-50/60" : "bg-white",
-                    "border border-slate-100",
+                    "w-full text-left px-5 py-4 transition-all group relative",
+                    "hover:bg-emerald-50/50 active:scale-[0.99]",
+                    unread ? "bg-emerald-50/30" : "bg-white hover:bg-slate-50",
                   ].join(" ")}
                 >
-                  <div className="flex items-start gap-3">
-                    {/* dot trái */}
+                  {/* Unread indicator bar */}
+                  {unread && (
                     <div
                       className={[
-                        "w-2.5 h-2.5 rounded-full mt-2 shrink-0",
-                        unread ? "bg-emerald-600" : "bg-slate-200",
+                        "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 rounded-r-full",
+                        v.barUnread,
                       ].join(" ")}
                     />
+                  )}
 
+                  <div className="flex gap-3">
+                    {/* Avatar/Icon */}
+                    <div
+                      className={[
+                        "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
+                        unread ? v.wrapUnread : "bg-slate-100",
+                      ].join(" ")}
+                    >
+                      <Icon
+                        className={[
+                          "w-5 h-5",
+                          unread ? v.iconUnread : "text-slate-400",
+                        ].join(" ")}
+                      />
+                    </div>
+
+                    {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-extrabold text-[15px] text-slate-900 mb-1 line-clamp-1">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h3
+                          className={[
+                            "text-sm leading-snug line-clamp-1",
+                            unread
+                              ? "font-bold text-slate-900"
+                              : "font-semibold text-slate-700",
+                          ].join(" ")}
+                        >
                           {n.title}
-                        </p>
+                        </h3>
+                        {unread && (
+                          <div
+                            className={[
+                              "flex-shrink-0 w-2 h-2 rounded-full mt-1",
+                              v.dotUnread,
+                            ].join(" ")}
+                          />
+                        )}
                       </div>
 
-                      <p className="text-[13px] text-slate-600 line-clamp-2">
+                      <p
+                        className={[
+                          "text-sm leading-relaxed line-clamp-2 mb-2",
+                          unread ? "text-slate-700" : "text-slate-500",
+                        ].join(" ")}
+                      >
                         {n.content}
                       </p>
 
-                      <p className="text-[12px] text-slate-400 mt-1 font-semibold">
-                        {formatTimeAgo(n.createdAt)}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-400 font-medium">
+                          {formatTimeAgo(n.createdAt)}
+                        </span>
+                        {!unread && (
+                          <div className="flex items-center gap-1 text-emerald-600">
+                            <Check className="w-3 h-3" />
+                            <span className="text-xs font-medium">Đã đọc</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
+                  </div>
 
-                    {/* dot phải kiểu fb */}
-                    {unread && (
-                      <span className="w-2 h-2 rounded-full bg-emerald-600 mt-2" />
-                    )}
+                  {/* Hover effect */}
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ChevronRight className="w-5 h-5 text-slate-400" />
                   </div>
                 </button>
               );
@@ -255,40 +361,75 @@ export default function NotificationPanel({
 
             {/* Load more (chỉ page) */}
             {variant === "page" && (
-              <div className="pt-2">
+              <div className="px-5 py-4 bg-slate-50">
                 <button
-                  type="button"
                   disabled={!canLoadMore || list.isFetching}
                   onClick={() => setPage((p) => p + 1)}
                   className={[
-                    "w-full rounded-2xl px-4 py-3 text-[15px] font-extrabold transition",
-                    canLoadMore
-                      ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                      : "bg-slate-200 text-slate-500 cursor-not-allowed",
+                    "w-full rounded-xl px-4 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2",
+                    canLoadMore && !list.isFetching
+                      ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-200 hover:shadow-xl"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed",
                   ].join(" ")}
                 >
-                  {list.isFetching
-                    ? "Đang tải..."
-                    : canLoadMore
-                      ? "Tải thêm"
-                      : "Hết thông báo"}
+                  {list.isFetching ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Đang tải...
+                    </>
+                  ) : canLoadMore ? (
+                    <>
+                      <ChevronRight className="w-4 h-4 rotate-90" />
+                      Tải thêm thông báo
+                    </>
+                  ) : (
+                    <>
+                      <CheckCheck className="w-4 h-4" />
+                      Đã hiển thị tất cả
+                    </>
+                  )}
                 </button>
               </div>
             )}
           </div>
         ) : (
-          <div className="p-10 text-center text-slate-500">
-            <Bell className="w-12 h-12 mx-auto mb-2 opacity-20" />
-            <p className="text-sm font-extrabold">
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="p-4 bg-slate-100 rounded-2xl mb-4">
+              {filter === "UNREAD" ? (
+                <CheckCheck className="w-8 h-8 text-emerald-600" />
+              ) : filter === "READ" ? (
+                <Inbox className="w-8 h-8 text-slate-400" />
+              ) : (
+                <Bell className="w-8 h-8 text-slate-400" />
+              )}
+            </div>
+            <h3 className="text-base font-bold text-slate-700 mb-1">
               {filter === "UNREAD"
-                ? "Bạn đã đọc hết rồi"
+                ? "Tuyệt vời! Bạn đã đọc hết rồi"
                 : filter === "READ"
                   ? "Chưa có thông báo đã đọc"
-                  : "Chưa có thông báo"}
+                  : "Chưa có thông báo nào"}
+            </h3>
+            <p className="text-sm text-slate-500 text-center max-w-xs">
+              {filter === "UNREAD"
+                ? "Không có thông báo mới nào cần xem"
+                : filter === "READ"
+                  ? "Các thông báo đã đọc sẽ hiển thị ở đây"
+                  : "Thông báo của bạn sẽ xuất hiện tại đây"}
             </p>
           </div>
         )}
       </div>
+
+      {/* Footer status (optional) */}
+      {marking && (
+        <div className="px-5 py-3 border-t border-slate-200 bg-slate-50">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+            <span>Đang cập nhật...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
