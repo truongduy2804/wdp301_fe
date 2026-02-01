@@ -1,6 +1,11 @@
 // CollectorUpsertModal.tsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion, easeOut } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  easeOut,
+} from "framer-motion";
 import { Input, Select } from "antd";
 import { Mail, User, Phone, Activity, AlertCircle, X } from "lucide-react";
 
@@ -223,7 +228,7 @@ export default function CollectorUpsertModal({
               w-[calc(100vw-2rem)] sm:w-[580px] max-w-[500px]
               max-h-[calc(100vh-5rem)]
               flex flex-col overflow-hidden
-              rounded-2xl bg-white shadow-2xl
+              rounded-2xl  shadow-2xl
             "
             onClick={(e) => e.stopPropagation()}
           >
@@ -262,7 +267,7 @@ export default function CollectorUpsertModal({
             </div>
 
             {/* Body: chỉ phần này scroll khi dài */}
-            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-6 sm:px-8 py-6">
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-6 sm:px-8 py-6 bg-white">
               <div className="space-y-5">
                 {!isEdit ? (
                   <FormField

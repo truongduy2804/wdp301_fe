@@ -8,10 +8,30 @@ import {
   portalRoutes,
   PortalRouteWrapper,
 } from "@/router/portalRoutes";
+import RequireAuth from "@/router/RequireAuth";
+import ProfilePage from "@/pages/Account/Profile";
+import ChangePasswordPage from "@/pages/Account/ChangePassword";
 
 export default function App() {
   return (
     <Routes>
+      {/* ================= PROFILE ACCOUNT ================= */}
+      <Route
+        path={endPoint.PROFILE}
+        element={
+          <RequireAuth>
+            <ProfilePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path={endPoint.CHANGE_PASSWORD}
+        element={
+          <RequireAuth>
+            <ChangePasswordPage />
+          </RequireAuth>
+        }
+      />
       {/* ================= PUBLIC (TEMP: redirect HOME) ================= */}
       {publicRoutes.map((r) => (
         <Route key={r.path} path={r.path} element={r.element as any} />

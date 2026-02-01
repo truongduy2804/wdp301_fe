@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 
 import endPoint from "@/router/endPoint";
-import UserMenu from "@/layout/Dashboard/components/Header/userMenu";
+import UserMenu from "@/layout/Dashboard/components/Header/UserMenu";
 
 import type { MockUser, MockRole } from "@/lib/mockAuthApi";
 import {

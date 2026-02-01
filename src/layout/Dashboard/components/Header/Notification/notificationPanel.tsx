@@ -4,7 +4,6 @@ import {
   Check,
   CheckCheck,
   Inbox,
-  Loader2,
   ChevronRight,
   ShieldCheck,
   Package,
@@ -38,50 +37,54 @@ function formatTimeAgo(iso?: string) {
   return d.toLocaleDateString("vi-VN");
 }
 
-/**
- * Map visual theo loại thông báo.
- * Ưu tiên lấy type từ: n.type | n.category | n.meta.type
- * - order/đơn: icon Package (màu xanh)
- * - system: icon ShieldCheck (màu emerald)
- */
+/** Lấy type/cate an toàn */
 function pickType(n: any) {
   const raw =
     n?.eventCode ?? n?.type ?? n?.category ?? n?.meta?.type ?? "SYSTEM";
-
-  // nếu raw là object thì cố lấy field code/name/type
   const value =
     raw && typeof raw === "object"
       ? (raw.code ?? raw.type ?? raw.name ?? "SYSTEM")
       : raw;
-
   return String(value).toUpperCase();
 }
 
+/**
+ * Order/Đơn: theme BLUE
+ * System: theme EMERALD
+ * Bạn chỉnh rule isOrder ở đây theo backend thực tế
+ */
 function getNotiVisual(n: any) {
-  const raw = n?.type ?? "SYSTEM";
-  const type = String(raw).toUpperCase();
+  const type = pickType(n);
+
   const isOrder =
     type === "REPORT_STATUS_CHANGED" ||
     type === "REPORT_ASSIGNED" ||
-    type.startsWith("REPORT_");
+    type.startsWith("REPORT_") ||
+    type.includes("ORDER") ||
+    type.includes("ASSIGN");
 
   if (isOrder) {
     return {
       Icon: Package,
+      rowUnread: "bg-blue-50/30",
+      rowHover: "hover:bg-blue-50/50",
       wrapUnread: "bg-blue-100 ring-2 ring-blue-200",
       iconUnread: "text-blue-600",
       dotUnread: "bg-blue-600",
       barUnread: "bg-blue-600",
+      readText: "text-blue-600",
     };
   }
 
-  // SYSTEM
   return {
     Icon: ShieldCheck,
+    rowUnread: "bg-emerald-50/30",
+    rowHover: "hover:bg-emerald-50/50",
     wrapUnread: "bg-emerald-100 ring-2 ring-emerald-200",
     iconUnread: "text-emerald-600",
     dotUnread: "bg-emerald-600",
     barUnread: "bg-emerald-600",
+    readText: "text-emerald-600",
   };
 }
 
@@ -130,8 +133,8 @@ export default function NotificationPanel({
     if (page === 1) setItems(newItems);
     else {
       setItems((prev) => {
-        const map = new Map();
-        [...prev, ...newItems].forEach((x) => map.set(x.id, x));
+        const map = new Map<string, any>();
+        [...prev, ...newItems].forEach((x) => map.set(String(x.id), x));
         return Array.from(map.values());
       });
     }
@@ -153,9 +156,9 @@ export default function NotificationPanel({
     } catch {
       // không chặn UX
     } finally {
-      // dropdown thì đóng lại cho "mượt"
       if (variant === "dropdown") onClose?.();
-      // nếu muốn điều hướng theo meta/type thì xử lý ở đây
+      // nếu muốn điều hướng theo type/meta:
+      // navigate(...);
     }
   };
 
@@ -169,21 +172,21 @@ export default function NotificationPanel({
       className={[
         "flex flex-col bg-white",
         variant === "dropdown"
-          ? "w-full max-w-md shadow-2xl rounded-xl overflow-hidden border border-slate-200"
+          ? "w-full max-w-md shadow-2xl rounded-xl overflow-hidden"
           : "w-full max-w-3xl mx-auto",
       ].join(" ")}
     >
       {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-200 bg-emerald-50/40">
+      <div className="px-5 py-4 border-b border-slate-200 bg-emerald-600">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 rounded-xl">
+            <div className="p-2 bg-emerald-50 rounded-xl">
               <Bell className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800">Thông báo</h2>
+              <h2 className="text-lg font-bold text-white">Thông báo</h2>
               {unreadCount > 0 && (
-                <p className="text-xs text-slate-600 mt-0.5">
+                <p className="text-xs text-white mt-0.5">
                   {unreadCount} thông báo mới
                 </p>
               )}
@@ -191,7 +194,7 @@ export default function NotificationPanel({
           </div>
 
           {unreadCount > 0 && filter !== "UNREAD" && (
-            <span className="px-2 py-0.5 bg-red-500/90 text-white text-xs rounded-full">
+            <span className="px-2 py-0.5 bg-red-600 text-white text-xs rounded-full">
               {unreadCount} Chưa đọc
             </span>
           )}
@@ -243,14 +246,14 @@ export default function NotificationPanel({
       {/* List */}
       <div
         className={[
-          "bg-white overflow-y-auto custom-scrollbar",
+          "bg-white overflow-y-auto custom-scrollbar border border-slate-200",
           variant === "dropdown" ? "max-h-[400px]" : "min-h-[60vh]",
         ].join(" ")}
       >
         {list.isFetching && page === 1 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">
-            <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mb-3" />
-            <p className="text-sm text-slate-500">Đang tải thông báo...</p>
+            <LoadingSpinner size="8" />
+            <p className="text-sm text-slate-500 mt-3">Đang tải thông báo...</p>
           </div>
         ) : list.isError ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -275,8 +278,9 @@ export default function NotificationPanel({
                   onClick={() => onClickItem(n)}
                   className={[
                     "w-full text-left px-5 py-4 transition-all group relative",
-                    "hover:bg-emerald-50/50 active:scale-[0.99]",
-                    unread ? "bg-emerald-50/30" : "bg-white hover:bg-slate-50",
+                    "active:scale-[0.99]",
+                    v.rowHover,
+                    unread ? v.rowUnread : "bg-white hover:bg-slate-50",
                   ].join(" ")}
                 >
                   {/* Unread indicator bar */}
@@ -318,6 +322,7 @@ export default function NotificationPanel({
                         >
                           {n.title}
                         </h3>
+
                         {unread && (
                           <div
                             className={[
@@ -341,8 +346,14 @@ export default function NotificationPanel({
                         <span className="text-xs text-slate-400 font-medium">
                           {formatTimeAgo(n.createdAt)}
                         </span>
+
                         {!unread && (
-                          <div className="flex items-center gap-1 text-emerald-600">
+                          <div
+                            className={[
+                              "flex items-center gap-1",
+                              v.readText,
+                            ].join(" ")}
+                          >
                             <Check className="w-3 h-3" />
                             <span className="text-xs font-medium">Đã đọc</span>
                           </div>
@@ -351,7 +362,7 @@ export default function NotificationPanel({
                     </div>
                   </div>
 
-                  {/* Hover effect */}
+                  {/* Hover arrow */}
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <ChevronRight className="w-5 h-5 text-slate-400" />
                   </div>
@@ -374,7 +385,7 @@ export default function NotificationPanel({
                 >
                   {list.isFetching ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <LoadingSpinner color="white" size="4" inline />
                       Đang tải...
                     </>
                   ) : canLoadMore ? (
@@ -425,7 +436,7 @@ export default function NotificationPanel({
       {marking && (
         <div className="px-5 py-3 border-t border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2 text-sm text-slate-600">
-            <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+            <LoadingSpinner size="4" inline />
             <span>Đang cập nhật...</span>
           </div>
         </div>

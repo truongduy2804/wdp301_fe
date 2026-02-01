@@ -8,7 +8,7 @@ export const menuEnterprise = {
       requestHistory: "Lịch sử đơn đã hoàn thành",
       collectors: "Quản lý nhân sự thu gom",
       rewardRules: "Quy tắc điểm thưởng",
-      settings: "Cài đặt doanh nghiệp",
+      settings: "Thông tin doanh nghiệp",
     },
   },
   en: {

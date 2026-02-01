@@ -3,7 +3,6 @@ const endPoint = {
   HOMEPAGE: "/",
 
   // ===== Auth =====
-
   AUTH: "/auth",
   LOGIN: "/auth?view=login",
   REGISTER: "/auth?view=register",
@@ -14,6 +13,10 @@ const endPoint = {
   ENTERPRISE: "/enterprise",
   COLLECTOR: "/collector",
   CITIZEN: "/citizen",
+
+  // Account (relative children) - dùng chung cho mọi role
+  PROFILE: "/profile",
+  CHANGE_PASSWORD: "/change-password",
 
   // ===== Enterprise (relative children) =====
   ENTERPRISE_CHILD: {
@@ -41,9 +44,9 @@ const endPoint = {
 
   // ===== Admin (relative children) =====
   ADMIN_CHILD: {
-    MONITOR: "monitor", // giám sát hệ thống
-    ACCOUNTS: "accounts", // quản lý tài khoản + phân quyền
-    COMPLAINTS: "complaints", // tranh chấp / khiếu nại
+    MONITOR: "monitor",
+    ACCOUNTS: "accounts",
+    COMPLAINTS: "complaints",
   },
 } as const;
 

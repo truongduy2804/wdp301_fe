@@ -4,8 +4,8 @@ import { useLocation } from "react-router-dom";
 import { Switch } from "antd";
 import { toast } from "react-toastify";
 
-import UserMenu from "./userMenu";
-import NotificationPanel from "./notificationPanel";
+import UserMenu from "./UserMenu";
+import NotificationPanel from "./Notification/notificationPanel";
 
 import { ACCESS_MAP, type Role } from "@/lib/role";
 
@@ -201,7 +201,7 @@ export default function PortalHeader({
           </h1>
         </div>
 
-        {/* ✅ ENTERPRISE: switch desktop */}
+        {/* ENTERPRISE: switch desktop */}
         {isEnterprise && (
           <div className="hidden md:flex items-center gap-3 px-3 py-2 rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm">
             <Switch
@@ -218,7 +218,7 @@ export default function PortalHeader({
           </div>
         )}
 
-        {/* ✅ ENTERPRISE: switch mobile */}
+        {/* ENTERPRISE: switch mobile */}
         {isEnterprise && (
           <div className="md:hidden flex items-center gap-2">
             <Switch

@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import {
   Leaf,
@@ -52,7 +58,7 @@ const BrandMark = ({
   );
 };
 
-/** RotatingPhrase (không dùng useReducedMotion nữa) */
+/** RotatingPhrase */
 const RotatingPhrase = ({
   phrases,
   intervalMs = 2600,
@@ -93,7 +99,7 @@ const RotatingPhrase = ({
   );
 };
 
-/** RotatingStat (không dùng useReducedMotion nữa) */
+/** RotatingStat */
 const RotatingStat = ({
   items,
   intervalMs = 2600,
@@ -241,7 +247,7 @@ const AuthShowcase: React.FC = () => {
     "Bảo mật dữ liệu & minh bạch",
   ];
 
-  // ✅ particles chuyển qua CSS animation (nhẹ hơn framer infinite)
+  // particles CSS
   const particles = useMemo(() => {
     return Array.from({ length: 12 }).map((_, i) => ({
       id: i,
@@ -251,6 +257,23 @@ const AuthShowcase: React.FC = () => {
       delay: (i * 0.25) % 2.5,
       duration: 4 + ((i * 11) % 8),
     }));
+  }, []);
+
+  // ✅ để căn giữa trên/dưới “đều” theo toàn màn hình (header vẫn chiếm layout)
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerH, setHeaderH] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+
+    const update = () => setHeaderH(el.getBoundingClientRect().height);
+
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+
+    return () => ro.disconnect();
   }, []);
 
   return (
@@ -270,7 +293,6 @@ const AuthShowcase: React.FC = () => {
             100%{ transform: translate3d(0,0,0); opacity:.25; }
           }
 
-          /*  Force override nếu project có global reduced-motion kill animations */
           @media (prefers-reduced-motion: reduce) {
             .force-motion .animate-spin-slow { animation: spin-slow 20s linear infinite !important; }
             .force-motion .animate-spin-reverse { animation: spin-reverse 28s linear infinite !important; }
@@ -292,7 +314,7 @@ const AuthShowcase: React.FC = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(16,185,129,0.16)_1px,transparent_0)] bg-[size:18px_18px]" />
         </div>
 
-        {/* particles (CSS animated) */}
+        {/* particles */}
         <div className="absolute inset-0 pointer-events-none">
           {particles.map((p) => (
             <div
@@ -310,9 +332,10 @@ const AuthShowcase: React.FC = () => {
           ))}
         </div>
 
-        <div className="relative w-full px-6 py-4 flex flex-col">
-          {/* top brand row */}
-          <div className="flex items-center justify-between">
+        {/* ✅ Layout: orbit bự hơn + căn giữa trên/dưới đều (header vẫn in-flow) */}
+        <div className="relative w-full h-[100dvh] px-6 py-4 flex flex-col">
+          {/* Header */}
+          <div ref={headerRef} className="flex items-center justify-between">
             <BrandMark textMode="inline" sizeClassName="h-14 w-14" />
             <div className="hidden xl:inline-flex items-center gap-2 rounded-full border border-emerald-200/70 bg-white px-3 py-1.5 text-sm font-medium text-emerald-800 backdrop-blur">
               <Sparkles className="h-5 w-5" />
@@ -320,141 +343,125 @@ const AuthShowcase: React.FC = () => {
             </div>
           </div>
 
-          {/*  GIỮ BỐ CỤC TRÊN/DƯỚI */}
-          <div className="mt-5 items-center">
-            {/* TOP CONTENT
+          {/* Center area */}
+          <div className="flex-1 flex items-center justify-center">
             <motion.div
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 10, scale: 0.99 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="max-w-165"
+              //  BỰ HƠN (tăng/giảm 42rem tuỳ bạn)
+              className="relative w-[min(32rem,92vw)]"
             >
-              <h2 className="text-5xl font-black tracking-tight text-slate-900 leading-[1.05]">
-                Bảo vệ môi trường{" "}
-                <span className="text-emerald-700">từng bước nhỏ</span>
-              </h2>
+              <div className="relative w-full aspect-square mx-auto overflow-visible">
+                <div
+                  className="
+                    absolute inset-0 rounded-full
+                    bg-white/90
+                    border border-emerald-200/70
+                    ring-1 ring-white/80
+                    shadow-[0_28px_80px_-55px_rgba(2,6,23,0.14)]
+                  "
+                >
+                  <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.78)_62%,rgba(255,255,255,0.62)_100%)]" />
 
-              <p className="mt-5 text-slate-600 leading-relaxed">
-                ECONET kết nối{" "}
-                <span className="font-semibold text-slate-800">người dân</span>,{" "}
-                <span className="font-semibold text-slate-800">
-                  đơn vị thu gom
-                </span>{" "}
-                và{" "}
-                <span className="font-semibold text-slate-800">
-                  doanh nghiệp tái chế
-                </span>{" "}
-                theo khu vực — mang đến quy trình quản lý rác thải minh bạch,
-                nhanh chóng và dễ sử dụng.
-              </p>
-            </motion.div> */}
+                  <div className="absolute inset-2.5 rounded-full border border-emerald-200/70" />
+                  <div className="absolute inset-5.5 rounded-full border border-teal-200/45" />
 
-            {/* BOTTOM ORBIT */}
-            <div className="mt-8 flex-1 flex flex-col items-center">
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.99 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="relative w-full max-w-120 -mt-2"
-              >
-                <div className="relative w-full aspect-square mx-auto overflow-visible">
+                  <div className="absolute inset-8 rounded-full border-2 border-emerald-400/30 animate-spin-slow">
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-600 rounded-full shadow-lg shadow-emerald-500/35" />
+                    <div className="absolute top-1/4 -left-2 w-3.5 h-3.5 bg-emerald-500 rounded-full shadow-md shadow-emerald-500/25" />
+                    <div className="absolute bottom-1/3 -right-1 w-3 h-3 bg-teal-500 rounded-full shadow-md shadow-teal-500/20" />
+                  </div>
+
+                  <div className="absolute inset-16 rounded-full border border-teal-400/25 animate-spin-reverse">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-teal-500 rounded-full shadow-md" />
+                  </div>
+
+                  {/* center */}
                   <div
                     className="
-                      absolute inset-0 rounded-full
-                      bg-white/90
-                      border border-emerald-200/70
-                      ring-1 ring-white/80
-                      shadow-[0_28px_80px_-55px_rgba(2,6,23,0.14)]
+                      absolute inset-24 rounded-full
+                      bg-white/92 backdrop-blur
+                      border border-slate-200/80
+                      ring-1 ring-emerald-100/90
+                      shadow-[0_18px_50px_-30px_rgba(16,185,129,0.22)]
+                      flex flex-col items-center justify-center p-8 text-center
                     "
                   >
-                    <div className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.78)_62%,rgba(255,255,255,0.62)_100%)]" />
-
-                    <div className="absolute inset-2.5 rounded-full border border-emerald-200/70" />
-                    <div className="absolute inset-5.5 rounded-full border border-teal-200/45" />
-
-                    <div className="absolute inset-8 rounded-full border-2 border-emerald-400/30 animate-spin-slow">
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-600 rounded-full shadow-lg shadow-emerald-500/35" />
-                      <div className="absolute top-1/4 -left-2 w-3.5 h-3.5 bg-emerald-500 rounded-full shadow-md shadow-emerald-500/25" />
-                      <div className="absolute bottom-1/3 -right-1 w-3 h-3 bg-teal-500 rounded-full shadow-md shadow-teal-500/20" />
+                    <BrandMark textMode="stack" sizeClassName="h-16 w-16" />
+                    <div className="mt-6">
+                      <RotatingStat items={stats} intervalMs={2600} />
                     </div>
-
-                    <div className="absolute inset-16 rounded-full border border-teal-400/25 animate-spin-reverse">
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-teal-500 rounded-full shadow-md" />
-                    </div>
-
-                    {/* center */}
-                    <div
-                      className="
-                        absolute inset-24 rounded-full
-                        bg-white/92 backdrop-blur
-                        border border-slate-200/80
-                        ring-1 ring-emerald-100/90
-                        shadow-[0_18px_50px_-30px_rgba(16,185,129,0.22)]
-                        flex flex-col items-center justify-center p-8 text-center
-                      "
-                    >
-                      <BrandMark textMode="stack" sizeClassName="h-16 w-16" />
-                      <div className="mt-6">
-                        <RotatingStat items={stats} intervalMs={2600} />
-                      </div>
-                      <div className="mt-4 w-20 h-px bg-emerald-200/90" />
-                      <RotatingPhrase
-                        phrases={circlePhrases}
-                        intervalMs={2600}
-                        className="mt-3 text-sm font-medium text-slate-700"
-                      />
-                    </div>
-
-                    {/* floating icons */}
-                    <FloatingIcon
-                      className="absolute top-8 right-16 z-10"
-                      icon={<Recycle className="h-5 w-5" strokeWidth={2.4} />}
+                    <div className="mt-4 w-20 h-px bg-emerald-200/90" />
+                    <RotatingPhrase
+                      phrases={circlePhrases}
+                      intervalMs={2600}
+                      className="mt-3 text-sm font-medium text-slate-700"
                     />
-                    <FloatingIcon
-                      className="absolute bottom-14 left-12 z-10"
-                      icon={<Truck className="h-5 w-5" strokeWidth={2.4} />}
-                      delay={0.7}
-                    />
-                    <FloatingIcon
-                      className="absolute top-14 left-10 z-10"
-                      icon={<MapPin className="h-5 w-5" strokeWidth={2.4} />}
-                      delay={1.2}
-                    />
-                    <FloatingIcon
-                      className="absolute bottom-12 right-14 z-10"
-                      icon={
-                        <Smartphone className="h-5 w-5" strokeWidth={2.4} />
-                      }
-                      delay={1.6}
-                    />
-
-                    {/* badge */}
-                    <div className="absolute inset-0 animate-spin-slow-star">
-                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-white/75 rounded-full border border-emerald-300/55 flex items-center justify-center shadow-md">
-                        <Sparkles className="w-5 h-5 text-emerald-700" />
-                      </div>
-                    </div>
                   </div>
 
-                  {/* feature pills */}
-                  <div className="absolute inset-0 hidden xl:block pointer-events-none">
-                    {[
-                      { ...features[0], pos: "left-[-32%] top-[24%]" },
-                      { ...features[1], pos: "left-[-28%] top-[54%]" },
-                      { ...features[2], pos: "right-[-26%] top-[62%]" },
-                    ].map((f) => (
-                      <FeatureChip
-                        key={f.text}
-                        icon={f.icon}
-                        text={f.text}
-                        className={f.pos}
-                      />
-                    ))}
+                  {/* floating icons */}
+                  <FloatingIcon
+                    className="absolute top-8 right-16 z-10"
+                    icon={<Recycle className="h-5 w-5" strokeWidth={2.4} />}
+                  />
+                  <FloatingIcon
+                    className="absolute bottom-14 left-12 z-10"
+                    icon={<Truck className="h-5 w-5" strokeWidth={2.4} />}
+                    delay={0.7}
+                  />
+                  <FloatingIcon
+                    className="absolute top-14 left-10 z-10"
+                    icon={<MapPin className="h-5 w-5" strokeWidth={2.4} />}
+                    delay={1.2}
+                  />
+                  <FloatingIcon
+                    className="absolute bottom-12 right-14 z-10"
+                    icon={<Smartphone className="h-5 w-5" strokeWidth={2.4} />}
+                    delay={1.6}
+                  />
+
+                  {/* badge */}
+                  <div className="absolute inset-0 animate-spin-slow-star">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-white/75 rounded-full border border-emerald-300/55 flex items-center justify-center shadow-md">
+                      <Sparkles className="w-5 h-5 text-emerald-700" />
+                    </div>
                   </div>
                 </div>
-              </motion.div>
-            </div>
+
+                {/* feature pills */}
+                <div className="absolute inset-0 hidden xl:block pointer-events-none">
+                  {[
+                    {
+                      icon: features[0].icon,
+                      text: features[0].text,
+                      pos: "left-[-32%] top-[24%]",
+                    },
+                    {
+                      icon: features[1].icon,
+                      text: features[1].text,
+                      pos: "left-[-28%] top-[54%]",
+                    },
+                    {
+                      icon: features[2].icon,
+                      text: features[2].text,
+                      pos: "right-[-26%] top-[62%]",
+                    },
+                  ].map((f) => (
+                    <FeatureChip
+                      key={f.text}
+                      icon={f.icon}
+                      text={f.text}
+                      className={f.pos}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
           </div>
+
+          {/* Spacer dưới = chiều cao header => cân đối trên/dưới */}
+          <div aria-hidden className="shrink-0" style={{ height: headerH }} />
         </div>
       </div>
     </MotionConfig>

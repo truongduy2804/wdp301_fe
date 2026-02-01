@@ -12,6 +12,8 @@ export const tagTypes = [
   "OrderAcceptance",
   "Collectors",
   "Notifications",
+  "AccountProfile",
+  "EnterpriseProfile",
 ] as const;
 
 //  Xuất kiểu để TypeScript autocomplete & kiểm tra chính xác
