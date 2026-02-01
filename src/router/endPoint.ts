@@ -44,6 +44,7 @@ const endPoint = {
     MONITOR: "monitor", // giám sát hệ thống
     ACCOUNTS: "accounts", // quản lý tài khoản + phân quyền
     COMPLAINTS: "complaints", // tranh chấp / khiếu nại
+    ENTERPRISE_MAP: "enterprise-map", // bản đồ doanh nghiệp
   },
 } as const;
 

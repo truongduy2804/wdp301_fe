@@ -6,6 +6,8 @@ import { Toaster } from "react-hot-toast";
 import "./index.css";
 import App from "./App";
 
+console.log("DEBUG: VITE_API_URL =", import.meta.env.VITE_API_URL);
+
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <App />

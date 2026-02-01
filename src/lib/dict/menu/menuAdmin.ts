@@ -6,6 +6,7 @@ export const menuAdmin = {
       userManagement: "Tài khoản & phân quyền",
       systemMonitoring: "Giám sát hệ thống",
       complaintsDisputes: "Khiếu nại / Tranh chấp",
+      enterpriseMap: "Bản đồ doanh nghiệp",
     },
   },
   en: {
@@ -14,6 +15,7 @@ export const menuAdmin = {
       userManagement: "Accounts & Permissions",
       systemMonitoring: "System Monitoring",
       complaintsDisputes: "Complaints / Disputes",
+      enterpriseMap: "Enterprise Map",
     },
   },
 } as const;

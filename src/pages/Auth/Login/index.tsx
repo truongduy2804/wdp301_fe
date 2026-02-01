@@ -38,25 +38,44 @@ const validateIdentifier = (value: string) => {
   return "Định dạng email không hợp lệ";
 };
 
-function mockLoginApi(identifier: string, password: string): Promise<MockRole> {
-  return new Promise((resolve, reject) => {
-    window.setTimeout(() => {
-      const id = normalize(identifier);
+const API_URL = import.meta.env.VITE_API_URL || "";
 
-      const adminOk =
-        (id === "admin@gmail.com" || id === "admin@econet.vn") &&
-        password === "1234";
+async function loginApi(identifier: string, password: string): Promise<{ token: string; role: string; roleId: number }> {
+  // Đảm bảo URL kết thúc bằng /api/v1 nếu chưa có
+  const cleanBase = API_URL.endsWith("/") ? API_URL.slice(0, -1) : API_URL;
+  const fullUrl = cleanBase.endsWith("/api/v1") ? `${cleanBase}/auth/login` : `${cleanBase}/api/v1/auth/login`;
 
-      const enterpriseOk =
-        (id === "enterprise@gmail.com" || id === "enterprise@econet.vn") &&
-        password === "1234";
+  console.log("DEBUG: Calling Login API:", fullUrl);
 
-      if (adminOk) return resolve("ADMIN");
-      if (enterpriseOk) return resolve("ENTERPRISE");
-
-      return reject(new Error("Sai tài khoản hoặc mật khẩu"));
-    }, 650);
+  const response = await fetch(fullUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: identifier,
+      password: password,
+    }),
   });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Sai tài khoản hoặc mật khẩu");
+  }
+
+  const res = await response.json();
+  console.log("DEBUG: Full Login Response (Fixed):", res);
+
+  const data = res.data || {};
+  const token = data.backendToken?.accessToken || res.accessToken || res.token || data.token;
+  const role = data.user?.role?.name || data.user?.role || res.role || "ADMIN";
+  const roleId = data.user?.roleId || data.user?.role?.id || res.roleId || 4;
+
+  return {
+    token,
+    role,
+    roleId,
+  };
 }
 
 const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
@@ -93,15 +112,28 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
     setError(null);
 
     try {
-      const role = await mockLoginApi(email, password);
+      const result = await loginApi(email, password);
+      console.log("DEBUG: Login Success Activity:", result);
+
+      // PAUSE for debugging 401
+      // alert("Đã nhận Token từ Backend. Kiểm tra Console trước khi nhấn OK để tiếp tục.");
 
       const store = remember ? localStorage : sessionStorage;
-      store.setItem("mock_user", normalize(email));
-      store.setItem("mock_role", role);
+      store.setItem("mock_user", normalize(email)); // Giữ key cũ để tương thích
+      store.setItem("mock_role", result.role);
+      store.setItem("mock_role_id", String(result.roleId));
+      store.setItem("econet_access_token", result.token);
+
+      // Đồng bộ với LS_USER của mockAuthApi (nếu cần)
+      store.setItem("econet_user", JSON.stringify({
+        fullname: email.split("@")[0], // Tạm thời lấy từ email
+        email: email,
+        role: result.role,
+      }));
 
       toast.success("Đăng nhập thành công!", { autoClose: 1400 });
 
-      const target = role === "ADMIN" ? endPoint.ADMIN : endPoint.ENTERPRISE;
+      const target = result.role === "ADMIN" ? endPoint.ADMIN : endPoint.ENTERPRISE;
       navigate(target, { replace: true });
     } catch (err: any) {
       triggerError(err?.message ?? "Đăng nhập thất bại");
