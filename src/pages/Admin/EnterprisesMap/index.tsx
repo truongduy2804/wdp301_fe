@@ -1,9 +1,9 @@
-// src/pages/Admin/EnterprisesMap/index.tsx
 import React, { useState } from "react";
 import AdminMapGuard from "@/components/Admin/EnterprisesMap/AdminMapGuard";
 import MapComponent from "@/components/Admin/EnterprisesMap/MapComponent";
 import SearchBar from "@/components/Admin/EnterprisesMap/SearchBar";
 import LocationFilter from "@/components/Admin/EnterprisesMap/LocationFilter";
+import FilterSidebar from "@/components/Admin/EnterprisesMap/FilterSidebar";
 import EnterpriseDetailPanel from "@/components/Admin/EnterprisesMap/EnterpriseDetailPanel";
 import { fetchEnterprisesMap, type EnterpriseMapLocation } from "@/api/admin/enterprise-map";
 
@@ -11,7 +11,7 @@ const AdminEnterprisesMap: React.FC = () => {
     const [enterprises, setEnterprises] = useState<EnterpriseMapLocation[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<number | null>(null);
-    const [statusFilter, setStatusFilter] = useState<string>("ACTIVE");
+    const [statusFilter, setStatusFilter] = useState<string>("");
     const [flyToLocation, setFlyToLocation] = useState<{ lat: number; lng: number } | null>(null);
 
     React.useEffect(() => {
@@ -82,9 +82,18 @@ const AdminEnterprisesMap: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Location Filter - Left Floating */}
-                <div className="absolute top-20 left-4 bottom-4 z-[1000] pointer-events-none">
-                    <div className="h-full pointer-events-auto">
+                {/* Left Controls Stack */}
+                <div className="absolute top-20 left-4 bottom-4 z-[1000] flex flex-col gap-4 pointer-events-none">
+                    {/* Status Filter */}
+                    <div className="pointer-events-auto shrink-0 shadow-lg rounded-2xl">
+                        <FilterSidebar
+                            currentStatus={statusFilter}
+                            onStatusChange={setStatusFilter}
+                        />
+                    </div>
+
+                    {/* Location Filter */}
+                    <div className="pointer-events-auto flex-1 overflow-visible">
                         <LocationFilter
                             onLocationSelect={handleLocationFilterSelect}
                         />

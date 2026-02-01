@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import type { EnterpriseMapLocation } from "@/api/admin/enterprise-map";
 import { fetchEnterprisesMap } from "@/api/admin/enterprise-map";
 import { toast } from "react-toastify";
+import { translateStatus } from "@/utils/statusTranslation";
 
 // Fix Leaflet marker icons issues with Vite
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -89,7 +90,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ enterprises, isLoading, onS
                                 <div className="mt-2 flex items-center justify-between">
                                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${ent.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
                                         }`}>
-                                        {ent.status}
+                                        {translateStatus(ent.status)}
                                     </span>
                                     <button
                                         className="text-emerald-600 text-[11px] font-bold hover:underline"

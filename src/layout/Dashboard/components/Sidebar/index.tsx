@@ -130,32 +130,28 @@ function NavLink({
     >
       {/* Active indicator bar */}
       <span
-        className={`absolute left-0 top-1/2 -translate-y-1/2 h-full w-0.5 ${UI.indicatorBar} transition-all duration-300 ease-out ${
-          active ? "opacity-100 scale-100" : "opacity-0 scale-y-50"
-        }`}
+        className={`absolute left-0 top-1/2 -translate-y-1/2 h-full w-0.5 ${UI.indicatorBar} transition-all duration-300 ease-out ${active ? "opacity-100 scale-100" : "opacity-0 scale-y-50"
+          }`}
       />
 
       {Icon ? (
         <Icon
           size={18}
-          className={`shrink-0 transition-all duration-300 ease-out ${
-            active ? UI.iconActive : UI.iconIdle
-          }`}
+          className={`shrink-0 transition-all duration-300 ease-out ${active ? UI.iconActive : UI.iconIdle
+            }`}
           strokeWidth={active ? 2.5 : 2}
         />
       ) : (
         <span
-          className={`h-1.5 w-1.5 rounded-full shrink-0 transition-all duration-300 ease-out ${
-            active ? UI.dotActive : UI.dotIdle
-          }`}
+          className={`h-1.5 w-1.5 rounded-full shrink-0 transition-all duration-300 ease-out ${active ? UI.dotActive : UI.dotIdle
+            }`}
         />
       )}
 
       {!collapsed && (
         <span
-          className={`truncate transition-all duration-300 ease-out ${
-            active ? "font-semibold translate-x-0.5" : "font-medium"
-          }`}
+          className={`truncate transition-all duration-300 ease-out ${active ? "font-semibold translate-x-0.5" : "font-medium"
+            }`}
         >
           {label}
         </span>
@@ -319,12 +315,11 @@ function Group({
         className={`relative w-full flex items-center justify-between px-3 py-2.5 lg:py-3 rounded-r-lg 
           text-[11px] lg:text-[12px] font-semibold uppercase tracking-wider transition-all duration-300 ease-out group
           ${collapsed ? "justify-center" : ""}
-          ${
-            open && !collapsed
-              ? UI.groupOpen
-              : hasActive && collapsed
-                ? UI.groupActiveCollapsed
-                : UI.groupIdle
+          ${open && !collapsed
+            ? UI.groupOpen
+            : hasActive && collapsed
+              ? UI.groupActiveCollapsed
+              : UI.groupIdle
           }`}
       >
         {!collapsed ? (
@@ -333,11 +328,10 @@ function Group({
               <Icon
                 size={16}
                 strokeWidth={accent ? 2.5 : 2}
-                className={`transition-all duration-300 ease-out ${
-                  accent
+                className={`transition-all duration-300 ease-out ${accent
                     ? "text-emerald-600 scale-110"
                     : "text-slate-400 group-hover:text-emerald-600 group-hover:scale-105"
-                }`}
+                  }`}
               />
             )}
             <span className={`${accent ? "text-emerald-700" : ""}`}>
@@ -350,11 +344,10 @@ function Group({
               <Icon
                 size={18}
                 strokeWidth={hasActive ? 2.5 : 2}
-                className={`transition-all duration-300 ease-out ${
-                  hasActive
+                className={`transition-all duration-300 ease-out ${hasActive
                     ? "text-emerald-600 scale-110"
                     : "text-slate-400 group-hover:text-emerald-600 group-hover:scale-105"
-                }`}
+                  }`}
               />
             </span>
           )
@@ -362,29 +355,26 @@ function Group({
 
         {!collapsed && (
           <span
-            className={`transition-transform duration-500 ease-out ${
-              open ? "rotate-180" : ""
-            }`}
+            className={`transition-transform duration-500 ease-out ${open ? "rotate-180" : ""
+              }`}
           >
             <ChevronDown
               size={14}
               strokeWidth={2}
-              className={`${
-                accent
+              className={`${accent
                   ? "text-emerald-600"
                   : "text-slate-400 group-hover:text-emerald-600"
-              }`}
+                }`}
             />
           </span>
         )}
       </button>
 
       <div
-        className={`grid transition-all duration-500 ease-in-out ${
-          open && !collapsed
+        className={`grid transition-all duration-500 ease-in-out ${open && !collapsed
             ? "grid-rows-[1fr] opacity-100 mt-1"
             : "grid-rows-[0fr] opacity-0"
-        }`}
+          }`}
       >
         <div className="overflow-hidden">
           <div className="space-y-0.5 pb-1">{children}</div>
@@ -397,7 +387,7 @@ function Group({
 /* ===== Main Sidebar ===== */
 export default function Sidebar({
   role,
-  version = "v1.0.0",
+  // version = "v1.0.0",
   branches,
   initialBranch,
 }: {
@@ -512,11 +502,10 @@ export default function Sidebar({
         {/* Full logo */}
         <div
           className={`absolute inset-0 flex items-center justify-start lg:justify-center
-    pl-5 sm:pl-0 pt-1 transition-all duration-500 ease-out ${
-      collapsed
-        ? "opacity-0 scale-90 pointer-events-none"
-        : "opacity-100 scale-100 delay-100"
-    }`}
+    pl-5 sm:pl-0 pt-1 transition-all duration-500 ease-out ${collapsed
+              ? "opacity-0 scale-90 pointer-events-none"
+              : "opacity-100 scale-100 delay-100"
+            }`}
         >
           <BrandMark
             textMode="inline"
@@ -529,11 +518,10 @@ export default function Sidebar({
         {/* Icon-only */}
         <div
           className={`absolute inset-0 flex items-center justify-start lg:justify-center
-    pl-6 sm:pl-0 transition-all duration-500 ease-out ${
-      collapsed
-        ? "opacity-100 scale-100 -translate-x-1.5 delay-100"
-        : "opacity-0 scale-90 pointer-events-none"
-    }`}
+    pl-6 sm:pl-0 transition-all duration-500 ease-out ${collapsed
+              ? "opacity-100 scale-100 -translate-x-1.5 delay-100"
+              : "opacity-0 scale-90 pointer-events-none"
+            }`}
         >
           <BrandMark
             sizeClassName="h-10 w-10 lg:h-11 lg:w-11"
@@ -555,9 +543,8 @@ export default function Sidebar({
           <ChevronLeft
             size={14}
             strokeWidth={2.5}
-            className={`transition-all duration-500 ease-out ${
-              collapsed ? "rotate-180" : "rotate-0"
-            }`}
+            className={`transition-all duration-500 ease-out ${collapsed ? "rotate-180" : "rotate-0"
+              }`}
           />
         </button>
 
@@ -590,9 +577,8 @@ export default function Sidebar({
               </span>
               <ChevronDown
                 size={16}
-                className={`text-slate-400 group-hover:text-emerald-600 shrink-0 transition-all duration-500 ease-out ${
-                  branchOpen ? "rotate-180" : "rotate-0"
-                }`}
+                className={`text-slate-400 group-hover:text-emerald-600 shrink-0 transition-all duration-500 ease-out ${branchOpen ? "rotate-180" : "rotate-0"
+                  }`}
                 strokeWidth={2}
               />
             </button>
@@ -612,20 +598,18 @@ export default function Sidebar({
                           setBranch(b);
                           setBranchOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-3 text-sm lg:text-[14px] font-medium transition-all duration-200 ease-out ${
-                          b === branch
+                        className={`w-full text-left px-4 py-3 text-sm lg:text-[14px] font-medium transition-all duration-200 ease-out ${b === branch
                             ? "bg-linear-to-r from-emerald-50 via-emerald-50/80 to-transparent text-emerald-800"
                             : "text-slate-700 hover:bg-linear-to-r hover:from-slate-50 hover:to-transparent hover:text-slate-900"
-                        } ${idx !== branches.length - 1 ? "border-b border-slate-100" : ""}`}
+                          } ${idx !== branches.length - 1 ? "border-b border-slate-100" : ""}`}
                         type="button"
                       >
                         <span className="flex items-center gap-2.5">
                           <span
-                            className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ease-out ${
-                              b === branch
+                            className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ease-out ${b === branch
                                 ? "bg-emerald-500 scale-125"
                                 : "bg-transparent"
-                            }`}
+                              }`}
                           />
                           {b}
                         </span>
@@ -708,9 +692,8 @@ export default function Sidebar({
 
       {/* Footer */}
       <div
-        className={`border-t border-slate-200 transition-all duration-500 ${
-          collapsed ? "px-2 py-3" : "px-4 py-3"
-        }`}
+        className={`border-t border-slate-200 transition-all duration-500 ${collapsed ? "px-2 py-3" : "px-4 py-3"
+          }`}
       >
         {!collapsed ? (
           <div className="space-y-1">
@@ -723,17 +706,17 @@ export default function Sidebar({
               </span>
             </div>
 
-            <div className={`text-[11px] lg:text-[12px] ${UI.footerSub}`}>
+            {/* <div className={`text-[11px] lg:text-[12px] ${UI.footerSub}`}>
               Phiên bản{" "}
               <span className="font-medium text-slate-500">{version}</span>
-            </div>
+            </div> */}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] text-slate-400 font-medium">
+            {/* <span className="text-[10px] text-slate-400 font-medium">
               {version}
-            </span>
+            </span> */}
           </div>
         )}
       </div>

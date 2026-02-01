@@ -43,11 +43,11 @@ export const getInitials = (name?: string): string => {
   return first + last || (name[0]?.toUpperCase() ?? "");
 };
 
-type Status = "online" | "busy" | "offline" | "none";
+type Status = "online" | "busy" | "OFFLINE" | "none";
 const statusColor: Record<Exclude<Status, "none">, string> = {
   online: "bg-emerald-500",
   busy: "bg-amber-500",
-  offline: "bg-gray-400",
+  OFFLINE: "bg-gray-400",
 };
 
 interface AvatarUserImageProps {

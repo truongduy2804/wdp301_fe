@@ -4,6 +4,7 @@ import { X, Building2, Phone, Mail, User, ShieldCheck, MapPin, Calendar, Trash2 
 import type { EnterpriseDetailMap } from "@/api/admin/enterprise-map";
 import { fetchEnterpriseDetailMap } from "@/api/admin/enterprise-map";
 import { motion, AnimatePresence } from "framer-motion";
+import { translateStatus } from "@/utils/statusTranslation";
 
 interface EnterpriseDetailPanelProps {
     enterpriseId: number | null;
@@ -87,7 +88,7 @@ const EnterpriseDetailPanel: React.FC<EnterpriseDetailPanelProps> = ({ enterpris
                                             <div className="flex items-center gap-2 mt-2">
                                                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${enterprise.status === "ACTIVE" ? "bg-emerald-600 text-white" : "bg-slate-600 text-white"
                                                     }`}>
-                                                    {enterprise.status === "ACTIVE" ? "Đang hoạt động" : enterprise.status}
+                                                    {translateStatus(enterprise.status)}
                                                 </span>
                                             </div>
                                         </div>
@@ -110,7 +111,7 @@ const EnterpriseDetailPanel: React.FC<EnterpriseDetailPanelProps> = ({ enterpris
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-2 h-2 rounded-full ${enterprise.status === "ACTIVE" ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
                                                 <p className={`text-sm font-bold ${enterprise.status === "ACTIVE" ? "text-emerald-700" : "text-slate-600"}`}>
-                                                    {enterprise.status === "ACTIVE" ? "Đang hoạt động" : (enterprise.status || "Ngoại tuyến")}
+                                                    {translateStatus(enterprise.status || "OFFLINE")}
                                                 </p>
                                             </div>
                                         </div>

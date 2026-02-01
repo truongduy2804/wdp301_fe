@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Search, MapPin, Loader2, X } from "lucide-react";
 import type { EnterpriseMapLocation } from "@/api/admin/enterprise-map";
+import { translateStatus } from "@/utils/statusTranslation";
 
 interface SearchBarProps {
     enterprises: EnterpriseMapLocation[];
@@ -103,7 +104,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ enterprises, onSelectLocation }) 
                                 </div>
                                 <div className="flex flex-col items-end gap-1">
                                     <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase ${s.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
-                                        {s.status}
+                                        {translateStatus(s.status)}
                                     </span>
                                     <span className="text-[10px] text-slate-400 font-medium">#{s.id}</span>
                                 </div>

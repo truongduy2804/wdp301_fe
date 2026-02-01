@@ -1034,7 +1034,7 @@ export default function EnterpriseSettingsPage() {
                         ["ASSIGNMENT_CREATED", "Tạo phân công mới"],
                         [
                           "COLLECTOR_OFFLINE",
-                          "Collector offline / mất tín hiệu",
+                          "Collector OFFLINE / mất tín hiệu",
                         ],
                         ["WEEKLY_REPORT", "Báo cáo tuần"],
                       ] as Array<[NotificationEvent, string]>
@@ -1366,19 +1366,19 @@ export default function EnterpriseSettingsPage() {
               <div className="px-4 sm:px-5 pb-5 space-y-3">
                 <Toggle
                   checked={true}
-                  onChange={() => {}}
+                  onChange={() => { }}
                   label="Bắt buộc mật khẩu mạnh"
                   desc="Tối thiểu 8 ký tự, có chữ hoa, chữ thường, số."
                 />
                 <Toggle
                   checked={false}
-                  onChange={() => {}}
+                  onChange={() => { }}
                   label="Bật 2FA (Two-factor Authentication)"
                   desc="Khuyến nghị bật cho OWNER/MANAGER."
                 />
                 <Toggle
                   checked={true}
-                  onChange={() => {}}
+                  onChange={() => { }}
                   label="Giới hạn đăng nhập theo thiết bị"
                   desc="Ghi nhớ thiết bị tin cậy và cảnh báo đăng nhập lạ."
                 />
@@ -1519,8 +1519,8 @@ export default function EnterpriseSettingsPage() {
                 label="Status"
                 value={
                   (branchDraft.active ? "ACTIVE" : "INACTIVE") as
-                    | "ACTIVE"
-                    | "INACTIVE"
+                  | "ACTIVE"
+                  | "INACTIVE"
                 }
                 onChange={(v) =>
                   setBranchDraft((d) => ({ ...d, active: v === "ACTIVE" }))

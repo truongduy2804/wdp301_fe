@@ -8,16 +8,16 @@ interface FilterSidebarProps {
 }
 
 const statusOptions = [
+    { value: "", label: "Tất cả", icon: Filter, color: "text-slate-600", bg: "bg-slate-50" },
     { value: "ACTIVE", label: "Đang hoạt động", icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-50" },
-    { value: "PENDING", label: "Đang chờ duyệt", icon: Clock, color: "text-amber-500", bg: "bg-amber-50" },
+    { value: "OFFLINE", label: "Ngoại tuyến", icon: Ghost, color: "text-slate-400", bg: "bg-slate-100" },
     { value: "BANNED", label: "Đã bị khoá", icon: Ban, color: "text-red-500", bg: "bg-red-50" },
     { value: "EXPIRED", label: "Hết hạn", icon: AlertCircle, color: "text-slate-500", bg: "bg-slate-50" },
-    { value: "OFFLINE", label: "Ngoại tuyến", icon: Ghost, color: "text-slate-400", bg: "bg-slate-100" },
 ];
 
 const FilterSidebar: React.FC<FilterSidebarProps> = ({ currentStatus, onStatusChange }) => {
     return (
-        <div className="w-64 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 p-4 h-full flex flex-col gap-4">
+        <div className="w-64 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 p-4 flex flex-col gap-4">
             <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                 <Filter className="w-5 h-5 text-emerald-600" />
                 <h3 className="font-bold text-slate-800">Bộ lọc trạng thái</h3>
@@ -29,8 +29,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ currentStatus, onStatusCh
                         key={opt.value}
                         onClick={() => onStatusChange(opt.value)}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${currentStatus === opt.value
-                                ? `${opt.bg} ${opt.color} ring-1 ring-inset ring-current font-semibold`
-                                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                            ? `${opt.bg} ${opt.color} ring-1 ring-inset ring-current font-semibold`
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                             }`}
                     >
                         <opt.icon className="w-5 h-5" />
