@@ -3,6 +3,7 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import endPoint from "@/router/endPoint";
 import type { Role } from "@/lib/role";
+import RequireRole from "@/router/requireRole";
 
 // layouts
 import PortalLayout from "@/layout/Dashboard/PortalLayout";
@@ -116,5 +117,9 @@ export const portalRoutes: PortalRoute[] = [
 ];
 
 export function PortalRouteWrapper({ role }: { role: Role }) {
-  return <PortalLayout role={role} />;
+  return (
+    <RequireRole allowed={[role]}>
+      <PortalLayout role={role} />
+    </RequireRole>
+  );
 }

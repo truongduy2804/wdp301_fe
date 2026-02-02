@@ -1,4 +1,4 @@
-// components/portal/userMenu.tsx (React Router)
+// components/portal/userMenu.tsx
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -7,11 +7,18 @@ import {
   User as UserIcon,
   Sparkles,
   ChevronRight,
+  KeyRound,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
 import AvatarUserImage from "@/components/Avatar_User_Image";
 import type { Role } from "@/lib/role";
-import { ROLE_LABEL, ROLES } from "@/lib/role";
+import { ROLE_LABEL } from "@/lib/role";
+
+import { useAppDispatch, useAppSelector } from "@/redux/store/hooks";
+import { selectUser, logout as logoutAction } from "@/redux/feature/authSlice";
+import { baseApi } from "@/redux/api/baseApi";
+import endPoint from "@/router/endPoint";
 
 type Placement = "down" | "up";
 
@@ -19,19 +26,6 @@ interface UserMenuProps {
   placement?: Placement;
   className?: string;
   showNameOnMobile?: boolean;
-
-  /** Chọn nhanh role mock nếu muốn ép (nếu không truyền sẽ tự đọc từ URL) */
-  mockRole?: Role;
-
-  /** override thông tin user mock */
-  mockUser?: {
-    fullname: string;
-    email: string;
-    avatarUrl?: string;
-    role?: Role;
-  };
-
-  /** trang quay về sau logout (mock) */
   homeHref?: string;
 }
 
@@ -67,13 +61,9 @@ const shortenName = (fullName: string) => {
   return `${last} ${initials}`.trim();
 };
 
-/**
- * Lấy role theo URL:
- * - Hỗ trợ dạng: /vi/admin, /en/enterprise, /collector, /citizen ...
- */
 function getRoleFromPathname(pathname: string, fallback?: Role): Role {
   const segs = (pathname || "/").split("/").filter(Boolean);
-  const i = segs[0] === "vi" || segs[0] === "en" ? 1 : 0; // bỏ locale
+  const i = segs[0] === "vi" || segs[0] === "en" ? 1 : 0;
   const segRole = segs[i];
 
   const map: Record<string, Role> = {
@@ -87,73 +77,62 @@ function getRoleFromPathname(pathname: string, fallback?: Role): Role {
   return fallback ?? "CITIZEN";
 }
 
-/** Giữ nguyên prefix locale hiện tại cho mọi Link */
 function getLocalePrefix(pathname: string) {
   const segs = (pathname || "/").split("/").filter(Boolean);
   const hasLocale = segs[0] === "vi" || segs[0] === "en";
   return hasLocale ? `/${segs[0]}` : "";
 }
 
-const DEFAULT_BY_ROLE: Record<
-  Role,
-  { fullname: string; email: string; role: Role; avatarUrl?: string }
-> = {
-  ADMIN: {
-    fullname: "Nguyễn Minh Quân",
-    email: "quan.admin@example.com",
-    role: "ADMIN",
-  },
-  ENTERPRISE: {
-    fullname: "Công ty Tái chế Xanh",
-    email: "enterprise@example.com",
-    role: "ENTERPRISE",
-  },
-  COLLECTOR: {
-    fullname: "Trần Văn Thu Gom",
-    email: "collector@example.com",
-    role: "COLLECTOR",
-  },
-  CITIZEN: {
-    fullname: "Võ Thảo My",
-    email: "citizen@example.com",
-    role: "CITIZEN",
-  },
-};
+function toRole(roleLike?: string | null, fallback: Role = "CITIZEN"): Role {
+  const r = (roleLike ?? "").trim().toUpperCase();
+  if (!r) return fallback;
+
+  if (r.includes("ADMIN")) return "ADMIN";
+  if (r.includes("ENTERPRISE")) return "ENTERPRISE";
+  if (r.includes("COLLECTOR")) return "COLLECTOR";
+  if (r.includes("CITIZEN")) return "CITIZEN";
+
+  return fallback;
+}
 
 const UserMenu: React.FC<UserMenuProps> = ({
   placement = "down",
   className = "",
   showNameOnMobile = false,
-  mockRole,
-  mockUser,
   homeHref = "/",
 }) => {
   const { pathname } = useLocation();
   const localePrefix = getLocalePrefix(pathname);
-  const role = getRoleFromPathname(pathname, mockRole);
 
-  // user mock (không dùng redux)
-  const user = {
-    ...(DEFAULT_BY_ROLE[role] ?? DEFAULT_BY_ROLE.CITIZEN),
-    ...(mockUser ?? {}),
-    role: (mockUser?.role ?? role) as Role,
-  };
+  const dispatch = useAppDispatch();
+  const authUser = useAppSelector(selectUser);
+
+  // role lấy từ redux trước, fallback từ URL
+  const roleFromUrl = getRoleFromPathname(pathname, "CITIZEN");
+  const role: Role = toRole(authUser?.role ?? null, roleFromUrl);
+
+  // user lấy từ redux (không mock)
+  const fullname = authUser?.fullname ?? "";
+  const email = authUser?.email ?? "";
 
   const [open, setOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
 
-  // NOTE: bạn đang dùng "/userlayout/profile" từ project cũ.
-  // Nếu chưa có routes này, hãy đổi BASE thành "" hoặc "/citizen" tùy app.
-  const BASE = `${localePrefix}/userlayout`;
-  const portalHref = `${localePrefix}${ROLES[user.role]}`;
-
   const menuItems = [
     {
       icon: UserIcon,
-      label: "Hồ sơ cá nhân",
-      to: `${BASE}/profile`,
+      label: "Hồ sơ tài khoản",
+      to: endPoint.PROFILE,
+      color: "text-gray-700",
+      hoverColor: "hover:bg-blue-50 hover:text-blue-600",
+      iconBg: "group-hover:bg-blue-100",
+    },
+    {
+      icon: KeyRound,
+      label: "Đổi mật khẩu",
+      to: endPoint.CHANGE_PASSWORD,
       color: "text-gray-700",
       hoverColor: "hover:bg-blue-50 hover:text-blue-600",
       iconBg: "group-hover:bg-blue-100",
@@ -181,45 +160,20 @@ const UserMenu: React.FC<UserMenuProps> = ({
   // đóng khi đổi route
   useEffect(() => setOpen(false), [pathname]);
 
-  const clearAllClientStorage = () => {
-    try {
-      localStorage.clear();
-    } catch {}
-    try {
-      sessionStorage.clear();
-    } catch {}
-
-    // best-effort: xóa cookie (chỉ xóa được cookie không HttpOnly)
-    try {
-      document.cookie.split(";").forEach((c) => {
-        const eq = c.indexOf("=");
-        const name = (eq > -1 ? c.slice(0, eq) : c).trim();
-        if (!name) return;
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-      });
-    } catch {}
-  };
-
   const handleLogout = async () => {
     if (isLoggingOut) return;
     setOpen(false);
     setIsLoggingOut(true);
 
-    // demo delay để UI mượt
-    await new Promise((r) => setTimeout(r, 450));
+    await new Promise((r) => setTimeout(r, 350));
+    dispatch(logoutAction());
+    dispatch(baseApi.util.resetApiState());
 
-    // ✅ xóa hết storage
-    clearAllClientStorage();
-
-    // ✅ về trang login và refresh lại app
-    // (giữ locale nếu có, ví dụ /vi/auth?view=login)
     const loginUrl = `${localePrefix}/auth?view=login`;
-
-    // replace -> không back lại được trang cũ
     window.location.replace(loginUrl);
   };
 
-  const { label: roleText, grad } = roleBadge(user.role);
+  const { label: roleText, grad } = roleBadge(role);
 
   return (
     <div className={`relative ${className}`}>
@@ -248,16 +202,18 @@ const UserMenu: React.FC<UserMenuProps> = ({
         <div className="relative flex items-center gap-2">
           <div className="relative">
             <AvatarUserImage
-              name={user.fullname}
+              name={fullname || email || "User"}
               size={36}
               ringClassName="ring-2 ring-white"
             />
+
             {!isLoggingOut && (
               <span className="absolute -bottom-0.5 right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
             )}
             {isLoggingOut && (
               <span className="pointer-events-none absolute inset-[-3px] rounded-full border-2 border-transparent border-t-sky-500 animate-spin" />
             )}
+
             {!isLoggingOut && (
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
@@ -272,16 +228,19 @@ const UserMenu: React.FC<UserMenuProps> = ({
             )}
           </div>
 
-          {/* Tên ngắn gọn */}
           <span
             className={`${
               showNameOnMobile ? "" : "hidden md:block"
             } text-[15px] font-medium max-w-[180px] truncate ${
               isLoggingOut ? "text-blue-500" : "text-gray-700"
             }`}
-            title={user.fullname}
+            title={fullname || email}
           >
-            {isLoggingOut ? "Đang đăng xuất…" : shortenName(user.fullname)}
+            {isLoggingOut
+              ? "Đang đăng xuất…"
+              : fullname
+                ? shortenName(fullname)
+                : email}
           </span>
 
           {!isLoggingOut && (
@@ -338,17 +297,17 @@ const UserMenu: React.FC<UserMenuProps> = ({
                 <div className="absolute inset-0 bg-grid-pattern opacity-5" />
                 <div className="relative">
                   <p className="text-base font-semibold text-gray-900 mb-0.5">
-                    {user.fullname}
+                    {fullname || "Tài khoản"}
                   </p>
                   <p className="text-xs text-gray-600 truncate mb-2">
-                    {user.email}
+                    {email || "—"}
                   </p>
                   <motion.span
                     initial={{ scale: 0, x: -20 }}
                     animate={{ scale: 1, x: 0 }}
                     transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
                     className={`inline-flex items-center gap-1.5 rounded-full bg-linear-to-r ${grad} text-white text-[10px] px-2 py-1 shadow-sm uppercase tracking-wide`}
-                    title={ROLE_LABEL[user.role]}
+                    title={ROLE_LABEL[role]}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                     {roleText}
@@ -393,7 +352,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
               <div className="mx-4 border-t border-gray-100" />
 
-              {/* Logout (mock) */}
+              {/* Logout */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}

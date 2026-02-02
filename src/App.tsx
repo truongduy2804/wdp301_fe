@@ -8,16 +8,43 @@ import {
   portalRoutes,
   PortalRouteWrapper,
 } from "@/router/portalRoutes";
+import RequireAuth from "@/router/RequireAuth";
+import ProfilePage from "@/pages/Account/Profile";
+import ChangePasswordPage from "@/pages/Account/ChangePassword";
+import NotFoundPage from "@/pages/System/notFound-404";
+import ForbiddenPage from "@/pages/System/forbidden-403";
 
 export default function App() {
   return (
     <Routes>
-      {/* ================= PUBLIC (TEMP: redirect HOME) ================= */}
+      {/* ===== System pages ===== */}
+      <Route path={endPoint.FORBIDDEN} element={<ForbiddenPage />} />
+      <Route path={endPoint.NOT_FOUND} element={<NotFoundPage />} />
+
+      {/* ===== Account pages (cần login) ===== */}
+      <Route
+        path={endPoint.PROFILE}
+        element={
+          <RequireAuth>
+            <ProfilePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path={endPoint.CHANGE_PASSWORD}
+        element={
+          <RequireAuth>
+            <ChangePasswordPage />
+          </RequireAuth>
+        }
+      />
+
+      {/* ===== Public ===== */}
       {publicRoutes.map((r) => (
         <Route key={r.path} path={r.path} element={r.element as any} />
       ))}
 
-      {/* ================= AUTH (query-based) ================= */}
+      {/* ===== Auth ===== */}
       {authRoutes.map((r) => (
         <Route key={r.path} path={r.path} element={r.element as any} />
       ))}
@@ -36,7 +63,7 @@ export default function App() {
         element={<Navigate to={`${endPoint.AUTH}?view=forgot`} replace />}
       />
 
-      {/* ================= PORTALS ================= */}
+      {/* ===== Portals ===== */}
       {portalRoutes.map((p) => (
         <Route
           key={p.role}
@@ -58,14 +85,17 @@ export default function App() {
               />
             ),
           )}
+
+          {/* QUAN TRỌNG: sai path trong portal -> 404 */}
+          <Route
+            path="*"
+            element={<Navigate to={endPoint.NOT_FOUND} replace />}
+          />
         </Route>
       ))}
 
-      {/* ================= FALLBACK ================= */}
-      <Route
-        path="*"
-        element={<Navigate to={`${endPoint.AUTH}?view=login`} replace />}
-      />
+      {/* QUAN TRỌNG: Sai path toàn hệ thống -> 404 */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

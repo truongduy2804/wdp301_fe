@@ -1,285 +1,219 @@
-// src/pages/enterprise/EnterprisePendingRequestsPage.tsx
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
-import {
-  ClipboardList,
-  CheckCircle2,
-  XCircle,
-  MapPinned,
-  Filter,
-} from "lucide-react";
+import { toast } from "react-toastify";
+import { ClipboardList, RefreshCw } from "lucide-react";
 
+import LoadingSpinner from "@/components/ui/loadingSpinner";
 import {
   Card,
-  Button,
   Badge,
-  Dropdown,
+  Button,
   DateRangePill,
   EmptyState,
-  cx,
   formatNumber,
-  Modal,
-} from "../../../components/ui/page/componentUI";
+} from "@/components/ui/page/componentUI";
+
+import WaitingReportsTable from "../components/waitingReportsTable";
+import ReportDetailModal from "./detailPage";
 
 import {
-  mockRequests,
-  type RequestItem,
-  type Zone,
-  type WasteType,
-  ZONE_OPTIONS,
-  WASTE_OPTIONS,
-} from "../data/mockEnterprise";
+  useGetWaitingReportsQuery,
+  useLazyGetWaitingReportDetailQuery,
+  useAcceptReportMutation,
+  useRejectReportMutation,
+  enterpriseReportsApi,
+} from "@/redux/api/enterprise/reports";
 
-type ZoneFilter = Zone | "ALL";
-type WasteFilter = WasteType | "ALL";
+import type { EnterpriseReport } from "@/redux/api/enterprise/reports/types";
 
 export default function EnterprisePendingRequestsPage() {
-  const [rows, setRows] = useState<RequestItem[]>(mockRequests);
+  // ✅ bỏ refetchOnFocus/refetchOnReconnect để tránh request “tự nhiên bắn”
+  const { data, isLoading, isFetching, isError, error, refetch } =
+    useGetWaitingReportsQuery();
 
-  const [zone, setZone] = useState<ZoneFilter>("ALL");
-  const [wasteType, setWasteType] = useState<WasteFilter>("ALL");
+  const rows: EnterpriseReport[] = data?.data ?? [];
+
+  const pendingOnly = useMemo(
+    () => rows.filter((r) => (r.status ?? "").toUpperCase() === "PENDING"),
+    [rows],
+  );
+
   const [range, setRange] = useState<[Dayjs | null, Dayjs | null]>([
     dayjs().subtract(14, "day"),
     dayjs(),
   ]);
 
-  // reject modal
-  const [rejectOpen, setRejectOpen] = useState(false);
-  const [rejectReason, setRejectReason] = useState("");
-  const [target, setTarget] = useState<RequestItem | null>(null);
-
-  const pending = useMemo(() => {
-    return rows.filter((r) => r.status === "PENDING_REVIEW");
-  }, [rows]);
-
   const filtered = useMemo(() => {
     const [a, b] = range;
-    return pending.filter((r) => {
-      if (zone !== "ALL" && r.zone !== zone) return false;
-      if (wasteType !== "ALL" && r.wasteType !== wasteType) return false;
-
+    return pendingOnly.filter((r) => {
+      const t = dayjs(r.createdAt ?? r.sentAt);
       if (a && b) {
-        const t = dayjs(r.createdAt);
         if (t.isBefore(a.startOf("day")) || t.isAfter(b.endOf("day")))
           return false;
       }
       return true;
     });
-  }, [pending, zone, wasteType, range]);
+  }, [pendingOnly, range]);
 
-  const accept = (id: string) => {
-    setRows((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              status: "WAITING_ASSIGN",
-              reviewedBy: "admin",
-              reviewedAt: new Date().toISOString(),
-            }
-          : r,
-      ),
-    );
-  };
+  const [acceptReport] = useAcceptReportMutation();
+  const [rejectReport] = useRejectReportMutation();
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
-  const openReject = (r: RequestItem) => {
-    setTarget(r);
-    setRejectReason("");
-    setRejectOpen(true);
-  };
+  // View modal + fetch detail
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewMeta, setViewMeta] = useState<EnterpriseReport | null>(null);
+  const [fetchDetail, detail] = useLazyGetWaitingReportDetailQuery();
 
-  const confirmReject = () => {
-    if (!target) return;
-    setRows((prev) =>
-      prev.map((r) =>
-        r.id === target.id
-          ? {
-              ...r,
-              status: "REJECTED",
-              reviewedBy: "admin",
-              reviewedAt: new Date().toISOString(),
-              rejectReason:
-                rejectReason.trim() || "Không đủ điều kiện tiếp nhận.",
-            }
-          : r,
-      ),
-    );
-    setRejectOpen(false);
-    setTarget(null);
-  };
+  const prefetchDetail = enterpriseReportsApi.usePrefetch(
+    "getWaitingReportDetail",
+  );
+
+  const onView = useCallback(
+    (id: number) => {
+      const meta = filtered.find((x) => x.id === id) ?? null;
+      setViewMeta(meta);
+      setViewOpen(true);
+      fetchDetail(id);
+    },
+    [filtered, fetchDetail],
+  );
+
+  const onAccept = useCallback(
+    async (id: number) => {
+      try {
+        setActionLoadingId(id);
+        await acceptReport(id).unwrap();
+        toast.success(`Đã duyệt đơn #${id}`, { autoClose: 1400 });
+      } catch (e: any) {
+        toast.error(e?.data?.message ?? "Duyệt thất bại");
+        throw e; // để confirm giữ modal nếu fail
+      } finally {
+        setActionLoadingId(null);
+      }
+    },
+    [acceptReport],
+  );
+
+  const onReject = useCallback(
+    async (id: number) => {
+      try {
+        setActionLoadingId(id);
+        await rejectReport({ id }).unwrap();
+        toast.success(`Đã từ chối đơn #${id}`, { autoClose: 1400 });
+      } catch (e: any) {
+        toast.error(e?.data?.message ?? "Từ chối thất bại");
+        throw e;
+      } finally {
+        setActionLoadingId(null);
+      }
+    },
+    [rejectReport],
+  );
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-100">
-      {/* Top bar */}
+      {/* Header */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6">
         <Card className="p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0">
-              <div className="flex items-center gap-3">
+            <div className="min-w-0 text-center lg:text-left">
+              <div className="flex items-center justify-center lg:justify-start gap-3">
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-2.5">
                   <ClipboardList className="h-5 w-5 text-emerald-700" />
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-                    Đơn chờ duyệt
+                    Đơn chờ phản hồi
                   </h1>
                   <p className="text-sm text-slate-600">
-                    Tiếp nhận hoặc từ chối yêu cầu thu gom trong phạm vi hoạt
-                    động.
+                    Theo dõi đơn và thời gian hiệu lực còn lại
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Dropdown<ZoneFilter>
-                label="Khu vực"
-                value={zone}
-                onChange={setZone}
-                icon={MapPinned}
-                options={ZONE_OPTIONS}
-              />
-              <Dropdown<WasteFilter>
-                label="Loại rác"
-                value={wasteType}
-                onChange={setWasteType}
-                icon={Filter}
-                options={WASTE_OPTIONS}
-              />
-
-              <div
-                className={cx(
-                  "inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm",
-                  "hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors",
-                )}
-              >
+            <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2">
+              <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
                 <span className="text-xs font-semibold text-slate-600">
                   Khoảng ngày
                 </span>
                 <DateRangePill
                   value={range}
                   onChange={setRange}
-                  className={cx(
-                    "!border-0 !shadow-none !bg-transparent !p-0 hover:!bg-transparent",
-                  )}
+                  className="!border-0 !shadow-none !bg-transparent !p-0 hover:!bg-transparent"
                 />
               </div>
 
               <Badge tone="emerald">{formatNumber(filtered.length)} đơn</Badge>
+
+              {/* ✅ NÚT TẢI LẠI GIỐNG TRANG COLLECTOR */}
+              <Button
+                variant="ghost"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                className="!rounded-2xl !px-3 !py-2 !bg-white !border !border-slate-200 !text-slate-800 !font-medium
+                  hover:!border-emerald-300 hover:!bg-emerald-50/60 hover:!text-emerald-800
+                  active:!bg-emerald-100/60 disabled:!opacity-70 disabled:!cursor-not-allowed transition-all duration-200 ease-out shadow-sm hover:shadow"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <RefreshCw
+                    className={`h-4 w-4 ${
+                      isFetching
+                        ? "animate-spin text-emerald-700"
+                        : "text-slate-600"
+                    }`}
+                  />
+                  {isFetching ? "Đang tải..." : "Tải lại"}
+                </span>
+              </Button>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Table */}
+      {/* Content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
         <Card className="overflow-hidden" hover={false}>
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div className="py-10">
+              <LoadingSpinner color="blue" size="10" />
+            </div>
+          ) : isError ? (
+            <div className="p-6 text-center">
+              <div className="text-rose-600 font-semibold">Lỗi tải dữ liệu</div>
+              <pre className="mt-2 text-xs text-slate-600 text-left whitespace-pre-wrap">
+                {JSON.stringify(error, null, 2)}
+              </pre>
+            </div>
+          ) : filtered.length === 0 ? (
             <EmptyState
-              title="Không có đơn chờ duyệt"
-              desc="Thử đổi bộ lọc hoặc khoảng ngày."
+              title="Danh sách đơn chờ đang trống"
+              desc="Thử đổi khoảng ngày."
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-slate-50 border-y border-slate-200">
-                  <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                    <th className="px-4 py-3">Mã đơn</th>
-                    <th className="px-4 py-3">Khu vực</th>
-                    <th className="px-4 py-3">Loại rác</th>
-                    <th className="px-4 py-3">Ước tính</th>
-                    <th className="px-4 py-3">Địa chỉ</th>
-                    <th className="px-4 py-3">Tạo lúc</th>
-                    <th className="px-4 py-3 text-right">Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="border-b border-slate-100 hover:bg-emerald-50/30 transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-slate-900">
-                          {r.id}
-                        </div>
-                        {r.note ? (
-                          <div className="text-xs text-slate-500 line-clamp-1">
-                            {r.note}
-                          </div>
-                        ) : null}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
-                        {r.zone}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge tone="slate">{r.wasteType}</Badge>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-slate-900">
-                        {formatNumber(r.estKg)} kg
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
-                        {r.address}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
-                        {dayjs(r.createdAt).format("DD/MM/YYYY HH:mm")}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="primary"
-                            onClick={() => accept(r.id)}
-                            className="!rounded-xl !px-3 !py-2"
-                          >
-                            <CheckCircle2 className="h-4 w-4" />
-                            Duyệt
-                          </Button>
-                          <Button
-                            variant="danger"
-                            onClick={() => openReject(r)}
-                            className="!rounded-xl !px-3 !py-2"
-                          >
-                            <XCircle className="h-4 w-4" />
-                            Từ chối
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <WaitingReportsTable
+              data={filtered}
+              actionLoadingId={actionLoadingId}
+              onView={onView}
+              onPrefetchDetail={prefetchDetail}
+              onAccept={onAccept}
+              onReject={onReject}
+            />
           )}
         </Card>
       </div>
 
-      {/* Reject modal */}
-      <Modal
-        open={rejectOpen}
-        title={`Từ chối đơn ${target?.id ?? ""}`}
-        sub="Nhập lý do để lưu vào lịch sử duyệt."
-        onClose={() => setRejectOpen(false)}
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setRejectOpen(false)}>
-              Huỷ
-            </Button>
-            <Button variant="danger" onClick={confirmReject}>
-              Xác nhận từ chối
-            </Button>
-          </>
-        }
-      >
-        <label className="text-sm font-semibold text-slate-800">Lý do</label>
-        <textarea
-          value={rejectReason}
-          onChange={(e) => setRejectReason(e.target.value)}
-          rows={4}
-          className="mt-2 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-emerald-300"
-          placeholder="Ví dụ: Ngoài phạm vi, loại rác không hỗ trợ, thiếu thông tin..."
-        />
-      </Modal>
+      {/* Detail modal */}
+      <ReportDetailModal
+        open={viewOpen}
+        onClose={() => {
+          setViewOpen(false);
+          setViewMeta(null);
+        }}
+        loading={detail.isFetching}
+        detail={detail.data?.data ?? null}
+        meta={viewMeta}
+      />
     </div>
   );
 }
