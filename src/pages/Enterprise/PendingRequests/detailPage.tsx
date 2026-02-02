@@ -15,7 +15,6 @@ import {
   ExternalLink,
   AlertTriangle,
   FileText,
-  Copy,
 } from "lucide-react";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
@@ -25,6 +24,8 @@ import type {
 } from "@/redux/api/enterprise/reports/types";
 
 import TagPill from "../components/tagPill";
+
+import { getLocationNamesFromCodes } from "@/utils/helpers";
 
 /** ===== Helpers ===== */
 function toMs(iso?: string | null): number | null {
@@ -115,6 +116,30 @@ async function reverseGeocode(lat: number, lng: number, signal?: AbortSignal) {
   return (json?.display_name as string) || null;
 }
 
+/** ===== Location name cache ===== */
+type LocationNames = Awaited<ReturnType<typeof getLocationNamesFromCodes>>;
+const locationNameCache = new Map<string, LocationNames>();
+
+async function getLocationNamesCached(
+  provinceCode?: string,
+  districtCode?: string,
+  wardCode?: string,
+) {
+  const key = [provinceCode || "", districtCode || "", wardCode || ""].join(
+    "|",
+  );
+  const cached = locationNameCache.get(key);
+  if (cached) return cached;
+
+  const res = await getLocationNamesFromCodes(
+    provinceCode,
+    districtCode,
+    wardCode,
+  );
+  locationNameCache.set(key, res);
+  return res;
+}
+
 /** ===== Props ===== */
 type Props = {
   open: boolean;
@@ -137,7 +162,6 @@ export default function ReportDetailModal({
   const reduceMotion = useReducedMotion();
   const nowMs = useNowWhenOpen(open, 1000);
 
-  // render phần nặng sau khi open
   const [ready, setReady] = useState(false);
   useEffect(() => {
     if (!open) setReady(false);
@@ -155,9 +179,6 @@ export default function ReportDetailModal({
   const report = detail?.report ?? null;
 
   const expMs = toMs(meta?.expiredAt);
-  const sendMs = toMs(meta?.sentAt);
-  const ttlMs = expMs && sendMs ? Math.max(0, expMs - sendMs) : null;
-
   const leftMs = expMs ? expMs - nowMs : null;
   const expired = leftMs != null && leftMs <= 0;
 
@@ -178,19 +199,14 @@ export default function ReportDetailModal({
     )}&layer=mapnik&marker=${lat},${lng}`;
   }, [lat, lng]);
 
-  /** ===== Status code (lấy status hiện tại của đơn) ===== */
+  /** ===== Status code (expired override) ===== */
   const statusCode = useMemo(() => {
-    // ưu tiên report.status -> meta.status
     const raw = (report as any)?.status ?? (meta as any)?.status ?? "PENDING";
-
-    // override nếu hết hạn (tuỳ logic bạn muốn)
     if (expired) return "EXPIRED";
-
     return typeof raw === "string" ? raw : "PENDING";
   }, [report, meta, expired]);
 
   const isApproved = useMemo(() => {
-    // tuỳ backend của bạn: APPROVED / ACCEPTED / COMPLETED / DONE...
     const s = String(statusCode || "").toUpperCase();
     return ["APPROVED", "ACCEPTED", "DONE", "COMPLETED"].includes(s);
   }, [statusCode]);
@@ -223,7 +239,6 @@ export default function ReportDetailModal({
     return Number.isFinite(km) ? km : null;
   }, [myPos, lat, lng]);
 
-  // distanceKm từ API (đúng theo screenshot)
   const apiDistanceKm = (detail as any)?.distanceKm as number | undefined;
 
   const displayDistance = useMemo(() => {
@@ -256,6 +271,44 @@ export default function ReportDetailModal({
       controller.abort();
     };
   }, [open, lat, lng]);
+
+  /** ===== Area names from codes ===== */
+  const [areaNames, setAreaNames] = useState<LocationNames | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (!report) return;
+
+    const p = report.provinceCode;
+    const d = report.districtCode;
+    const w = report.wardCode;
+
+    if (!p && !d && !w) {
+      setAreaNames(null);
+      return;
+    }
+
+    let cancelled = false;
+    setAreaNames(null);
+
+    getLocationNamesCached(p, d, w)
+      .then((names) => {
+        if (!cancelled) setAreaNames(names);
+      })
+      .catch(() => {
+        if (!cancelled) setAreaNames(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    open,
+    report?.provinceCode,
+    report?.districtCode,
+    report?.wardCode,
+    report,
+  ]);
 
   const variants = useMemo(() => {
     return {
@@ -308,7 +361,6 @@ export default function ReportDetailModal({
                       {report ? `#${report.id}` : meta?.id ? `#${meta.id}` : ""}
                     </h2>
 
-                    {/* ✅ Status pill dịch tiếng Việt */}
                     <TagPill kind="reportStatus" value={statusCode} />
                   </div>
 
@@ -356,28 +408,21 @@ export default function ReportDetailModal({
                 <>
                   {!ready ? <ReadyOnce onReady={() => setReady(true)} /> : null}
 
-                  {/* Top grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {/* Top grid (layout mới) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:items-stretch">
                     {/* Left: Summary */}
                     <SectionCard
-                      className="lg:col-span-2"
+                      className="lg:col-span-8 h-full"
                       title="Tóm tắt"
                       icon={<Clock className="h-4 w-4 text-emerald-700" />}
-                      right={
-                        <div className="flex flex-wrap gap-2">
-                          <MiniStat
-                            label="Tạo lúc"
-                            value={formatInlineDateTime(report.createdAt)}
-                          />
-                          <MiniStat
-                            label="Khoảng cách"
-                            value={displayDistance}
-                            icon={<Ruler className="h-4 w-4" />}
-                          />
-                        </div>
-                      }
                     >
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-[1.75fr_1.75fr_1.5fr] gap-3">
+                        <InfoRow
+                          icon={<Clock className="h-4 w-4" />}
+                          label="Tạo lúc"
+                          value={formatInlineDateTime(report.createdAt)}
+                        />
+
                         <InfoRow
                           icon={<Clock className="h-4 w-4" />}
                           label="Hết hạn lúc"
@@ -387,43 +432,45 @@ export default function ReportDetailModal({
                               : "—"
                           }
                         />
+
                         <InfoRow
-                          icon={<Clock className="h-4 w-4" />}
-                          label="TTL"
-                          value={ttlMs != null ? formatCountdown(ttlMs) : "—"}
+                          icon={<Ruler className="h-4 w-4" />}
+                          label="Khoảng cách"
+                          value={displayDistance}
                         />
+
                         {!isApproved ? (
-                          <div className="md:col-span-2">
+                          <div className="md:col-span-3">
                             <div
                               className={`
-        rounded-2xl border px-4 py-3
-        ${
-          leftMs == null
-            ? "border-slate-200 bg-white"
-            : expired
-              ? "border-slate-200 bg-white"
-              : "border-rose-200 bg-rose-50"
-        }
-      `}
+              rounded-2xl border px-4 py-3
+              ${
+                leftMs == null
+                  ? "border-slate-200 bg-white"
+                  : expired
+                    ? "border-slate-200 bg-white"
+                    : "border-rose-200 bg-rose-50"
+              }
+            `}
                             >
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="text-sm font-bold text-slate-700">
-                                  Đơn hết hạn sau
+                              {leftMs == null ? (
+                                <div className="text-sm font-extrabold text-slate-700">
+                                  —
                                 </div>
-                                <div className="tabular-nums text-lg font-extrabold">
-                                  {leftMs == null ? (
-                                    <span className="text-slate-700">—</span>
-                                  ) : expired ? (
-                                    <span className="text-slate-400">
-                                      Đơn đã hết hạn
-                                    </span>
-                                  ) : (
-                                    <span className="text-rose-700">
-                                      {formatCountdown(leftMs)}
-                                    </span>
-                                  )}
+                              ) : expired ? (
+                                <div className="text-sm font-extrabold text-slate-500">
+                                  Đơn đã hết hạn
                                 </div>
-                              </div>
+                              ) : (
+                                <div className="flex items-center justify-between gap-3">
+                                  <div className="text-sm font-bold text-slate-700">
+                                    Đơn hết hạn sau
+                                  </div>
+                                  <div className="tabular-nums text-lg font-extrabold text-rose-700">
+                                    {formatCountdown(leftMs)}
+                                  </div>
+                                </div>
+                              )}
 
                               {geoErr ? (
                                 <div className="mt-2 flex items-start gap-2 text-xs text-amber-700">
@@ -437,8 +484,9 @@ export default function ReportDetailModal({
                       </div>
                     </SectionCard>
 
-                    {/* Right: Citizen */}
+                    {/* Right: Citizen (cao ngang bên trái) */}
                     <SectionCard
+                      className="lg:col-span-4 h-full"
                       title="Người tạo đơn"
                       icon={<User className="h-4 w-4 text-indigo-700" />}
                     >
@@ -483,31 +531,33 @@ export default function ReportDetailModal({
                       </div>
                     </SectionCard>
                   </div>
-                  {/* Details (3 cards 1 hàng) */}
-                  <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
-                    {/* Thông tin đơn */}
+
+                  {/* Details (2-1-2) */}
+                  <div className="mt-4 grid grid-cols-1 gap-4 items-stretch lg:grid-cols-[1.75fr_1.5fr_1.75fr]">
+                    {/* Thông tin đơn (2) */}
                     <SectionCard
+                      className="h-full"
                       title="Thông tin đơn"
                       icon={<MapPin className="h-4 w-4 text-emerald-700" />}
                     >
                       <div className="grid grid-cols-1 gap-3">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <InfoRow
-                            icon={<Leaf className="h-4 w-4" />}
-                            label="Mã khu vực"
-                            value={
-                              <span className="tabular-nums">
+                        <InfoRow
+                          icon={<Leaf className="h-4 w-4" />}
+                          label="Khu vực"
+                          value={
+                            areaNames?.fullAddress ? (
+                              <span className="font-semibold text-slate-800 break-words">
+                                {areaNames.fullAddress}
+                              </span>
+                            ) : (
+                              <span className="text-slate-500 tabular-nums">
                                 {report.provinceCode}-{report.districtCode}-
                                 {report.wardCode}
                               </span>
-                            }
-                          />
-                          <InfoRow
-                            icon={<Ruler className="h-4 w-4" />}
-                            label="Khoảng cách"
-                            value={displayDistance}
-                          />
-                        </div>
+                            )
+                          }
+                        />
+
                         <InfoRow
                           icon={<MapPin className="h-4 w-4" />}
                           label="Địa chỉ"
@@ -533,8 +583,9 @@ export default function ReportDetailModal({
                       </div>
                     </SectionCard>
 
-                    {/* Danh sách rác */}
+                    {/* Danh sách rác (1) */}
                     <SectionCard
+                      className=" h-full"
                       title="Danh sách rác"
                       icon={<Leaf className="h-4 w-4 text-emerald-700" />}
                     >
@@ -545,7 +596,6 @@ export default function ReportDetailModal({
                               key={`${w.wasteType}-${idx}`}
                               className="rounded-xl border border-slate-200 bg-white px-3 py-2 flex items-center justify-between"
                             >
-                              {/* dịch ORGANIC/RECYCLABLE */}
                               <TagPill
                                 kind="wasteType"
                                 value={w.wasteType as any}
@@ -562,8 +612,9 @@ export default function ReportDetailModal({
                       )}
                     </SectionCard>
 
-                    {/* Hình ảnh */}
+                    {/* Hình ảnh (2) */}
                     <SectionCard
+                      className=" h-full"
                       title="Hình ảnh"
                       icon={<Images className="h-4 w-4 text-indigo-700" />}
                     >
@@ -705,28 +756,7 @@ function SectionCard({
         {right ? <div className="shrink-0">{right}</div> : null}
       </div>
 
-      {/* flex-1 để các card stretch đều chiều cao */}
       <div className="p-4 flex-1 min-h-0">{children}</div>
-    </div>
-  );
-}
-
-function MiniStat({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: React.ReactNode;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-      <div className="text-[11px] font-extrabold text-slate-500">{label}</div>
-      <div className="mt-0.5 inline-flex items-center gap-2 text-sm font-extrabold text-slate-900">
-        {icon ? <span className="text-slate-500">{icon}</span> : null}
-        <span className="tabular-nums">{value}</span>
-      </div>
     </div>
   );
 }

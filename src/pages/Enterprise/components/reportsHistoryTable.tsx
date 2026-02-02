@@ -47,10 +47,10 @@ export default function ReportsHistoryTable({
         render: (_: unknown, r: EnterpriseReport) => {
           const name = (r as any)?.citizen?.fullName ?? "—";
           return (
-            <div className="inline-flex items-center gap-2 justify-center min-w-0">
+            <div className="inline-flex items-center gap-2 justify-center min-w-0 w-full">
               <User2 className="h-4 w-4 text-slate-500 shrink-0" />
-              <Tooltip title={name}>
-                <span className="max-w-[240px] truncate font-semibold text-slate-800">
+              <Tooltip destroyOnHidden title={name}>
+                <span className="min-w-0 truncate font-semibold text-slate-800">
                   {name}
                 </span>
               </Tooltip>
@@ -88,12 +88,11 @@ export default function ReportsHistoryTable({
         title: <div className="text-center font-semibold">Địa chỉ</div>,
         dataIndex: "address",
         key: "address",
-        align: "center",
+        align: "left",
+        ellipsis: { showTitle: false },
         render: (v: string) => (
-          <Tooltip title={v}>
-            <span className="inline-block max-w-[420px] truncate align-middle">
-              {v}
-            </span>
+          <Tooltip destroyOnHidden title={v}>
+            <span className="block w-full min-w-0 truncate">{v}</span>
           </Tooltip>
         ),
       },
@@ -164,7 +163,11 @@ export default function ReportsHistoryTable({
       pagination={false}
       size="middle"
       tableLayout="fixed"
-      className="[&_.ant-table]:bg-transparent [&_.ant-table-thead>tr>th]:text-center"
+      className="
+    [&_.ant-table]:bg-transparent
+    [&_.ant-table-thead>tr>th]:text-center
+    [&_.ant-table-cell]:align-middle
+  "
       rowClassName={() =>
         "transition-colors duration-200 hover:!bg-emerald-50/30"
       }

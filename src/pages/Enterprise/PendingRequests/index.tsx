@@ -1,12 +1,13 @@
 import React, { useCallback, useMemo, useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
 import { toast } from "react-toastify";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, RefreshCw } from "lucide-react";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
 import {
   Card,
   Badge,
+  Button,
   DateRangePill,
   EmptyState,
   formatNumber,
@@ -27,7 +28,8 @@ import type { EnterpriseReport } from "@/redux/api/enterprise/reports/types";
 
 export default function EnterprisePendingRequestsPage() {
   // ✅ bỏ refetchOnFocus/refetchOnReconnect để tránh request “tự nhiên bắn”
-  const { data, isLoading, isError, error } = useGetWaitingReportsQuery();
+  const { data, isLoading, isFetching, isError, error, refetch } =
+    useGetWaitingReportsQuery();
 
   const rows: EnterpriseReport[] = data?.data ?? [];
 
@@ -61,7 +63,6 @@ export default function EnterprisePendingRequestsPage() {
   const [viewOpen, setViewOpen] = useState(false);
   const [viewMeta, setViewMeta] = useState<EnterpriseReport | null>(null);
   const [fetchDetail, detail] = useLazyGetWaitingReportDetailQuery();
-  // console.log("data: ", detail.data);
 
   const prefetchDetail = enterpriseReportsApi.usePrefetch(
     "getWaitingReportDetail",
@@ -93,7 +94,6 @@ export default function EnterprisePendingRequestsPage() {
     [acceptReport],
   );
 
-  // ✅ Reject mới: không reason
   const onReject = useCallback(
     async (id: number) => {
       try {
@@ -145,6 +145,27 @@ export default function EnterprisePendingRequestsPage() {
               </div>
 
               <Badge tone="emerald">{formatNumber(filtered.length)} đơn</Badge>
+
+              {/* ✅ NÚT TẢI LẠI GIỐNG TRANG COLLECTOR */}
+              <Button
+                variant="ghost"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                className="!rounded-2xl !px-3 !py-2 !bg-white !border !border-slate-200 !text-slate-800 !font-medium
+                  hover:!border-emerald-300 hover:!bg-emerald-50/60 hover:!text-emerald-800
+                  active:!bg-emerald-100/60 disabled:!opacity-70 disabled:!cursor-not-allowed transition-all duration-200 ease-out shadow-sm hover:shadow"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <RefreshCw
+                    className={`h-4 w-4 ${
+                      isFetching
+                        ? "animate-spin text-emerald-700"
+                        : "text-slate-600"
+                    }`}
+                  />
+                  {isFetching ? "Đang tải..." : "Tải lại"}
+                </span>
+              </Button>
             </div>
           </div>
         </Card>

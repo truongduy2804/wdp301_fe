@@ -17,6 +17,7 @@ const REPORT_STATUS: Record<string, { label: string; cls: string }> = {
     label: "Chờ duyệt",
     cls: "bg-amber-50 text-amber-700 border-amber-200",
   },
+
   ACCEPTED: {
     label: "Đã duyệt",
     cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -25,17 +26,46 @@ const REPORT_STATUS: Record<string, { label: string; cls: string }> = {
     label: "Đã duyệt",
     cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
+
   REJECTED: {
     label: "Từ chối",
     cls: "bg-rose-50 text-rose-700 border-rose-200",
   },
+
   EXPIRED: {
     label: "Hết hạn",
     cls: "bg-slate-100 text-slate-700 border-slate-200",
   },
+
   CANCELLED: {
     label: "Đã huỷ",
     cls: "bg-slate-100 text-slate-700 border-slate-200",
+  },
+
+  // (optional) nếu backend có các trạng thái này
+  WAITING: {
+    label: "Chờ xử lý",
+    cls: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  ASSIGNED: {
+    label: "Đã phân công",
+    cls: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  ON_THE_WAY: {
+    label: "Đang đến",
+    cls: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  },
+  WAITING_CUSTOMER: {
+    label: "Đang chờ khách",
+    cls: "bg-rose-50 text-rose-700 border-rose-200",
+  },
+  COLLECTED: {
+    label: "Đã thu gom",
+    cls: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  },
+  COMPLETED: {
+    label: "Hoàn thành",
+    cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
 };
 
@@ -47,6 +77,10 @@ const WASTE_TYPE: Record<string, { label: string; cls: string }> = {
   RECYCLABLE: {
     label: "Rác tái chế",
     cls: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  HAZARDOUS: {
+    label: "Rác nguy hại",
+    cls: "bg-rose-50 text-rose-700 border-rose-200",
   },
 };
 

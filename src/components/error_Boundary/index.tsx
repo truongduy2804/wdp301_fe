@@ -11,6 +11,7 @@ import {
   FiCheck,
 } from "react-icons/fi";
 import { Tooltip } from "@mui/material";
+import endPoint from "@/router/endPoint";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -36,24 +37,16 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     };
   }
 
-  // static getDerivedStateFromError(_: Error): Partial<ErrorBoundaryState> {
-  //   return { hasError: true };
-  // }
   static getDerivedStateFromError(): Partial<ErrorBoundaryState> {
     return { hasError: true };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    this.setState({
-      error,
-      errorInfo,
-    });
+    this.setState({ error, errorInfo });
   }
 
   toggleDetails = (): void => {
-    this.setState((prevState) => ({
-      isDetailsOpen: !prevState.isDetailsOpen,
-    }));
+    this.setState((prev) => ({ isDetailsOpen: !prev.isDetailsOpen }));
   };
 
   copyErrorDetails = (): void => {
@@ -61,11 +54,40 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     const errorDetails = `Lỗi: ${error?.toString()}\nStack Trace: ${
       errorInfo?.componentStack
     }`;
+
     navigator.clipboard.writeText(errorDetails).then(() => {
       this.setState({ copySuccess: true });
       setTimeout(() => this.setState({ copySuccess: false }), 2000);
     });
   };
+
+  /** React Router v6 thường có history.state.idx. Nếu không có thì fallback history.length */
+  private canGoBack(): boolean {
+    const idx = (window.history.state as any)?.idx;
+    if (typeof idx === "number") return idx > 0;
+    return window.history.length > 1;
+  }
+
+  /** Back xong thì reload trang vừa back về để tránh trắng */
+  private backAndReload(delayMs = 120) {
+    if (!this.canGoBack()) {
+      // không có history -> về login luôn
+      window.location.assign(endPoint.LOGIN);
+      return;
+    }
+
+    window.history.back();
+
+    window.setTimeout(() => {
+      // reload trang vừa quay về
+      window.location.reload();
+    }, delayMs);
+  }
+
+  /** Về login theo endpoint (không hardcode "/") */
+  private goToLogin() {
+    window.location.assign(endPoint.LOGIN);
+  }
 
   render(): ReactNode {
     const { hasError, error, errorInfo, isDetailsOpen, copySuccess } =
@@ -76,12 +98,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
           {/* Animated Background */}
           <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-teal-900 to-slate-900">
-            {/* Floating Orbs */}
             <div className="absolute top-20 left-10 w-72 h-72 bg-teal-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
             <div className="absolute top-40 right-10 w-72 h-72 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
             <div className="absolute -bottom-8 left-20 w-72 h-72 bg-emerald-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
 
-            {/* Grid Pattern */}
             <div
               className="absolute inset-0 opacity-10"
               style={{
@@ -89,7 +109,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               }}
             />
 
-            {/* Badminton Net Pattern */}
             <div
               className="absolute inset-0 opacity-5"
               style={{
@@ -101,7 +120,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
           {/* Main Error Card */}
           <div className="relative z-10 max-w-xl w-full animate-fade-in-up">
             <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 px-8 pt-8 pb-4  space-y-6 relative overflow-hidden">
-              {/* Decorative Elements */}
               <div className="absolute -top-2 -right-2 w-20 h-20 bg-linear-to-br from-teal-400 to-cyan-500 rounded-full opacity-10 blur-xl"></div>
               <div className="absolute -bottom-2 -left-2 w-16 h-16 bg-linear-to-br from-emerald-400 to-teal-500 rounded-full opacity-10 blur-xl"></div>
 
@@ -113,7 +131,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                   </div>
                   <div className="absolute inset-0 bg-red-300 opacity-20 rounded-full blur-xl animate-pulse"></div>
 
-                  {/* Ripple Effect */}
                   <div className="absolute inset-0 rounded-full border-2 border-red-300 animate-ping opacity-30"></div>
                   <div
                     className="absolute inset-0 rounded-full border-2 border-red-400 animate-ping opacity-20"
@@ -155,20 +172,17 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                     )}
                   </div>
 
-                  {/* Hover Effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-teal-500/0 via-teal-500/5 to-teal-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                 </button>
 
                 {isDetailsOpen && (
                   <div className="bg-gray-900/5 backdrop-blur-sm p-5 rounded-2xl border border-gray-200/30 animate-slide-down">
                     <div className="relative">
-                      {/* Khung code */}
                       <pre className="text-xs text-gray-700 overflow-auto max-h-40 font-mono bg-white/70 p-4 pr-12 rounded-xl border border-gray-200/50 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                         {error?.toString()}
                         {errorInfo?.componentStack}
                       </pre>
 
-                      {/* Nút copy nổi trên khung */}
                       <Tooltip
                         title={copySuccess ? "Đã sao chép!" : "Sao chép lỗi"}
                         arrow
@@ -197,7 +211,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 className="flex justify-center gap-2 animate-fade-in"
                 style={{ animationDelay: "0.6s" }}
               >
-                {/* Primary Button - Refresh */}
+                {/* Refresh */}
                 <button
                   onClick={() => window.location.reload()}
                   className="group relative overflow-hidden px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-2 transform-gpu"
@@ -210,14 +224,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                   <div className="absolute inset-0 rounded-2xl bg-teal-400/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </button>
 
-                {/* Secondary Button - Quay lại trang */}
+                {/* Back + Reload */}
                 <button
-                  onClick={() => {
-                    window.history.go(-1);
-                    setTimeout(() => {
-                      window.location.reload();
-                    }, 300);
-                  }}
+                  onClick={() => this.backAndReload(120)}
                   className="group relative overflow-hidden px-6 py-3 text-sm font-medium text-teal-700 bg-teal-50/80 hover:bg-teal-100/80 border border-teal-200/50 hover:border-teal-300 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
                   <div className="relative z-10 flex items-center justify-center">
@@ -227,14 +236,14 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                   <div className="absolute inset-0 bg-gradient-to-r from-teal-500/0 via-teal-500/10 to-teal-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                 </button>
 
-                {/* Secondary Button - Về Trang chủ */}
+                {/* Go to Login via endpoint */}
                 <button
-                  onClick={() => (window.location.href = "/")}
+                  onClick={() => this.goToLogin()}
                   className="group relative overflow-hidden px-6 py-3 text-sm font-medium text-gray-700 bg-gray-50/80 hover:bg-gray-100/80 border border-gray-200/50 hover:border-gray-300 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300  hover:-translate-y-1"
                 >
                   <div className="relative z-10 flex items-center justify-center">
                     <FiHome className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
-                    Về Trang chủ
+                    Về Trang đăng nhập
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-r from-gray-500/0 via-gray-500/10 to-gray-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                 </button>
@@ -246,7 +255,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 style={{ animationDelay: "0.8s" }}
               >
                 <p className="text-xs text-gray-500 hover:text-teal-600 transition-colors duration-300">
-                  © 2025 GetSport. Tất cả quyền được bảo lưu.
+                  © EcoNet. Tất cả quyền được bảo lưu.
                 </p>
               </div>
             </div>

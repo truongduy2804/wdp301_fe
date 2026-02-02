@@ -66,7 +66,7 @@ export type UpdateEnterpriseProfileBody = {
 
   serviceAreas: Array<{
     provinceCode: string;
-    districtCode: string;
+    districtCode?: string | null;
     wardCode?: string | null;
   }>;
 

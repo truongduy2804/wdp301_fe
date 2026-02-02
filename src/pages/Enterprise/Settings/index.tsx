@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { toast } from "react-toastify";
 import {
   Building2,
   Mail,
@@ -21,8 +20,15 @@ import {
 } from "@/redux/api/enterprise/profile";
 import type { EnterpriseProfile } from "@/redux/api/enterprise/profile/types";
 
-import { getProvinceName, getDistrictName, getWardName } from "@/utils/vnAdmin";
-import EnterpriseProfileUpsertModal from "./modal";
+import {
+  getAllProvinces,
+  getProvinceName,
+  getDistrictName,
+  getWardName,
+  getWardsByDistrict,
+} from "@/utils/vnAdmin";
+
+import EnterpriseProfileUpsertModal from "./Modal/modal";
 
 /* ─── helpers ─────────────────────────────────────────────── */
 function resolveAvatarUrl(avatar?: string | null) {
@@ -70,16 +76,45 @@ function formatKg(n: number | null | undefined) {
 }
 
 type AreaLabel = {
-  raw: { provinceCode: string; districtCode: string; wardCode?: string | null };
+  raw: {
+    provinceCode: string;
+    districtCode?: string | null;
+    wardCode?: string | null;
+  };
   label: string;
 };
 
+async function safeWardName(wardCode: string, districtCode?: string | null) {
+  try {
+    const name = await getWardName(wardCode);
+    if (name) return name;
+  } catch {
+    // ignore
+  }
+  if (districtCode) {
+    try {
+      const ws = await getWardsByDistrict(String(districtCode));
+      const found = ws.find((x: any) => String(x.code) === String(wardCode));
+      if (found?.name) return found.name;
+    } catch {
+      // ignore
+    }
+  }
+  return "";
+}
+
 async function buildAreaLabel(sa: any): Promise<string> {
+  const provinceCode = sa?.provinceCode == null ? "" : String(sa.provinceCode);
+  const districtCode = sa?.districtCode == null ? "" : String(sa.districtCode);
+  const wardCode = sa?.wardCode == null ? "" : String(sa.wardCode);
+
   const [p, d, w] = await Promise.all([
-    getProvinceName(sa?.provinceCode),
-    getDistrictName(sa?.districtCode),
-    sa?.wardCode ? getWardName(sa?.wardCode) : Promise.resolve(""),
+    provinceCode ? getProvinceName(provinceCode) : Promise.resolve(""),
+    districtCode ? getDistrictName(districtCode) : Promise.resolve(""),
+    wardCode ? safeWardName(wardCode, districtCode) : Promise.resolve(""),
   ]);
+
+  // Nếu chỉ có province -> vẫn hiện province
   return [w, d, p].filter(Boolean).join(", ") || "—";
 }
 
@@ -148,12 +183,15 @@ export default function EnterpriseProfilePage() {
   const [update, u] = useUpdateEnterpriseProfileMutation();
   const profile: EnterpriseProfile | null = q.data ?? null;
 
+  useEffect(() => {
+    getAllProvinces().catch(() => {});
+  }, []);
+
   const avatarUrl = useMemo(
     () => resolveAvatarUrl(profile?.avatar ?? null),
     [profile?.avatar],
   );
 
-  // map center
   const defaultCenter = useMemo(
     () => ({ lat: 10.762622, lng: 106.660172 }),
     [],
@@ -161,8 +199,12 @@ export default function EnterpriseProfilePage() {
   const hasLocation = profile?.latitude != null && profile?.longitude != null;
 
   const [viewCenter, setViewCenter] = useState(defaultCenter);
+  const [locationDirty, setLocationDirty] = useState(false);
+
   useEffect(() => {
     if (!profile) return;
+    setLocationDirty(false);
+
     if (profile.latitude != null && profile.longitude != null) {
       setViewCenter({ lat: profile.latitude, lng: profile.longitude });
     } else {
@@ -170,7 +212,6 @@ export default function EnterpriseProfilePage() {
     }
   }, [profile, defaultCenter]);
 
-  // service area labels
   const [areaLabels, setAreaLabels] = useState<AreaLabel[]>([]);
   useEffect(() => {
     let alive = true;
@@ -179,9 +220,10 @@ export default function EnterpriseProfilePage() {
       const next = await Promise.all(
         sa.map(async (x) => ({
           raw: {
-            provinceCode: x.provinceCode,
-            districtCode: x.districtCode,
-            wardCode: x.wardCode ?? null,
+            provinceCode: String(x.provinceCode),
+            districtCode:
+              x.districtCode == null ? null : String(x.districtCode),
+            wardCode: x.wardCode == null ? null : String(x.wardCode),
           },
           label: await buildAreaLabel(x),
         })),
@@ -197,7 +239,6 @@ export default function EnterpriseProfilePage() {
 
   const onSubmit = async (body: any) => {
     await update(body).unwrap();
-    toast.success("Đã cập nhật hồ sơ doanh nghiệp", { autoClose: 1400 });
     setOpen(false);
   };
 
@@ -234,15 +275,12 @@ export default function EnterpriseProfilePage() {
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-100">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 space-y-5">
-        {/* ===== Header Card ===== */}
         <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          {/* top strip */}
           <div className="relative bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-6">
             <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10" />
             <div className="absolute -bottom-12 right-28 h-56 w-56 rounded-full bg-white/5" />
 
             <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              {/* left: avatar + name */}
               <div className="flex items-center gap-4">
                 <div className="relative shrink-0">
                   <div className="h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-2xl border-[3px] border-white/30 bg-white/10 shadow-lg">
@@ -265,8 +303,9 @@ export default function EnterpriseProfilePage() {
 
                   <button
                     onClick={() => setOpen(true)}
-                    className="absolute -bottom-2 -right-2 grid h-10 w-10 place-items-center rounded-full bg-white text-emerald-700 shadow-md hover:shadow-lg active:scale-[0.98] transition"
+                    className="absolute -bottom-2 -right-2 grid h-10 w-10 place-items-center rounded-full bg-white text-emerald-700 shadow-md hover:shadow-lg hover:brightness-75 active:scale-[0.98] transition"
                     aria-label="Cập nhật hồ sơ"
+                    type="button"
                   >
                     <Pencil className="h-4.5 w-4.5" />
                   </button>
@@ -295,11 +334,11 @@ export default function EnterpriseProfilePage() {
                 </div>
               </div>
 
-              {/* right: action */}
               <div className="flex md:justify-end">
                 <button
                   onClick={() => setOpen(true)}
-                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-2.5 text-[13px] font-bold text-emerald-700 shadow-md hover:shadow-lg active:scale-[0.98] transition"
+                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-white hover:brightness-90 px-5 py-2.5 text-[13px] font-bold text-emerald-700 shadow-md hover:shadow-lg active:scale-[0.98] transition"
+                  type="button"
                 >
                   <Building2 className="h-4 w-4" />
                   Cập nhật hồ sơ
@@ -308,7 +347,6 @@ export default function EnterpriseProfilePage() {
             </div>
           </div>
 
-          {/* bottom info row */}
           <div className="px-6 py-5 bg-white">
             <div className="grid gap-3 md:grid-cols-3">
               <MiniInfo
@@ -330,11 +368,8 @@ export default function EnterpriseProfilePage() {
           </div>
         </div>
 
-        {/* ===== Content grid ===== */}
         <div className="grid gap-5 lg:grid-cols-[1.55fr_1fr]">
-          {/* left column */}
           <div className="flex flex-col gap-5">
-            {/* address card */}
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <SectionHead
                 icon={MapPin}
@@ -348,19 +383,27 @@ export default function EnterpriseProfilePage() {
               </div>
             </div>
 
-            {/* map card */}
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <SectionHead
                 icon={MapIcon}
                 title="Vị trí trên bản đồ"
                 sub="Kéo bản đồ để chọn điểm ghim"
-                badge={hasLocation ? "Đã thiết lập" : "Chưa có vị trí"}
+                badge={
+                  locationDirty
+                    ? "Chưa lưu"
+                    : hasLocation
+                      ? "Đã thiết lập"
+                      : "Chưa có vị trí"
+                }
               />
 
               <div className="mt-4 overflow-hidden rounded-2xl ring-1 ring-slate-100">
                 <CenterPinMap
                   value={viewCenter}
-                  onChange={(v) => setViewCenter(v)}
+                  onChange={(v) => {
+                    setViewCenter(v);
+                    setLocationDirty(true);
+                  }}
                   height={360}
                   zoom={15}
                 />
@@ -380,9 +423,7 @@ export default function EnterpriseProfilePage() {
             </div>
           </div>
 
-          {/* right column */}
           <div className="flex flex-col gap-5">
-            {/* service areas */}
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <SectionHead
                 icon={Layers}
@@ -392,20 +433,29 @@ export default function EnterpriseProfilePage() {
                   areaLabels.length ? `${areaLabels.length} khu vực` : undefined
                 }
               />
-
-              <div className="mt-4 flex min-h-[60px] flex-wrap items-start gap-2">
+              <div
+                className="
+    mt-4
+    max-h-[260px] overflow-y-auto
+    rounded-2xl border border-slate-200 bg-white/60
+    p-2
+    custom-scrollbar
+  "
+              >
                 {areaLabels.length ? (
-                  areaLabels.map((a, i) => (
-                    <span
-                      key={`${a.raw.provinceCode}-${a.raw.districtCode}-${a.raw.wardCode ?? ""}-${i}`}
-                      className="inline-flex items-center rounded-xl bg-emerald-50 px-3 py-2 text-[12px] font-semibold text-emerald-700 ring-1 ring-emerald-100"
-                    >
-                      <MapPin className="mr-1.5 h-3.5 w-3.5 opacity-70" />
-                      {a.label}
-                    </span>
-                  ))
+                  <div className="flex flex-wrap items-start gap-2">
+                    {areaLabels.map((a, i) => (
+                      <span
+                        key={`${a.raw.provinceCode}-${a.raw.districtCode ?? ""}-${a.raw.wardCode ?? ""}-${i}`}
+                        className="inline-flex items-center rounded-xl bg-emerald-50 px-3 py-2 text-[12px] font-semibold text-emerald-700 ring-1 ring-emerald-100"
+                      >
+                        <MapPin className="mr-1.5 h-3.5 w-3.5 opacity-70" />
+                        {a.label}
+                      </span>
+                    ))}
+                  </div>
                 ) : (
-                  <p className="text-[13px] text-slate-500">
+                  <p className="px-2 py-3 text-[13px] text-slate-500">
                     Chưa thiết lập khu vực phục vụ.
                   </p>
                 )}
@@ -418,14 +468,12 @@ export default function EnterpriseProfilePage() {
               ) : null}
             </div>
 
-            {/* summary */}
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <SectionHead
                 icon={Building2}
                 title="Tóm tắt"
                 sub="Thông tin cơ bản"
               />
-
               <div className="mt-4 flex flex-col divide-y divide-slate-100">
                 {[
                   { label: "Tên doanh nghiệp", value: profile.name },
@@ -455,11 +503,11 @@ export default function EnterpriseProfilePage() {
         </div>
       </div>
 
-      {/* modal */}
       <EnterpriseProfileUpsertModal
         open={open}
         initial={profile}
         submitting={u.isLoading}
+        draftLocation={locationDirty ? viewCenter : null}
         onClose={() => {
           if (u.isLoading) return;
           setOpen(false);

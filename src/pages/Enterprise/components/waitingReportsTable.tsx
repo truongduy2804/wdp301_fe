@@ -1,4 +1,4 @@
-import React, { useMemo, useSyncExternalStore } from "react";
+import React, { useMemo, useRef, useSyncExternalStore } from "react";
 import dayjs from "dayjs";
 import { Table, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -7,7 +7,6 @@ import { Eye, CheckCircle2, XCircle, Lock, Clock } from "lucide-react";
 import LoadingSpinner from "@/components/ui/loadingSpinner";
 import type { EnterpriseReport } from "@/redux/api/enterprise/reports/types";
 import { confirmAcceptReport, confirmRejectReport } from "./reportConfirm";
-
 import TagPill from "./tagPill";
 
 type Props = {
@@ -21,13 +20,37 @@ type Props = {
   onReject: (id: number) => Promise<void>;
 };
 
-function toMs(iso?: string | null): number | null {
-  if (!iso) return null;
-  const t = new Date(iso).getTime();
-  return Number.isFinite(t) ? t : null;
+/** robust parse: hỗ trợ ISO / number seconds / number ms */
+function toMs(v?: unknown): number | null {
+  if (v == null) return null;
+
+  if (typeof v === "number" && Number.isFinite(v)) {
+    return v < 1e12 ? v * 1000 : v; // seconds -> ms
+  }
+
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (!s) return null;
+
+    // numeric string
+    if (/^\d+$/.test(s)) {
+      const n = Number(s);
+      if (!Number.isFinite(n)) return null;
+      return n < 1e12 ? n * 1000 : n;
+    }
+
+    const t = new Date(s).getTime();
+    return Number.isFinite(t) ? t : null;
+  }
+
+  return null;
 }
 
-function formatCountdownAbs(ms: number): string {
+function expiryText(ms: number) {
+  return `${dayjs(ms).format("h:mm A")} | ${dayjs(ms).format("DD/MM/YYYY")}`;
+}
+
+function formatCountdownClamp(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
@@ -38,18 +61,10 @@ function formatCountdownAbs(ms: number): string {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-/** ✅ clamp: hết hạn thì dừng ở 00:00 (không âm) */
-function formatCountdownClamp(ms: number): string {
-  return formatCountdownAbs(Math.max(0, ms));
-}
-
-function expiryText(ms: number) {
-  return `${dayjs(ms).format("h:mm A")} | ${dayjs(ms).format("DD/MM/YYYY")}`;
-}
-
+/** window hiển thị countdown ở cột "Thời gian hết hạn" */
 const LIVE_WINDOW_MS = 60 * 60 * 1000;
 
-/** 1 interval duy nhất cho bảng (chỉ chạy khi có subscriber) */
+/** 1 interval duy nhất cho countdown (chỉ chạy khi có subscriber) */
 const nowStore = (() => {
   let now = Date.now();
   const listeners = new Set<() => void>();
@@ -93,16 +108,63 @@ function useSharedNowMs() {
   );
 }
 
-const ExpiryLive = React.memo(function ExpiryLive(props: {
-  expMs: number;
-  sendMs: number;
+/** ✅ theo dõi hết hạn "đúng thời điểm" (không cần refresh) */
+function useExpiredFlag(expiredAt?: unknown) {
+  const expMs = useMemo(() => toMs(expiredAt), [expiredAt]);
+
+  const [expired, setExpired] = React.useState(() =>
+    expMs != null ? expMs <= Date.now() : false,
+  );
+
+  React.useEffect(() => {
+    if (expMs == null) {
+      setExpired(false);
+      return;
+    }
+
+    const now = Date.now();
+    if (expMs <= now) {
+      setExpired(true);
+      return;
+    }
+
+    setExpired(false);
+
+    // setTimeout tới đúng thời điểm hết hạn
+    const delay = expMs - now + 80; // buffer nhỏ
+    const MAX = 2_147_483_647; // ~24.8 ngày
+    const t = window.setTimeout(() => setExpired(true), Math.min(delay, MAX));
+
+    return () => window.clearTimeout(t);
+  }, [expMs]);
+
+  return { expMs, expired };
+}
+
+/** ✅ status tự đổi EXPIRED khi tới hạn (chỉ override khi còn pending) */
+const StatusPillLive = React.memo(function StatusPillLive(props: {
+  status?: unknown;
+  expiredAt?: unknown;
 }) {
+  const { expired } = useExpiredFlag(props.expiredAt);
+
+  const raw = String(props.status ?? "PENDING");
+  const key = raw.trim().toUpperCase();
+
+  const shouldOverride = ["PENDING", "WAITING"].includes(key);
+  const value = expired && shouldOverride ? "EXPIRED" : key;
+
+  return <TagPill kind="reportStatus" value={value} />;
+});
+
+const ExpiryLive = React.memo(function ExpiryLive(props: { expMs: number }) {
   const now = useSharedNowMs();
   const msLeftRaw = props.expMs - now;
   const expired = msLeftRaw <= 0;
 
   const right = expiryText(props.expMs);
-  const ttl = Math.max(0, props.expMs - props.sendMs);
+
+  const text = formatCountdownClamp(msLeftRaw);
 
   return (
     <Tooltip
@@ -113,38 +175,37 @@ const ExpiryLive = React.memo(function ExpiryLive(props: {
             <b>Hết hạn lúc:</b> {right}
           </div>
           <div>
-            <b>{expired ? "Đã hết hạn:" : "Còn lại:"}</b>{" "}
-            {formatCountdownClamp(msLeftRaw)}
-          </div>
-          <div>
-            <b>TTL:</b> {formatCountdownAbs(ttl)}
+            <b>{expired ? "Đã hết hạn:" : "Còn lại:"}</b> {text}
           </div>
         </div>
       }
     >
+      {/* pill countdown */}
       <span
         className={[
-          "font-semibold tabular-nums",
-          expired ? "text-slate-500" : "text-slate-900",
+          "inline-flex items-center justify-center",
+          "rounded-full border px-3 py-1",
+          "tabular-nums font-medium",
+          expired
+            ? "border-slate-200 bg-slate-100 text-slate-500"
+            : "border-rose-200 bg-rose-50 text-rose-700",
         ].join(" ")}
       >
-        {formatCountdownClamp(msLeftRaw)}
+        {text}
       </span>
     </Tooltip>
   );
 });
 
 const ExpiryCell = React.memo(function ExpiryCell(props: {
-  expiredAt?: string | null;
-  sentAt?: string | null;
+  expiredAt?: unknown;
 }) {
   const expMs = toMs(props.expiredAt);
-  const sendMs = toMs(props.sentAt);
-  if (!expMs || !sendMs) return <span className="text-slate-500">—</span>;
+  if (!expMs) return <span className="text-slate-500">—</span>;
 
   const msLeftNow = expMs - Date.now();
 
-  // xa hơn 60 phút thì hiển thị dạng timestamp
+  // xa hơn 60 phút thì hiển thị timestamp (không tick)
   if (msLeftNow > LIVE_WINDOW_MS) {
     const right = expiryText(expMs);
     return (
@@ -154,32 +215,40 @@ const ExpiryCell = React.memo(function ExpiryCell(props: {
     );
   }
 
-  return <ExpiryLive expMs={expMs} sendMs={sendMs} />;
+  return <ExpiryLive expMs={expMs} />;
 });
 
 const ActionButtons = React.memo(function ActionButtons(props: {
   r: EnterpriseReport;
   loading: boolean;
-  expired: boolean;
+  expiredAt?: unknown;
+
   onView: (id: number) => void;
   onPrefetchDetail?: (id: number) => void;
   onAccept: (id: number) => Promise<void>;
   onReject: (id: number) => Promise<void>;
 }) {
-  const { r, loading, expired, onView, onPrefetchDetail, onAccept, onReject } =
-    props;
+  const {
+    r,
+    loading,
+    expiredAt,
+    onView,
+    onPrefetchDetail,
+    onAccept,
+    onReject,
+  } = props;
 
-  if (expired) {
-    return (
-      <span className="inline-flex items-center gap-2 text-slate-400">
-        <Lock className="h-4 w-4" />
-        <span className="text-sm font-medium">Hết hạn</span>
-      </span>
-    );
-  }
+  const { expired } = useExpiredFlag(expiredAt);
+
+  // ✅ chỉ nút vừa bấm mới hiện spinner
+  const lastActionRef = useRef<"accept" | "reject" | null>(null);
+
+  const showAcceptSpin = loading && lastActionRef.current === "accept";
+  const showRejectSpin = loading && lastActionRef.current === "reject";
 
   return (
     <div className="inline-flex items-center gap-2 flex-nowrap whitespace-nowrap">
+      {/* View luôn cho phép */}
       <button
         onMouseEnter={() => onPrefetchDetail?.(r.id)}
         onClick={() => onView(r.id)}
@@ -196,59 +265,71 @@ const ActionButtons = React.memo(function ActionButtons(props: {
         Xem
       </button>
 
-      <button
-        disabled={loading}
-        onClick={() =>
-          confirmAcceptReport({
-            reportId: r.id,
-            disabled: loading,
-            onOk: () => onAccept(r.id),
-          })
-        }
-        className="
-          inline-flex items-center gap-1 rounded-xl
-          bg-emerald-600 px-2 py-1.5
-          text-sm font-medium text-white
-          transition-all duration-200 ease-out
-          hover:-translate-y-[1px] hover:shadow-sm
-          hover:bg-emerald-700 active:bg-emerald-800
-          disabled:opacity-70
-        "
-      >
-        {loading ? (
-          <LoadingSpinner color="white" size="4" inline />
-        ) : (
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-        )}
-        Duyệt
-      </button>
+      {/* ✅ hết hạn thì ẩn Duyệt/Từ chối ngay lập tức */}
+      {expired ? (
+        <span className="inline-flex items-center gap-2 text-slate-400">
+          <Lock className="h-4 w-4" />
+          <span className="text-sm font-medium">Hết hạn</span>
+        </span>
+      ) : (
+        <>
+          <button
+            disabled={loading}
+            onClick={() => {
+              lastActionRef.current = "accept";
+              confirmAcceptReport({
+                reportId: r.id,
+                disabled: loading,
+                onOk: () => onAccept(r.id),
+              });
+            }}
+            className="
+              inline-flex items-center gap-1 rounded-xl
+              bg-emerald-600 px-2 py-1.5
+              text-sm font-medium text-white
+              transition-all duration-200 ease-out
+              hover:-translate-y-[1px] hover:shadow-sm
+              hover:bg-emerald-700 active:bg-emerald-800
+              disabled:opacity-70
+            "
+          >
+            {showAcceptSpin ? (
+              <LoadingSpinner color="white" size="4" inline />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+            )}
+            Duyệt
+          </button>
 
-      <button
-        disabled={loading}
-        onClick={() =>
-          confirmRejectReport({
-            reportId: r.id,
-            disabled: loading,
-            onOk: () => onReject(r.id),
-          })
-        }
-        className="
-          inline-flex items-center gap-1 rounded-xl
-          bg-rose-600 px-2 py-1.5
-          text-sm font-medium text-white
-          transition-all duration-200 ease-out
-          hover:-translate-y-[1px] hover:shadow-sm
-          hover:bg-rose-700 active:bg-rose-800
-          disabled:opacity-70
-        "
-      >
-        {loading ? (
-          <LoadingSpinner color="white" size="4" inline />
-        ) : (
-          <XCircle className="h-4 w-4 shrink-0" />
-        )}
-        Từ chối
-      </button>
+          <button
+            disabled={loading}
+            onClick={() => {
+              lastActionRef.current = "reject";
+              confirmRejectReport({
+                reportId: r.id,
+                disabled: loading,
+                onOk: () => onReject(r.id),
+              });
+            }}
+            className="
+              inline-flex items-center gap-1 rounded-xl
+              bg-rose-600 px-2 py-1.5
+              text-sm font-medium text-white
+              transition-all duration-200 ease-out
+              hover:-translate-y-[1px] hover:shadow-sm
+              hover:bg-rose-700 active:bg-rose-800
+              disabled:opacity-70
+            "
+          >
+            {showRejectSpin ? (
+              <LoadingSpinner color="white" size="4" inline />
+            ) : (
+              <XCircle className="h-4 w-4 shrink-0" />
+            )}
+            Từ chối
+          </button>
+        </>
+      )}
     </div>
   );
 });
@@ -261,7 +342,7 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
   onAccept,
   onReject,
 }: Props) {
-  /** ✅ DESKTOP columns */
+  /** DESKTOP columns */
   const columnsDesktop: ColumnsType<EnterpriseReport> = useMemo(() => {
     return [
       {
@@ -280,12 +361,11 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
         title: <div className="text-center font-semibold">Địa chỉ</div>,
         dataIndex: "address",
         key: "address",
-        align: "center",
+        align: "left",
+        ellipsis: { showTitle: false },
         render: (v: string) => (
           <Tooltip destroyOnHidden title={v}>
-            <span className="inline-block max-w-[420px] truncate align-middle">
-              {v}
-            </span>
+            <span className="block w-full min-w-0 truncate">{v}</span>
           </Tooltip>
         ),
       },
@@ -294,14 +374,14 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
         key: "status",
         align: "center",
         width: 170,
-        render: (_: unknown, r: EnterpriseReport) => {
-          const status = (r as any)?.status ?? "PENDING";
-          return (
-            <div className="inline-flex justify-center">
-              <TagPill kind="reportStatus" value={status} />
-            </div>
-          );
-        },
+        render: (_: unknown, r: EnterpriseReport) => (
+          <div className="inline-flex justify-center">
+            <StatusPillLive
+              status={(r as any)?.status ?? "PENDING"}
+              expiredAt={r.expiredAt}
+            />
+          </div>
+        ),
       },
       {
         title: (
@@ -311,26 +391,21 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
         align: "center",
         width: 260,
         render: (_: unknown, r: EnterpriseReport) => (
-          <ExpiryCell expiredAt={r.expiredAt} sentAt={r.sentAt} />
+          <ExpiryCell expiredAt={r.expiredAt} />
         ),
       },
       {
         title: <div className="text-center font-semibold">Thao tác</div>,
         key: "actions",
         align: "center",
-        width: 320,
-        shouldCellUpdate: (r, prev) =>
-          r.id === actionLoadingId || prev.id === actionLoadingId,
+        width: 340,
         render: (_: unknown, r: EnterpriseReport) => {
-          const expMs = toMs(r.expiredAt);
-          const expired = expMs ? expMs - Date.now() <= 0 : false;
           const loading = actionLoadingId === r.id;
-
           return (
             <ActionButtons
               r={r}
               loading={loading}
-              expired={expired}
+              expiredAt={r.expiredAt}
               onView={onView}
               onPrefetchDetail={onPrefetchDetail}
               onAccept={onAccept}
@@ -342,30 +417,27 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
     ];
   }, [actionLoadingId, onAccept, onReject, onView, onPrefetchDetail]);
 
-  /** ✅ MOBILE columns: 1 cột dạng “card” */
+  /** MOBILE columns */
   const columnsMobile: ColumnsType<EnterpriseReport> = useMemo(() => {
     return [
       {
         title: null,
         key: "mobileCard",
         render: (_: unknown, r: EnterpriseReport) => {
-          const expMs = toMs(r.expiredAt);
-          const expired = expMs ? expMs - Date.now() <= 0 : false;
           const loading = actionLoadingId === r.id;
-
           const status = (r as any)?.status ?? "PENDING";
 
+          // dùng hook trong component con để auto ẩn nút khi hết hạn
           return (
             <div className="p-3">
               <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                {/* Top row */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <div className="font-extrabold text-slate-900 tabular-nums">
                         #{r.id}
                       </div>
-                      <TagPill kind="reportStatus" value={status} />
+                      <StatusPillLive status={status} expiredAt={r.expiredAt} />
                     </div>
 
                     <div className="mt-1 text-sm text-slate-700 line-clamp-2">
@@ -374,95 +446,24 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
                   </div>
                 </div>
 
-                {/* Expiry */}
                 <div className="mt-3 flex items-center gap-2 text-xs text-slate-600">
                   <Clock className="h-4 w-4" />
                   <span className="font-semibold text-slate-800">Hết hạn:</span>
                   <span className="min-w-0">
-                    <ExpiryCell expiredAt={r.expiredAt} sentAt={r.sentAt} />
+                    <ExpiryCell expiredAt={r.expiredAt} />
                   </span>
                 </div>
 
-                {/* Actions */}
                 <div className="mt-3">
-                  {expired ? (
-                    <div className="text-sm text-slate-400 inline-flex items-center gap-2">
-                      <Lock className="h-4 w-4" />
-                      Hết hạn
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onMouseEnter={() => onPrefetchDetail?.(r.id)}
-                        onClick={() => onView(r.id)}
-                        className="
-                          flex-1 min-w-[110px]
-                          inline-flex items-center justify-center gap-1 rounded-xl
-                          border border-slate-200 bg-white px-3 py-2
-                          text-sm font-semibold text-slate-700
-                          hover:border-emerald-200 hover:bg-emerald-50/60
-                          transition
-                        "
-                      >
-                        <Eye className="h-4 w-4 shrink-0" />
-                        Xem
-                      </button>
-
-                      <button
-                        disabled={loading}
-                        onClick={() =>
-                          confirmAcceptReport({
-                            reportId: r.id,
-                            disabled: loading,
-                            onOk: () => onAccept(r.id),
-                          })
-                        }
-                        className="
-                          flex-1 min-w-[110px]
-                          inline-flex items-center justify-center gap-1 rounded-xl
-                          bg-emerald-600 px-3 py-2
-                          text-sm font-semibold text-white
-                          hover:bg-emerald-700 active:bg-emerald-800
-                          disabled:opacity-70
-                          transition
-                        "
-                      >
-                        {loading ? (
-                          <LoadingSpinner color="white" size="4" inline />
-                        ) : (
-                          <CheckCircle2 className="h-4 w-4 shrink-0" />
-                        )}
-                        Duyệt
-                      </button>
-
-                      <button
-                        disabled={loading}
-                        onClick={() =>
-                          confirmRejectReport({
-                            reportId: r.id,
-                            disabled: loading,
-                            onOk: () => onReject(r.id),
-                          })
-                        }
-                        className="
-                          w-full
-                          inline-flex items-center justify-center gap-1 rounded-xl
-                          bg-rose-600 px-3 py-2
-                          text-sm font-semibold text-white
-                          hover:bg-rose-700 active:bg-rose-800
-                          disabled:opacity-70
-                          transition
-                        "
-                      >
-                        {loading ? (
-                          <LoadingSpinner color="white" size="4" inline />
-                        ) : (
-                          <XCircle className="h-4 w-4 shrink-0" />
-                        )}
-                        Từ chối
-                      </button>
-                    </div>
-                  )}
+                  <ActionButtons
+                    r={r}
+                    loading={loading}
+                    expiredAt={r.expiredAt}
+                    onView={onView}
+                    onPrefetchDetail={onPrefetchDetail}
+                    onAccept={onAccept}
+                    onReject={onReject}
+                  />
                 </div>
               </div>
             </div>
@@ -474,7 +475,7 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
 
   return (
     <div className="w-full">
-      {/* ✅ MOBILE */}
+      {/* MOBILE */}
       <div className="block md:hidden">
         <Table
           rowKey={(r) => r.id}
@@ -492,7 +493,7 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
         />
       </div>
 
-      {/* ✅ DESKTOP */}
+      {/* DESKTOP */}
       <div className="hidden md:block">
         <Table
           rowKey={(r) => r.id}
@@ -501,7 +502,11 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
           pagination={false}
           size="middle"
           tableLayout="fixed"
-          className="[&_.ant-table]:bg-transparent [&_.ant-table-thead>tr>th]:text-center"
+          className="
+            [&_.ant-table]:bg-transparent
+            [&_.ant-table-thead>tr>th]:text-center
+            [&_.ant-table-cell]:align-middle
+          "
           rowClassName={() =>
             "transition-colors duration-200 hover:!bg-emerald-50/30"
           }

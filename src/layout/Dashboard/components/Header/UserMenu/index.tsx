@@ -123,7 +123,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
   const menuItems = [
     {
       icon: UserIcon,
-      label: "Hồ sơ cá nhân",
+      label: "Hồ sơ tài khoản",
       to: endPoint.PROFILE,
       color: "text-gray-700",
       hoverColor: "hover:bg-blue-50 hover:text-blue-600",

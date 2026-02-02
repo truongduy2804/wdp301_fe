@@ -8,11 +8,14 @@ import { Toaster } from "react-hot-toast";
 import "leaflet/dist/leaflet.css";
 import "./index.css";
 import App from "./App";
+import ErrorBoundary from "@/components/error_Boundary";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <Provider store={store}>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
       <ToastContainer autoClose={3000} />
       <Toaster position="bottom-right" />
     </Provider>

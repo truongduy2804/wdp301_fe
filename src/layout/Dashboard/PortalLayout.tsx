@@ -36,10 +36,9 @@ export default function PortalLayout({
   role,
   allowGuest = true,
 }: Props) {
-  // ✅ lấy user từ redux
+  // lấy user từ redux
   const authUser = useSelector(selectUser);
   const userId = authUser?.id;
-
   const resolvedRole = session?.role ?? role ?? authUser?.role;
 
   // Chưa có role
@@ -47,7 +46,7 @@ export default function PortalLayout({
     if (!allowGuest) return <div className="min-h-dvh bg-slate-50" />;
     return (
       <div className="min-h-dvh bg-slate-50">
-        {/* ✅ mount socket nếu có userId */}
+        {/* mount socket nếu có userId */}
         <NotificationsSocketBootstrap userId={userId} />
         {children ?? <Outlet />}
       </div>
@@ -61,7 +60,7 @@ export default function PortalLayout({
 
   return (
     <div className="h-dvh w-full">
-      {/* ✅ SOCKET: mount 1 lần ở layout */}
+      {/* SOCKET: mount 1 lần ở layout */}
       <NotificationsSocketBootstrap userId={userId} />
 
       <div className="flex h-full">

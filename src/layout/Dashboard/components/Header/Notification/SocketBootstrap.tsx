@@ -5,7 +5,7 @@ import {
   disconnectSocket,
   subscribeNotification,
 } from "@/utils/socket";
-import { applyRealtimeNotification } from "@/redux/api/enterprise/notifications/realTime";
+import { applyRealtimeNotification } from "@/redux/api/enterprise/notifications/realtime";
 import type { NotificationItem } from "@/redux/api/enterprise/notifications/types";
 
 export default function NotificationsSocketBootstrap({
@@ -18,9 +18,11 @@ export default function NotificationsSocketBootstrap({
   useEffect(() => {
     if (!userId) return;
 
+    console.log("🚀 Bootstrap socket with userId:", userId);
     connectSocket(userId);
 
     const unsub = subscribeNotification((data: NotificationItem) => {
+      console.log("🧩 bootstrap got notification -> patch cache");
       applyRealtimeNotification(dispatch, data);
     });
 

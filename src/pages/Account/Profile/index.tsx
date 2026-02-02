@@ -144,7 +144,7 @@ export default function AccountProfilePage() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-6">
-        {/* ✅ LoadingSpinner */}
+        {/*  LoadingSpinner */}
         {q.isLoading ? (
           <div className="rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
             <div className="flex items-center justify-center gap-3 text-slate-700">
@@ -184,7 +184,7 @@ export default function AccountProfilePage() {
 
                   <button
                     onClick={() => setOpen(true)}
-                    className="absolute -bottom-2 -right-2 grid h-11 w-11 place-items-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-[0.98] transition"
+                    className="absolute -bottom-0.5 -right-0.5 grid h-9 w-9 place-items-center rounded-full bg-emerald-600 text-white shadow-lg  hover:bg-emerald-700 active:scale-[0.98] transition"
                     aria-label="edit"
                   >
                     <Pencil className="h-5 w-5" />
