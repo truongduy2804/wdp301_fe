@@ -83,9 +83,9 @@ const AdminEnterprisesMap: React.FC = () => {
                 </div>
 
                 {/* Left Controls Stack */}
-                <div className="absolute top-20 left-4 bottom-4 z-[1000] flex flex-col gap-4 pointer-events-none">
+                <div className="absolute top-12 left-4 bottom-6 z-[1000] flex flex-col gap-3 pointer-events-none">
                     {/* Status Filter */}
-                    <div className="pointer-events-auto shrink-0 shadow-lg rounded-2xl">
+                    <div className="pointer-events-auto shrink-0">
                         <FilterSidebar
                             currentStatus={statusFilter}
                             onStatusChange={setStatusFilter}
@@ -93,7 +93,7 @@ const AdminEnterprisesMap: React.FC = () => {
                     </div>
 
                     {/* Location Filter */}
-                    <div className="pointer-events-auto flex-1 overflow-visible">
+                    <div className="pointer-events-auto shrink-0">
                         <LocationFilter
                             onLocationSelect={handleLocationFilterSelect}
                         />

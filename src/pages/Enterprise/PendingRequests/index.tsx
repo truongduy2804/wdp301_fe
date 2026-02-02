@@ -16,15 +16,58 @@ import {
 import WaitingReportsTable from "../components/waitingReportsTable";
 import ReportDetailModal from "./detailPage";
 
-import {
-  useGetWaitingReportsQuery,
-  useLazyGetWaitingReportDetailQuery,
-  useAcceptReportMutation,
-  useRejectReportMutation,
-  enterpriseReportsApi,
-} from "@/redux/api/enterprise/reports";
+// TODO: Uncomment when reports API is created
+// import {
+//   useGetWaitingReportsQuery,
+//   useLazyGetWaitingReportDetailQuery,
+//   useAcceptReportMutation,
+//   useRejectReportMutation,
+//   enterpriseReportsApi,
+// } from "@/redux/api/enterprise/reports";
+// import type { EnterpriseReport } from "@/redux/api/enterprise/reports/types";
 
-import type { EnterpriseReport } from "@/redux/api/enterprise/reports/types";
+// Stub implementations until reports API exists
+type EnterpriseReport = any;
+
+const useGetWaitingReportsQuery = () => ({
+  data: { data: [] },
+  isLoading: false,
+  isFetching: false,
+  isError: false,
+  error: null,
+  refetch: () => { },
+});
+
+const useLazyGetWaitingReportDetailQuery = () => [
+  (id: number) => { },
+  {
+    data: { data: null },
+    isFetching: false,
+  },
+];
+
+const useAcceptReportMutation = () => [
+  (id: number) => ({
+    unwrap: async () => {
+      console.log("📋 [STUB] acceptReport called for ID:", id);
+    },
+  }),
+];
+
+const useRejectReportMutation = () => [
+  (data: any) => ({
+    unwrap: async () => {
+      console.log("📋 [STUB] rejectReport called for:", data);
+    },
+  }),
+];
+
+const enterpriseReportsApi = {
+  usePrefetch: (endpoint: string) => (id: number) => {
+    console.log("📋 [STUB] prefetch called for:", endpoint, id);
+  },
+};
+
 
 export default function EnterprisePendingRequestsPage() {
   // ✅ bỏ refetchOnFocus/refetchOnReconnect để tránh request “tự nhiên bắn”
@@ -157,11 +200,10 @@ export default function EnterprisePendingRequestsPage() {
               >
                 <span className="inline-flex items-center gap-2">
                   <RefreshCw
-                    className={`h-4 w-4 ${
-                      isFetching
+                    className={`h-4 w-4 ${isFetching
                         ? "animate-spin text-emerald-700"
                         : "text-slate-600"
-                    }`}
+                      }`}
                   />
                   {isFetching ? "Đang tải..." : "Tải lại"}
                 </span>

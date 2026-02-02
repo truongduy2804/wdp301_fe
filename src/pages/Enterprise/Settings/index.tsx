@@ -20,13 +20,14 @@ import {
 } from "@/redux/api/enterprise/profile";
 import type { EnterpriseProfile } from "@/redux/api/enterprise/profile/types";
 
-import {
-  getAllProvinces,
-  getProvinceName,
-  getDistrictName,
-  getWardName,
-  getWardsByDistrict,
-} from "@/utils/vnAdmin";
+// TODO: Create vnAdmin utility file or comment out area label logic
+// import {
+//   getAllProvinces,
+//   getProvinceName,
+//   getDistrictName,
+//   getWardName,
+//   getWardsByDistrict,
+// } from "@/utils/vnAdmin";
 
 import EnterpriseProfileUpsertModal from "./Modal/modal";
 
@@ -84,38 +85,44 @@ type AreaLabel = {
   label: string;
 };
 
-async function safeWardName(wardCode: string, districtCode?: string | null) {
-  try {
-    const name = await getWardName(wardCode);
-    if (name) return name;
-  } catch {
-    // ignore
-  }
-  if (districtCode) {
-    try {
-      const ws = await getWardsByDistrict(String(districtCode));
-      const found = ws.find((x: any) => String(x.code) === String(wardCode));
-      if (found?.name) return found.name;
-    } catch {
-      // ignore
-    }
-  }
-  return "";
-}
+// TODO: Uncomment when vnAdmin utility exists
+// async function safeWardName(wardCode: string, districtCode?: string | null) {
+//   try {
+//     const name = await getWardName(wardCode);
+//     if (name) return name;
+//   } catch {
+//     // ignore
+//   }
+//   if (districtCode) {
+//     try {
+//       const ws = await getWardsByDistrict(String(districtCode));
+//       const found = ws.find((x: any) => String(x.code) === String(wardCode));
+//       if (found?.name) return found.name;
+//     } catch {
+//       // ignore
+//     }
+//   }
+//   return "";
+// }
 
-async function buildAreaLabel(sa: any): Promise<string> {
-  const provinceCode = sa?.provinceCode == null ? "" : String(sa.provinceCode);
-  const districtCode = sa?.districtCode == null ? "" : String(sa.districtCode);
-  const wardCode = sa?.wardCode == null ? "" : String(sa.wardCode);
+// async function buildAreaLabel(sa: any): Promise<string> {
+//   const provinceCode = sa?.provinceCode == null ? "" : String(sa.provinceCode);
+//   const districtCode = sa?.districtCode == null ? "" : String(sa.districtCode);
+//   const wardCode = sa?.wardCode == null ? "" : String(sa.wardCode);
 
-  const [p, d, w] = await Promise.all([
-    provinceCode ? getProvinceName(provinceCode) : Promise.resolve(""),
-    districtCode ? getDistrictName(districtCode) : Promise.resolve(""),
-    wardCode ? safeWardName(wardCode, districtCode) : Promise.resolve(""),
-  ]);
+//   const [p, d, w] = await Promise.all([
+//     provinceCode ? getProvinceName(provinceCode) : Promise.resolve(""),
+//     districtCode ? getDistrictName(districtCode) : Promise.resolve(""),
+//     wardCode ? safeWardName(wardCode, districtCode) : Promise.resolve(""),
+//   ]);
 
-  // Nếu chỉ có province -> vẫn hiện province
-  return [w, d, p].filter(Boolean).join(", ") || "—";
+//   // Nếu chỉ có province -> vẫn hiện province
+//   return [w, d, p].filter(Boolean).join(", ") || "—";
+// }
+
+// Temporary stub until vnAdmin is created
+function buildAreaLabel(sa: any): string {
+  return sa?.provinceCode || "—";
 }
 
 /* ─── micro ──────────────────────────────────────────────── */
@@ -183,9 +190,10 @@ export default function EnterpriseProfilePage() {
   const [update, u] = useUpdateEnterpriseProfileMutation();
   const profile: EnterpriseProfile | null = q.data ?? null;
 
-  useEffect(() => {
-    getAllProvinces().catch(() => {});
-  }, []);
+  // TODO: Uncomment when vnAdmin exists
+  // useEffect(() => {
+  //   getAllProvinces().catch(() => {});
+  // }, []);
 
   const avatarUrl = useMemo(
     () => resolveAvatarUrl(profile?.avatar ?? null),
@@ -214,25 +222,38 @@ export default function EnterpriseProfilePage() {
 
   const [areaLabels, setAreaLabels] = useState<AreaLabel[]>([]);
   useEffect(() => {
-    let alive = true;
-    (async () => {
-      const sa = profile?.serviceAreas ?? [];
-      const next = await Promise.all(
-        sa.map(async (x) => ({
-          raw: {
-            provinceCode: String(x.provinceCode),
-            districtCode:
-              x.districtCode == null ? null : String(x.districtCode),
-            wardCode: x.wardCode == null ? null : String(x.wardCode),
-          },
-          label: await buildAreaLabel(x),
-        })),
-      );
-      if (alive) setAreaLabels(next);
-    })();
-    return () => {
-      alive = false;
-    };
+    // TODO: Uncomment when vnAdmin exists
+    // let alive = true;
+    // (async () => {
+    //   const sa = profile?.serviceAreas ?? [];
+    //   const next = await Promise.all(
+    //     sa.map(async (x) => ({
+    //       raw: {
+    //         provinceCode: String(x.provinceCode),
+    //         districtCode:
+    //           x.districtCode == null ? null : String(x.districtCode),
+    //         wardCode: x.wardCode == null ? null : String(x.wardCode),
+    //       },
+    //       label: await buildAreaLabel(x),
+    //     })),
+    //   );
+    //   if (alive) setAreaLabels(next);
+    // })();
+    // return () => {
+    //   alive = false;
+    // };
+
+    // Temporary: show raw codes until vnAdmin is created
+    const sa = profile?.serviceAreas ?? [];
+    const next = sa.map((x) => ({
+      raw: {
+        provinceCode: String(x.provinceCode),
+        districtCode: x.districtCode == null ? null : String(x.districtCode),
+        wardCode: x.wardCode == null ? null : String(x.wardCode),
+      },
+      label: buildAreaLabel(x),
+    }));
+    setAreaLabels(next);
   }, [profile?.serviceAreas]);
 
   const [open, setOpen] = useState(false);

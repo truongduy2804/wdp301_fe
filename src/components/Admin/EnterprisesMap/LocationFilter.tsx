@@ -119,55 +119,55 @@ const LocationFilter: React.FC<LocationFilterProps> = ({ onLocationSelect }) => 
         <div className="relative h-full flex items-start">
             <motion.div
                 animate={{
-                    width: isCollapsed ? 0 : 240,
+                    width: isCollapsed ? 0 : 220,
                     opacity: isCollapsed ? 0 : 1,
                     marginRight: isCollapsed ? 0 : 12
                 }}
                 transition={{ type: "spring", damping: 20, stiffness: 150 }}
-                className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 overflow-hidden h-fit"
+                className="bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-slate-200 overflow-hidden h-fit max-h-[calc(100vh-390px)]"
             >
-                <div className="p-4 w-[240px]">
-                    <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                        <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-emerald-600" />
-                            <h3 className="font-bold text-slate-800 text-sm">Khu vực</h3>
+                <div className="p-3 w-[220px] flex flex-col max-h-full">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-3 flex-shrink-0">
+                        <div className="flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                            <h3 className="font-bold text-slate-800 text-xs">Khu vực</h3>
                         </div>
                         <button
                             onClick={() => setIsCollapsed(true)}
-                            className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+                            className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
                         >
-                            <ChevronLeft className="w-4 h-4" />
+                            <ChevronLeft className="w-3.5 h-3.5" />
                         </button>
                     </div>
 
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-2 overflow-y-auto flex-1 pr-1">
                         {/* Province Select */}
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Tỉnh / Thành phố</label>
+                        <div className="space-y-0.5">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase ml-1">Tỉnh / Thành phố</label>
                             <div className="relative">
                                 <select
                                     value={selectedProvince}
                                     onChange={(e) => setSelectedProvince(Number(e.target.value))}
-                                    className="w-full h-9 pl-3 pr-8 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 appearance-none transition-all cursor-pointer"
+                                    className="w-full h-8 pl-2.5 pr-7 rounded-lg border border-slate-200 bg-slate-50 text-[11px] font-medium text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 appearance-none transition-all cursor-pointer"
                                 >
                                     <option value="">Chọn Tỉnh/Thành</option>
                                     {provinces.map(p => (
                                         <option key={p.code} value={p.code}>{p.name}</option>
                                     ))}
                                 </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
                             </div>
                         </div>
 
                         {/* District Select */}
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Quận / Huyện</label>
+                        <div className="space-y-0.5">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase ml-1">Quận / Huyện</label>
                             <div className="relative">
                                 <select
                                     value={selectedDistrict}
                                     onChange={(e) => setSelectedDistrict(Number(e.target.value))}
                                     disabled={!selectedProvince}
-                                    className="w-full h-9 pl-3 pr-8 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 appearance-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full h-8 pl-2.5 pr-7 rounded-lg border border-slate-200 bg-slate-50 text-[11px] font-medium text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 appearance-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <option value="">Chọn Quận/Huyện</option>
                                     {districts.map(d => (
@@ -175,29 +175,29 @@ const LocationFilter: React.FC<LocationFilterProps> = ({ onLocationSelect }) => 
                                     ))}
                                 </select>
                                 {loading && !selectedDistrict ? (
-                                    <Loader2 className="absolute right-8 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-emerald-500 animate-spin" />
+                                    <Loader2 className="absolute right-7 top-1/2 -translate-y-1/2 w-3 h-3 text-emerald-500 animate-spin" />
                                 ) : (
-                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
                                 )}
                             </div>
                         </div>
 
                         {/* Ward Select */}
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Phường / Xã</label>
+                        <div className="space-y-0.5">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase ml-1">Phường / Xã</label>
                             <div className="relative">
                                 <select
                                     value={selectedWard}
                                     onChange={(e) => setSelectedWard(Number(e.target.value))}
                                     disabled={!selectedDistrict}
-                                    className="w-full h-9 pl-3 pr-8 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 appearance-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full h-8 pl-2.5 pr-7 rounded-lg border border-slate-200 bg-slate-50 text-[11px] font-medium text-slate-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 appearance-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <option value="">Chọn Phường/Xã</option>
                                     {wards.map(w => (
                                         <option key={w.code} value={w.code}>{w.name}</option>
                                     ))}
                                 </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
                             </div>
                         </div>
                     </div>

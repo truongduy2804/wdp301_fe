@@ -20,18 +20,25 @@ import {
 import { toast } from "react-toastify";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
-import { reverseGeocodeOSM } from "@/utils/osm";
-import {
-  getAllProvinces,
-  getDistrictsByProvince,
-  getWardsByDistrict,
-  getProvinceName,
-  getDistrictName,
-  getWardName,
-  type Province,
-  type District,
-  type Ward,
-} from "@/utils/vnAdmin";
+// TODO: Create OSM utility for reverse geocoding
+// import { reverseGeocodeOSM } from "@/utils/osm";
+// TODO: Create vnAdmin utility - already commented out in Settings
+// import {
+//   getAllProvinces,
+//   getDistrictsByProvince,
+//   getWardsByDistrict,
+//   getProvinceName,
+//   getDistrictName,
+//   getWardName,
+//   type Province,
+//   type District,
+//   type Ward,
+// } from "@/utils/vnAdmin";
+
+// Temporary types until vnAdmin is created
+type Province = any;
+type District = any;
+type Ward = any;
 
 import type {
   EnterpriseProfile,
@@ -147,13 +154,13 @@ async function safeWardName(code: string, districtCode?: string | null) {
   try {
     const name = await getWardName(code);
     if (name) return name;
-  } catch {}
+  } catch { }
   if (districtCode) {
     try {
       const ws = await getWardsByDistrict(String(districtCode));
       const found = (ws as any[]).find((x) => String(x.code) === String(code));
       if (found?.name) return String(found.name);
-    } catch {}
+    } catch { }
   }
   return "";
 }
@@ -1011,18 +1018,18 @@ export default function EnterpriseProfileUpsertModal({
   const overlayAnim = reduceMotion
     ? {}
     : {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        exit: { opacity: 0 },
-      };
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      exit: { opacity: 0 },
+    };
   const panelAnim = reduceMotion
     ? {}
     : {
-        initial: { opacity: 0, y: 18 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: 18 },
-        transition: { duration: 0.22, ease: "easeOut" as any },
-      };
+      initial: { opacity: 0, y: 18 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: 18 },
+      transition: { duration: 0.22, ease: "easeOut" as any },
+    };
 
   return (
     <AnimatePresence>
@@ -1280,10 +1287,9 @@ export default function EnterpriseProfileUpsertModal({
                               relative h-20 rounded-xl border-2 transition-all duration-150
                               flex flex-col items-center justify-center gap-1.5
                               disabled:opacity-50 disabled:cursor-not-allowed
-                              ${
-                                active
-                                  ? "bg-emerald-50 border-emerald-500 shadow-sm"
-                                  : "bg-white border-slate-200 hover:border-blue-300 hover:bg-slate-50"
+                              ${active
+                                ? "bg-emerald-50 border-emerald-500 shadow-sm"
+                                : "bg-white border-slate-200 hover:border-blue-300 hover:bg-slate-50"
                               }
                             `}
                           >

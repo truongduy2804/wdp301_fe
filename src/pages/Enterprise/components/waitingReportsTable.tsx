@@ -6,7 +6,8 @@ import { Eye, CheckCircle2, XCircle, Lock, Clock } from "lucide-react";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
 import type { EnterpriseReport } from "@/redux/api/enterprise/reports/types";
-import { confirmAcceptReport, confirmRejectReport } from "./reportConfirm";
+// TODO: Create reportConfirm utility or use Ant Design Modal.confirm
+// import { confirmAcceptReport, confirmRejectReport } from "./reportConfirm";
 import TagPill from "./tagPill";
 
 type Props = {
@@ -277,11 +278,13 @@ const ActionButtons = React.memo(function ActionButtons(props: {
             disabled={loading}
             onClick={() => {
               lastActionRef.current = "accept";
-              confirmAcceptReport({
-                reportId: r.id,
-                disabled: loading,
-                onOk: () => onAccept(r.id),
-              });
+              // TODO: Add confirmation dialog
+              onAccept(r.id);
+              // confirmAcceptReport({
+              //   reportId: r.id,
+              //   disabled: loading,
+              //   onOk: () => onAccept(r.id),
+              // });
             }}
             className="
               inline-flex items-center gap-1 rounded-xl
@@ -305,11 +308,13 @@ const ActionButtons = React.memo(function ActionButtons(props: {
             disabled={loading}
             onClick={() => {
               lastActionRef.current = "reject";
-              confirmRejectReport({
-                reportId: r.id,
-                disabled: loading,
-                onOk: () => onReject(r.id),
-              });
+              // TODO: Add confirmation dialog
+              onReject(r.id);
+              // confirmRejectReport({
+              //   reportId: r.id,
+              //   disabled: loading,
+              //   onOk: () => onReject(r.id),
+              // });
             }}
             className="
               inline-flex items-center gap-1 rounded-xl

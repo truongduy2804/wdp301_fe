@@ -7,6 +7,10 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import endPoint from "@/router/endPoint";
 
+// ✅ Import Redux
+import { useDispatch } from "react-redux";
+import { setCredentials } from "@/redux/feature/authSlice";
+
 import LoadingSpinner from "@/components/ui/loadingSpinner";
 import {
   CustomTextInput,
@@ -40,7 +44,7 @@ const validateIdentifier = (value: string) => {
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
-async function loginApi(identifier: string, password: string): Promise<{ token: string; role: string; roleId: number }> {
+async function loginApi(identifier: string, password: string): Promise<{ token: string; role: string; roleId: number; user?: any }> {
   // Đảm bảo URL kết thúc bằng /api/v1 nếu chưa có
   const cleanBase = API_URL.endsWith("/") ? API_URL.slice(0, -1) : API_URL;
   const fullUrl = cleanBase.endsWith("/api/v1") ? `${cleanBase}/auth/login` : `${cleanBase}/api/v1/auth/login`;
@@ -75,11 +79,13 @@ async function loginApi(identifier: string, password: string): Promise<{ token: 
     token,
     role,
     roleId,
+    user: data.user || { email: identifier, role },
   };
 }
 
 const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // ✅ Redux dispatch
 
   const [email, setEmail] = useState(""); // thực tế: email/username
   const [password, setPassword] = useState("");
@@ -115,8 +121,17 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
       const result = await loginApi(email, password);
       console.log("DEBUG: Login Success Activity:", result);
 
-      // PAUSE for debugging 401
-      // alert("Đã nhận Token từ Backend. Kiểm tra Console trước khi nhấn OK để tiếp tục.");
+      // ✅ UPDATE REDUX STORE
+      dispatch(setCredentials({
+        user: {
+          ...result.user,
+          email: email,
+          fullname: result.user?.fullname || email.split("@")[0],
+          role: result.role,
+          roleId: result.roleId,
+        },
+        token: result.token, // ✅ Changed from accessToken to token
+      }));
 
       const store = remember ? localStorage : sessionStorage;
       store.setItem("mock_user", normalize(email)); // Giữ key cũ để tương thích
@@ -141,6 +156,7 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="w-full">

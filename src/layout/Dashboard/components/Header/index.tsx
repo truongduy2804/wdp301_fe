@@ -9,12 +9,13 @@ import NotificationPanel from "./Notification/notificationPanel";
 
 import { ACCESS_MAP, type Role } from "@/lib/role";
 
-import {
-  useGetOrderAcceptanceQuery,
-  useSetOrderAcceptanceMutation,
-} from "@/redux/api/enterprise/orderAcceptance";
+// TODO: Uncomment when API files are created
+// import {
+//   useGetOrderAcceptanceQuery,
+//   useSetOrderAcceptanceMutation,
+// } from "@/redux/api/enterprise/orderAcceptance";
 
-import { useGetNotificationsQuery } from "@/redux/api/enterprise/notifications";
+// import { useGetNotificationsQuery } from "@/redux/api/enterprise/notifications";
 
 /* ================= Types ================= */
 export type PortalRole = Role;
@@ -124,74 +125,76 @@ export default function PortalHeader({
   };
 
   /* ================= ENTERPRISE: Order Acceptance ================= */
-  const {
-    data: oaData,
-    isFetching: oaFetching,
-    isError: oaError,
-    isUninitialized,
-  } = useGetOrderAcceptanceQuery(undefined, {
-    skip: !isEnterprise,
-    refetchOnMountOrArgChange: false,
-    refetchOnFocus: false,
-    refetchOnReconnect: false,
-  });
+  // TODO: Uncomment when orderAcceptance API is created
+  // const {
+  //   data: oaData,
+  //   isFetching: oaFetching,
+  //   isError: oaError,
+  //   isUninitialized,
+  // } = useGetOrderAcceptanceQuery(undefined, {
+  //   skip: !isEnterprise,
+  //   refetchOnMountOrArgChange: false,
+  //   refetchOnFocus: false,
+  //   refetchOnReconnect: false,
+  // });
 
-  const [setOrderAcceptance, { isLoading: oaSaving }] =
-    useSetOrderAcceptanceMutation();
+  // const [setOrderAcceptance, { isLoading: oaSaving }] =
+  //   useSetOrderAcceptanceMutation();
 
-  const accepting = oaData?.data?.isAcceptingOrders ?? false;
-  const busy = oaFetching || oaSaving;
+  // const accepting = oaData?.data?.isAcceptingOrders ?? false;
+  // const busy = oaFetching || oaSaving;
 
-  const hasServerValue = typeof oaData?.data?.isAcceptingOrders === "boolean";
-  const disableSwitch =
-    oaError || busy || (!hasServerValue && !isUninitialized);
+  // const hasServerValue = typeof oaData?.data?.isAcceptingOrders === "boolean";
+  // const disableSwitch =
+  //   oaError || busy || (!hasServerValue && !isUninitialized);
 
-  const onToggleAccepting = useCallback(
-    async (checked: boolean) => {
-      if (busy) return;
+  // const onToggleAccepting = useCallback(
+  //   async (checked: boolean) => {
+  //     if (busy) return;
 
-      try {
-        await setOrderAcceptance({ isAcceptingOrders: checked }).unwrap();
-        toast.success(
-          checked ? "Đã bật trạng thái nhận đơn" : "Đã tắt trạng thái nhận đơn",
-          { autoClose: 1200 },
-        );
-      } catch (e: any) {
-        toast.error(e?.data?.message ?? "Cập nhật trạng thái thất bại", {
-          autoClose: 1400,
-        });
-      }
-    },
-    [busy, setOrderAcceptance],
-  );
+  //     try {
+  //       await setOrderAcceptance({ isAcceptingOrders: checked }).unwrap();
+  //       toast.success(
+  //         checked ? "Đã bật trạng thái nhận đơn" : "Đã tắt trạng thái nhận đơn",
+  //         { autoClose: 1200 },
+  //       );
+  //     } catch (e: any) {
+  //       toast.error(e?.data?.message ?? "Cập nhật trạng thái thất bại", {
+  //         autoClose: 1400,
+  //       });
+  //     }
+  //   },
+  //   [busy, setOrderAcceptance],
+  // );
 
-  const StatusPill = (
-    <span
-      className={[
-        "text-[11px] font-extrabold px-2 py-0.5 rounded-full inline-flex items-center justify-center min-w-[44px]",
-        accepting ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-700",
-      ].join(" ")}
-    >
-      {busy ? <BouncyDots /> : accepting ? "BẬT" : "TẮT"}
-    </span>
-  );
+  // const StatusPill = (
+  //   <span
+  //     className={[
+  //       "text-[11px] font-extrabold px-2 py-0.5 rounded-full inline-flex items-center justify-center min-w-[44px]",
+  //       accepting ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-700",
+  //     ].join(" ")}
+  //   >
+  //     {busy ? <BouncyDots /> : accepting ? "BẬT" : "TẮT"}
+  //   </span>
+  // );
 
   /* ================= Notifications badge (API) ================= */
-  const unreadQ = useGetNotificationsQuery({
-    page: 1,
-    limit: 1,
-    isRead: false,
-  });
-  const derivedUnreadCount = Number(unreadQ.data?.data?.pagination?.total ?? 0);
+  // TODO: Uncomment when notifications API is created
+  // const unreadQ = useGetNotificationsQuery({
+  //   page: 1,
+  //   limit: 1,
+  //   isRead: false,
+  // });
+  const derivedUnreadCount = 0; // Hardcoded until API is available
 
-  console.log(
-    "🔎 [PortalHeader] unread total raw:",
-    unreadQ.data?.data?.pagination?.total,
-    "type:",
-    typeof unreadQ.data?.data?.pagination?.total,
-    "derived:",
-    derivedUnreadCount,
-  );
+  // console.log(
+  //   "🔎 [PortalHeader] unread total raw:",
+  //   unreadQ.data?.data?.pagination?.total,
+  //   "type:",
+  //   typeof unreadQ.data?.data?.pagination?.total,
+  //   "derived:",
+  //   derivedUnreadCount,
+  // );
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
@@ -210,8 +213,8 @@ export default function PortalHeader({
           </h1>
         </div>
 
-        {/* ENTERPRISE: switch desktop */}
-        {isEnterprise && (
+        {/* TODO: Uncomment when orderAcceptance API is available */}
+        {/* {isEnterprise && (
           <div className="hidden md:flex items-center gap-3 px-3 py-2 rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm">
             <Switch
               checked={accepting}
@@ -225,10 +228,10 @@ export default function PortalHeader({
             </span>
             {StatusPill}
           </div>
-        )}
+        )} */}
 
-        {/* ENTERPRISE: switch mobile */}
-        {isEnterprise && (
+        {/* TODO: Uncomment when orderAcceptance API is available */}
+        {/* {isEnterprise && (
           <div className="md:hidden flex items-center gap-2">
             <Switch
               checked={accepting}
@@ -239,7 +242,7 @@ export default function PortalHeader({
             />
             {StatusPill}
           </div>
-        )}
+        )} */}
 
         <div className="flex items-center gap-2 shrink-0">
           <div className="relative" ref={notificationRef}>

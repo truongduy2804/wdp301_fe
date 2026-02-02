@@ -8,9 +8,6 @@ import {
   portalRoutes,
   PortalRouteWrapper,
 } from "@/router/portalRoutes";
-import RequireAuth from "@/router/RequireAuth";
-import ProfilePage from "@/pages/Account/Profile";
-import ChangePasswordPage from "@/pages/Account/ChangePassword";
 import NotFoundPage from "@/pages/System/notFound-404";
 import ForbiddenPage from "@/pages/System/forbidden-403";
 
@@ -20,24 +17,6 @@ export default function App() {
       {/* ===== System pages ===== */}
       <Route path={endPoint.FORBIDDEN} element={<ForbiddenPage />} />
       <Route path={endPoint.NOT_FOUND} element={<NotFoundPage />} />
-
-      {/* ===== Account pages (cần login) ===== */}
-      <Route
-        path={endPoint.PROFILE}
-        element={
-          <RequireAuth>
-            <ProfilePage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path={endPoint.CHANGE_PASSWORD}
-        element={
-          <RequireAuth>
-            <ChangePasswordPage />
-          </RequireAuth>
-        }
-      />
 
       {/* ===== Public ===== */}
       {publicRoutes.map((r) => (

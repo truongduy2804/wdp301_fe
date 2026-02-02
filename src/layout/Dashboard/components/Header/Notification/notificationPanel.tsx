@@ -10,11 +10,34 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "@/components/ui/loadingSpinner";
-import {
-  useGetNotificationsQuery,
-  useLazyGetNotificationsQuery,
-  useMarkReadNotificationMutation,
-} from "@/redux/api/enterprise/notifications";
+// TODO: Uncomment when notifications API is created
+// import {
+//   useGetNotificationsQuery,
+//   useLazyGetNotificationsQuery,
+//   useMarkReadNotificationMutation,
+// } from "@/redux/api/enterprise/notifications";
+
+// Stub hooks until notifications API exists
+const useGetNotificationsQuery = (args: any) => ({
+  data: { data: { pagination: { total: 0 }, data: [] } },
+  isFetching: false,
+  isError: false,
+});
+
+const useLazyGetNotificationsQuery = () => [
+  (args: any, force?: boolean) => { },
+  {
+    data: { data: { pagination: { totalPages: 1 }, data: [] } },
+    isFetching: false,
+    isError: false,
+  },
+];
+
+const useMarkReadNotificationMutation = () => [
+  (id: number) => ({ unwrap: async () => { } }),
+  { isLoading: false },
+];
+
 
 type Variant = "dropdown" | "page";
 type Filter = "ALL" | "UNREAD" | "READ";
