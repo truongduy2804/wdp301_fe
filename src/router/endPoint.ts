@@ -49,6 +49,7 @@ const endPoint = {
     MONITOR: "monitor",
     ACCOUNTS: "accounts",
     COMPLAINTS: "complaints",
+    ENTERPRISE_MAP: "enterprise-map",
   },
 } as const;
 

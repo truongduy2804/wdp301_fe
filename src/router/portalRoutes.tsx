@@ -14,6 +14,7 @@ import AdminDashboard from "@/pages/Admin/Statistics";
 import AdminAccounts from "@/pages/Admin/Accounts";
 import AdminSystemMonitor from "@/pages/Admin/SystemMonitor";
 import AdminComplaints from "@/pages/Admin/Complaints";
+import AdminEnterprisesMap from "@/pages/Admin/EnterprisesMap";
 
 // Enterprise Pages
 import EnterpriseDashboard from "@/pages/Enterprise/Statistics";
@@ -69,6 +70,10 @@ export const portalRoutes: PortalRoute[] = [
       { path: endPoint.ADMIN_CHILD.MONITOR, element: <AdminSystemMonitor /> },
       { path: endPoint.ADMIN_CHILD.ACCOUNTS, element: <AdminAccounts /> },
       { path: endPoint.ADMIN_CHILD.COMPLAINTS, element: <AdminComplaints /> },
+      {
+        path: endPoint.ADMIN_CHILD.ENTERPRISE_MAP,
+        element: <AdminEnterprisesMap />,
+      },
     ],
   },
   {

@@ -12,10 +12,8 @@ import { tagTypes } from "./tagTypes";
 import { readRefreshToken } from "@/utils/authStorage";
 
 const PROD_BASE =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(
-    /\/+$/,
-    "",
-  ) || "http://localhost:8000/api/v1";
+  (import.meta.env.VITE_API_BASE_URL + "api/v1")?.replace(/\/+$/, "") ||
+  "http://localhost:8000/api/v1";
 
 const API_BASE = PROD_BASE.replace(/\/+$/, "") + "/";
 

@@ -23,6 +23,7 @@ export function adminMenu(root: string, locale: Locale = "vi"): MenuItem[] {
       `/${endPoint.ADMIN_CHILD.COMPLAINTS}`,
     ],
     [t.systemMonitoring, ClipboardList, `/${endPoint.ADMIN_CHILD.MONITOR}`],
+    [t.enterpriseMap, Users, `/${endPoint.ADMIN_CHILD.ENTERPRISE_MAP}`],
   ];
 
   return makeMenu(root, RAWS);
