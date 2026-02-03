@@ -27,8 +27,9 @@ const AuthPage: React.FC = () => {
     <MotionConfig reducedMotion="never">
       <div className="fixed inset-0 z-0 overflow-hidden bg-gradient-to-br from-slate-50 via-white to-emerald-50">
         <motion.div
-          initial={{ opacity: 0, y: 14, scale: 0.995 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          // ❌ bỏ scale ở wrapper
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: "easeOut" }}
           className="h-full w-full lg:grid lg:grid-cols-[7fr_5fr]"
         >
@@ -44,10 +45,11 @@ const AuthPage: React.FC = () => {
                 src={bgImage}
                 alt="background"
                 className="absolute inset-0 w-full h-full object-cover"
-                style={{ willChange: "transform" }}
-                initial={{ opacity: 1, scale: 1.03 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 2.0, ease: "easeOut" }}
+                // ❌ bỏ scale zoom
+                style={{ willChange: "opacity" }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
               />
               <div className="absolute inset-0 bg-gradient-to-br from-slate-900/55 via-slate-900/35 to-emerald-900/35" />
             </div>

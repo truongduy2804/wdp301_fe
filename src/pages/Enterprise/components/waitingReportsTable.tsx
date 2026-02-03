@@ -6,8 +6,10 @@ import { Eye, CheckCircle2, XCircle, Lock, Clock } from "lucide-react";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
 import type { EnterpriseReport } from "@/redux/api/enterprise/reports/types";
-import { confirmAcceptReport, confirmRejectReport } from "./reportConfirm";
+
 import TagPill from "./tagPill";
+import ConfirmModal from "./confirmModal";
+import { useConfirm } from "@/hooks/useConfirm";
 
 type Props = {
   data: EnterpriseReport[];
@@ -108,7 +110,7 @@ function useSharedNowMs() {
   );
 }
 
-/** ✅ theo dõi hết hạn "đúng thời điểm" (không cần refresh) */
+/** ✅ theo dõi hết hạn "đúng thời điểm" */
 function useExpiredFlag(expiredAt?: unknown) {
   const expMs = useMemo(() => toMs(expiredAt), [expiredAt]);
 
@@ -130,7 +132,6 @@ function useExpiredFlag(expiredAt?: unknown) {
 
     setExpired(false);
 
-    // setTimeout tới đúng thời điểm hết hạn
     const delay = expMs - now + 80; // buffer nhỏ
     const MAX = 2_147_483_647; // ~24.8 ngày
     const t = window.setTimeout(() => setExpired(true), Math.min(delay, MAX));
@@ -163,7 +164,6 @@ const ExpiryLive = React.memo(function ExpiryLive(props: { expMs: number }) {
   const expired = msLeftRaw <= 0;
 
   const right = expiryText(props.expMs);
-
   const text = formatCountdownClamp(msLeftRaw);
 
   return (
@@ -180,7 +180,6 @@ const ExpiryLive = React.memo(function ExpiryLive(props: { expMs: number }) {
         </div>
       }
     >
-      {/* pill countdown */}
       <span
         className={[
           "inline-flex items-center justify-center",
@@ -205,7 +204,6 @@ const ExpiryCell = React.memo(function ExpiryCell(props: {
 
   const msLeftNow = expMs - Date.now();
 
-  // xa hơn 60 phút thì hiển thị timestamp (không tick)
   if (msLeftNow > LIVE_WINDOW_MS) {
     const right = expiryText(expMs);
     return (
@@ -227,6 +225,9 @@ const ActionButtons = React.memo(function ActionButtons(props: {
   onPrefetchDetail?: (id: number) => void;
   onAccept: (id: number) => Promise<void>;
   onReject: (id: number) => Promise<void>;
+
+  // ✅ confirm controller
+  confirm: ReturnType<typeof useConfirm>;
 }) {
   const {
     r,
@@ -236,13 +237,13 @@ const ActionButtons = React.memo(function ActionButtons(props: {
     onPrefetchDetail,
     onAccept,
     onReject,
+    confirm,
   } = props;
 
   const { expired } = useExpiredFlag(expiredAt);
 
   // ✅ chỉ nút vừa bấm mới hiện spinner
   const lastActionRef = useRef<"accept" | "reject" | null>(null);
-
   const showAcceptSpin = loading && lastActionRef.current === "accept";
   const showRejectSpin = loading && lastActionRef.current === "reject";
 
@@ -265,7 +266,7 @@ const ActionButtons = React.memo(function ActionButtons(props: {
         Xem
       </button>
 
-      {/* ✅ hết hạn thì ẩn Duyệt/Từ chối ngay lập tức */}
+      {/* ✅ hết hạn thì ẩn Duyệt/Từ chối */}
       {expired ? (
         <span className="inline-flex items-center gap-2 text-slate-400">
           <Lock className="h-4 w-4" />
@@ -277,9 +278,14 @@ const ActionButtons = React.memo(function ActionButtons(props: {
             disabled={loading}
             onClick={() => {
               lastActionRef.current = "accept";
-              confirmAcceptReport({
-                reportId: r.id,
-                disabled: loading,
+
+              confirm.ask({
+                title: `Xác nhận duyệt đơn #${r.id}`,
+                content:
+                  "Bạn chắc chắn muốn duyệt đơn này? Thao tác không thể hoàn tác.",
+                okText: "Duyệt",
+                cancelText: "Huỷ",
+                tone: "emerald",
                 onOk: () => onAccept(r.id),
               });
             }}
@@ -305,9 +311,14 @@ const ActionButtons = React.memo(function ActionButtons(props: {
             disabled={loading}
             onClick={() => {
               lastActionRef.current = "reject";
-              confirmRejectReport({
-                reportId: r.id,
-                disabled: loading,
+
+              confirm.ask({
+                title: `Xác nhận từ chối đơn #${r.id}`,
+                content:
+                  "Bạn chắc chắn muốn từ chối đơn này? Thao tác không thể hoàn tác.",
+                okText: "Từ chối",
+                cancelText: "Huỷ",
+                tone: "rose",
                 onOk: () => onReject(r.id),
               });
             }}
@@ -342,6 +353,8 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
   onAccept,
   onReject,
 }: Props) {
+  const confirm = useConfirm();
+
   /** DESKTOP columns */
   const columnsDesktop: ColumnsType<EnterpriseReport> = useMemo(() => {
     return [
@@ -410,12 +423,13 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
               onPrefetchDetail={onPrefetchDetail}
               onAccept={onAccept}
               onReject={onReject}
+              confirm={confirm}
             />
           );
         },
       },
     ];
-  }, [actionLoadingId, onAccept, onReject, onView, onPrefetchDetail]);
+  }, [actionLoadingId, onAccept, onReject, onView, onPrefetchDetail, confirm]);
 
   /** MOBILE columns */
   const columnsMobile: ColumnsType<EnterpriseReport> = useMemo(() => {
@@ -427,7 +441,6 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
           const loading = actionLoadingId === r.id;
           const status = (r as any)?.status ?? "PENDING";
 
-          // dùng hook trong component con để auto ẩn nút khi hết hạn
           return (
             <div className="p-3">
               <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
@@ -463,6 +476,7 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
                     onPrefetchDetail={onPrefetchDetail}
                     onAccept={onAccept}
                     onReject={onReject}
+                    confirm={confirm}
                   />
                 </div>
               </div>
@@ -471,48 +485,63 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
         },
       },
     ];
-  }, [actionLoadingId, onAccept, onReject, onView, onPrefetchDetail]);
+  }, [actionLoadingId, onAccept, onReject, onView, onPrefetchDetail, confirm]);
 
   return (
-    <div className="w-full">
-      {/* MOBILE */}
-      <div className="block md:hidden">
-        <Table
-          rowKey={(r) => r.id}
-          columns={columnsMobile}
-          dataSource={data}
-          pagination={{ pageSize: 6, showSizeChanger: false }}
-          size="middle"
-          tableLayout="fixed"
-          showHeader={false}
-          className="
-            [&_.ant-table]:bg-transparent
-            [&_.ant-table-tbody>tr>td]:!border-0
-            [&_.ant-table-tbody>tr]:!bg-transparent
-          "
-        />
+    <>
+      <div className="w-full">
+        {/* MOBILE */}
+        <div className="block md:hidden">
+          <Table
+            rowKey={(r) => r.id}
+            columns={columnsMobile}
+            dataSource={data}
+            pagination={{ pageSize: 6, showSizeChanger: false }}
+            size="middle"
+            tableLayout="fixed"
+            showHeader={false}
+            className="
+              [&_.ant-table]:bg-transparent
+              [&_.ant-table-tbody>tr>td]:!border-0
+              [&_.ant-table-tbody>tr]:!bg-transparent
+            "
+          />
+        </div>
+
+        {/* DESKTOP */}
+        <div className="hidden md:block">
+          <Table
+            rowKey={(r) => r.id}
+            columns={columnsDesktop}
+            dataSource={data}
+            pagination={false}
+            size="middle"
+            tableLayout="fixed"
+            className="
+              [&_.ant-table]:bg-transparent
+              [&_.ant-table-thead>tr>th]:text-center
+              [&_.ant-table-cell]:align-middle
+            "
+            rowClassName={() =>
+              "transition-colors duration-200 hover:!bg-emerald-50/30"
+            }
+          />
+        </div>
       </div>
 
-      {/* DESKTOP */}
-      <div className="hidden md:block">
-        <Table
-          rowKey={(r) => r.id}
-          columns={columnsDesktop}
-          dataSource={data}
-          pagination={false}
-          size="middle"
-          tableLayout="fixed"
-          className="
-            [&_.ant-table]:bg-transparent
-            [&_.ant-table-thead>tr>th]:text-center
-            [&_.ant-table-cell]:align-middle
-          "
-          rowClassName={() =>
-            "transition-colors duration-200 hover:!bg-emerald-50/30"
-          }
-        />
-      </div>
-    </div>
+      {/* ✅ Confirm modal (fast, inline, no createRoot) */}
+      <ConfirmModal
+        open={confirm.open}
+        title={confirm.cfg?.title ?? ""}
+        content={confirm.cfg?.content ?? ""}
+        okText={confirm.cfg?.okText}
+        cancelText={confirm.cfg?.cancelText}
+        tone={confirm.cfg?.tone}
+        loading={confirm.loading}
+        onClose={confirm.close}
+        onOk={confirm.ok}
+      />
+    </>
   );
 });
 

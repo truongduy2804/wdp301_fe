@@ -383,14 +383,15 @@ export default function ReportDetailModal({
                   </div>
                 </div>
 
-                <button
-                  className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] transition"
+                <motion.button
+                  whileHover={{ rotate: 90 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 18 }}
+                  className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-md hover:bg-gray-100 "
                   onClick={onClose}
                   aria-label="Đóng"
-                  type="button"
                 >
-                  <X className="h-5 w-5 text-slate-700" />
-                </button>
+                  <X className="h-5 w-5" />
+                </motion.button>
               </div>
             </div>
 

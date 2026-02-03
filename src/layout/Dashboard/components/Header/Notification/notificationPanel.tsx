@@ -15,11 +15,13 @@ import {
   useLazyGetNotificationsQuery,
   useMarkReadNotificationMutation,
 } from "@/redux/api/enterprise/notifications";
+import endPoint from "@/router/endPoint";
 
 type Variant = "dropdown" | "page";
 type Filter = "ALL" | "UNREAD" | "READ";
 
-const NOTI_ROUTE = "/enterprise/notifications";
+// đổi route này đúng với trang "đơn chờ duyệt" của bạn
+const ORDER_PENDING_ENDPOINT = endPoint.ENTERPRISE_CHILD.PENDING_REQUESTS;
 
 function formatTimeAgo(iso?: string) {
   if (!iso) return "";
@@ -48,22 +50,49 @@ function pickType(n: any) {
   return String(value).toUpperCase();
 }
 
-/**
- * Order/Đơn: theme BLUE
- * System: theme EMERALD
- * Bạn chỉnh rule isOrder ở đây theo backend thực tế
- */
-function getNotiVisual(n: any) {
+// rule xác định noti "đơn"
+function isOrderNoti(n: any) {
   const type = pickType(n);
-
-  const isOrder =
+  return (
     type === "REPORT_STATUS_CHANGED" ||
     type === "REPORT_ASSIGNED" ||
     type.startsWith("REPORT_") ||
     type.includes("ORDER") ||
-    type.includes("ASSIGN");
+    type.includes("ASSIGN")
+  );
+}
 
-  if (isOrder) {
+// lấy id mục tiêu (orderId/reportId...) nếu backend có
+function pickOrderTargetId(n: any) {
+  return (
+    n?.meta?.orderId ??
+    n?.orderId ??
+    n?.meta?.reportId ??
+    n?.reportId ??
+    n?.meta?.id ??
+    n?.targetId ??
+    n?.entityId ??
+    n?.refId ??
+    null
+  );
+}
+
+// build url trang "đơn chờ duyệt" (kèm query id nếu có)
+function buildOrderPendingUrl(n: any) {
+  const id = pickOrderTargetId(n);
+  return id
+    ? `${ORDER_PENDING_ENDPOINT}?id=${encodeURIComponent(String(id))}`
+    : ORDER_PENDING_ENDPOINT;
+}
+
+/**
+ * Order/Đơn: theme BLUE
+ * System: theme EMERALD
+ */
+function getNotiVisual(n: any) {
+  const order = isOrderNoti(n);
+
+  if (order) {
     return {
       Icon: Package,
       rowUnread: "bg-blue-50/30",
@@ -145,7 +174,11 @@ export default function NotificationPanel({
 
   const [markRead, { isLoading: marking }] = useMarkReadNotificationMutation();
 
+  // click noti: nếu "đơn" -> navigate trang đơn chờ duyệt, nếu system -> không navigate
   const onClickItem = async (n: any) => {
+    const shouldNav = isOrderNoti(n);
+    const url = shouldNav ? buildOrderPendingUrl(n) : "";
+
     try {
       if (!n.isRead) {
         await markRead(n.id).unwrap();
@@ -156,9 +189,18 @@ export default function NotificationPanel({
     } catch {
       // không chặn UX
     } finally {
-      if (variant === "dropdown") onClose?.();
-      // nếu muốn điều hướng theo type/meta:
-      // navigate(...);
+      if (!shouldNav) {
+        if (variant === "dropdown") onClose?.();
+        return;
+      }
+
+      if (variant === "dropdown") {
+        onClose?.();
+        // tránh dropdown unmount trước khi navigate
+        setTimeout(() => navigate(url), 0);
+      } else {
+        navigate(url);
+      }
     }
   };
 
