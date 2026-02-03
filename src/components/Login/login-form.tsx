@@ -19,7 +19,6 @@ export default function LoginForm() {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      console.log("Login:", { email, password });
     }, 2000);
   };
 

@@ -26,41 +26,16 @@ export const connectSocket = (userId: number) => {
   if (socket?.connected) return socket;
 
   socket = io(SOCKET_URL, {
-    transports: ["websocket", "polling"],
-    withCredentials: true,
-    reconnection: true,
-    reconnectionAttempts: 50,
-    reconnectionDelay: 500,
-    timeout: 10000,
-  });
-
-  // Debug: nghe tất cả event
-  socket.onAny((event, ...args) => {
-    // comment nếu quá nhiều log
-    console.log("📩 [socket.onAny]", event, args);
+    transports: ["websocket"],
   });
 
   socket.on("connect", () => {
     console.log("🟢 Socket connected:", socket?.id);
-
-    // join room theo userId (string hoá cho chắc)
-    socket?.emit("join", { userId: String(userId) }, (ack: any) => {
-      console.log("✅ join ack:", ack);
-    });
+    socket?.emit("join", { userId });
   });
 
-  // Sau reconnect thì join lại
-  socket.io.on("reconnect", () => {
-    console.log("🔁 Socket reconnected");
-    socket?.emit("join", { userId: String(userId) });
-  });
-
-  socket.on("connect_error", (err) => {
-    console.error("❌ connect_error:", err.message, err);
-  });
-
-  socket.on("disconnect", (reason) => {
-    console.log("🔴 Socket disconnected:", reason);
+  socket.on("disconnect", () => {
+    console.log("🔴 Socket disconnected");
   });
 
   socket.on("notification", (data) => {

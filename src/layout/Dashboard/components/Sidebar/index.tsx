@@ -722,18 +722,10 @@ export default function Sidebar({
                 Hệ thống EcoNet
               </span>
             </div>
-
-            <div className={`text-[11px] lg:text-[12px] ${UI.footerSub}`}>
-              Phiên bản{" "}
-              <span className="font-medium text-slate-500">{version}</span>
-            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-1">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] text-slate-400 font-medium">
-              {version}
-            </span>
           </div>
         )}
       </div>

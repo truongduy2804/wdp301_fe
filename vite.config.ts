@@ -23,4 +23,13 @@ export default defineConfig({
       "@/lib": path.resolve(__dirname, "./src/lib"),
     },
   },
+  server: {
+    proxy: {
+      "/nominatim": {
+        target: "https://nominatim.openstreetmap.org",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/nominatim/, ""),
+      },
+    },
+  },
 });

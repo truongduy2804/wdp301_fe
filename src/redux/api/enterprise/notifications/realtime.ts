@@ -55,14 +55,6 @@ function patchList(
 
     const lim = Number(p.limit ?? 1);
     p.totalPages = Math.max(1, Math.ceil(p.total / lim));
-
-    console.log("📌 [patchList] args=", args, {
-      total_before: before,
-      total_after: p.total,
-      total_type: typeof p.total,
-      limit: p.limit,
-      totalPages: p.totalPages,
-    });
   }
 }
 
@@ -76,8 +68,6 @@ export const applyRealtimeNotification = (
     isRead: payload.isRead ?? false,
     createdAt: payload.createdAt ?? new Date().toISOString(),
   };
-
-  console.log("⚡ applyRealtimeNotification payload:", noti);
 
   const targets: GetNotificationsParams[] = [
     // badge unread ở PortalHeader

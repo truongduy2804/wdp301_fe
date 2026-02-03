@@ -17,12 +17,9 @@ export default function NotificationsSocketBootstrap({
 
   useEffect(() => {
     if (!userId) return;
-
-    console.log("🚀 Bootstrap socket with userId:", userId);
     connectSocket(userId);
 
     const unsub = subscribeNotification((data: NotificationItem) => {
-      console.log("🧩 bootstrap got notification -> patch cache");
       applyRealtimeNotification(dispatch, data);
     });
 

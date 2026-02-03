@@ -108,15 +108,6 @@ export default function NotificationPanel({
   });
   const unreadCount = Number(unreadQ.data?.data?.pagination?.total ?? 0);
 
-  console.log(
-    "🔎 [NotificationPanel] unread total raw:",
-    unreadQ.data?.data?.pagination?.total,
-    "type:",
-    typeof unreadQ.data?.data?.pagination?.total,
-    "derived:",
-    unreadCount,
-  );
-
   // list: dùng lazy để load more
   const [trigger, list] = useLazyGetNotificationsQuery();
   const [items, setItems] = useState<any[]>([]);

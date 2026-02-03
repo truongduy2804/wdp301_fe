@@ -225,7 +225,7 @@ function FormField({
   );
 }
 
-/* =================== MultiSearchSelect (giữ nguyên bản bạn đang dùng) =================== */
+/* =================== MultiSearchSelect (giữ nguyên) =================== */
 const MultiSearchSelect = memo(function MultiSearchSelect({
   values,
   onToggle,
@@ -403,6 +403,8 @@ export default function EnterpriseProfileUpsertModal({
   // form
   const [name, setName] = useState("");
   const [capacityKg, setCapacityKg] = useState<string>("");
+
+  // address auto from map/search only
   const [address, setAddress] = useState("");
 
   // map
@@ -428,7 +430,7 @@ export default function EnterpriseProfileUpsertModal({
   >({});
   const [wardNameById, setWardNameById] = useState<Record<string, string>>({});
 
-  // ✅ stable parent maps
+  // stable parent maps
   const [districtProvinceById, setDistrictProvinceById] = useState<
     Record<string, string>
   >({});
@@ -479,12 +481,16 @@ export default function EnterpriseProfileUpsertModal({
       const next = { ...prev };
       for (const d of districts as any[]) {
         const did = String(d.code);
-        const pid = getDistrictProvinceCode(d);
+        const pid = getDistrictProvinceprovinceCode(d);
         if (pid) next[did] = String(pid);
       }
       return next;
     });
   }, [districts]);
+
+  function getDistrictProvinceprovinceCode(d: any): string | null {
+    return getDistrictProvinceCode(d);
+  }
 
   useEffect(() => {
     if (!wards.length) return;
@@ -611,6 +617,7 @@ export default function EnterpriseProfileUpsertModal({
 
     setName(initial?.name ?? "");
     setCapacityKg(String(initial?.capacityKg ?? ""));
+
     setAddress(initial?.address ?? "");
 
     if (draftLocation?.lat != null && draftLocation?.lng != null) {
@@ -641,7 +648,6 @@ export default function EnterpriseProfileUpsertModal({
     setSelectedDistricts(dIds);
     setSelectedWards(wIds);
 
-    // warm parent maps from backend
     setDistrictProvinceById((prev) => {
       const next = { ...prev };
       for (const x of sa) {
@@ -718,8 +724,7 @@ export default function EnterpriseProfileUpsertModal({
     return arr;
   }, [wards]);
 
-  /* ===== reverse geocode hint ===== */
-  const [addrHint, setAddrHint] = useState<string>("");
+  /* ===== reverse geocode -> always write into address ===== */
   const [loadingHint, setLoadingHint] = useState(false);
   const reqIdRef = useRef(0);
 
@@ -735,10 +740,14 @@ export default function EnterpriseProfileUpsertModal({
           debouncedPicked.lng,
         );
         if (reqId !== reqIdRef.current) return;
-        setAddrHint(text || "");
+
+        const t = (text || "").trim();
+        if (t) {
+          setAddress(t);
+          setErrors((p) => (p.address ? { ...p, address: undefined } : p));
+        }
       } catch {
-        if (reqId !== reqIdRef.current) return;
-        setAddrHint("");
+        // ignore
       } finally {
         if (reqId !== reqIdRef.current) return;
         setLoadingHint(false);
@@ -752,7 +761,7 @@ export default function EnterpriseProfileUpsertModal({
     );
   }, []);
 
-  /* ===== toggles ===== */
+  /* ===== toggles (giữ nguyên của bạn) ===== */
   const toggleProvince = useCallback(
     (id: string) => {
       const pid = String(id);
@@ -779,12 +788,10 @@ export default function EnterpriseProfileUpsertModal({
         return Array.from(s);
       });
 
-      // remove wards inside district when district removed
       setSelectedWards((prev) =>
         prev.filter((w) => wardDistrictById[String(w)] !== did),
       );
 
-      // ensure province selected
       const pid = districtProvinceById[did];
       if (pid) {
         setSelectedProvinces((prev) => {
@@ -811,7 +818,6 @@ export default function EnterpriseProfileUpsertModal({
         return Array.from(s);
       });
 
-      // ensure district/province selected
       const did = wardDistrictById[wid];
       if (did) {
         setSelectedDistricts((prev) => {
@@ -836,20 +842,16 @@ export default function EnterpriseProfileUpsertModal({
     [errors.serviceAreas, wardDistrictById, districtProvinceById],
   );
 
-  /* ===== remove cascade for tag lớn ===== */
   const removeProvinceCascade = useCallback(
     (pid0: string) => {
       const pid = String(pid0);
 
-      // remove province
       setSelectedProvinces((prev) => prev.filter((x) => String(x) !== pid));
 
-      // remove districts under province
       setSelectedDistricts((prev) =>
         prev.filter((did0) => districtProvinceById[String(did0)] !== pid),
       );
 
-      // remove wards under province (through ward->district->province)
       setSelectedWards((prev) =>
         prev.filter((wid0) => {
           const did = wardDistrictById[String(wid0)];
@@ -886,7 +888,8 @@ export default function EnterpriseProfileUpsertModal({
     else if (Number.isNaN(cap) || cap <= 0)
       next.capacityKg = "Công suất phải lớn hơn 0";
 
-    if (!address.trim()) next.address = "Vui lòng nhập địa chỉ";
+    if (!address.trim()) next.address = "Chưa có địa chỉ từ bản đồ";
+
     if (selectedProvinces.length === 0)
       next.serviceAreas = "Vui lòng chọn tối thiểu 1 Tỉnh/Thành";
     if (wasteTypes.length === 0)
@@ -899,7 +902,6 @@ export default function EnterpriseProfileUpsertModal({
   const buildServiceAreasPayload = useCallback((): ServiceAreaPayload[] => {
     const items: ServiceAreaPayload[] = [];
 
-    // 1) WARDS
     const wardDistrictSet = new Set<string>();
     const wardProvinceSet = new Set<string>();
 
@@ -926,7 +928,6 @@ export default function EnterpriseProfileUpsertModal({
       });
     }
 
-    // 2) DISTRICTS not covered by wards
     const districtProvinceSet = new Set<string>();
     for (const did0 of selectedDistricts) {
       const did = String(did0);
@@ -948,7 +949,6 @@ export default function EnterpriseProfileUpsertModal({
       });
     }
 
-    // 3) PROVINCES not covered deeper
     const provincesCoveredByDeeper = new Set<string>([
       ...Array.from(wardProvinceSet),
       ...Array.from(districtProvinceSet),
@@ -960,7 +960,6 @@ export default function EnterpriseProfileUpsertModal({
       items.push({ provinceCode: pid, districtCode: null, wardCode: null });
     }
 
-    // uniq
     const key = (x: ServiceAreaPayload) =>
       `${x.provinceCode}::${x.districtCode ?? ""}::${x.wardCode ?? ""}`;
     const map = new Map<string, ServiceAreaPayload>();
@@ -1040,7 +1039,7 @@ export default function EnterpriseProfileUpsertModal({
             aria-modal="true"
             className="
               fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-              w-[calc(100vw-2rem)] max-w-[980px]
+              w-[calc(100vw-2rem)] max-w-[1000px]
               max-h-[calc(100vh-4rem)]
               flex flex-col overflow-hidden
               rounded-3xl shadow-2xl transform-gpu
@@ -1092,8 +1091,9 @@ export default function EnterpriseProfileUpsertModal({
             {/* Body */}
             <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar bg-slate-100">
               <div className="p-8 space-y-6">
-                <div className="grid gap-6 lg:grid-cols-2">
-                  {/* Basic Info */}
+                {/* 1–1 */}
+                <div className="grid gap-6 lg:grid-cols-2 items-start">
+                  {/* INFO (trái) */}
                   <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h3 className="flex items-center gap-2 text-base font-bold text-slate-900 mb-5">
                       <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
@@ -1143,90 +1143,93 @@ export default function EnterpriseProfileUpsertModal({
                         />
                       </FormField>
 
+                      {/* ✅ Đưa “địa chỉ theo bản đồ” vào INFO */}
                       <FormField
-                        label="Địa chỉ"
+                        label="Địa chỉ theo bản đồ"
                         required
                         error={errors.address}
                       >
-                        <div className="relative">
-                          <MapPin className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
-                          <textarea
-                            value={address}
-                            onChange={(e) => {
-                              setAddress(e.target.value);
-                              if (errors.address)
-                                setErrors((p) => ({
-                                  ...p,
-                                  address: undefined,
-                                }));
-                            }}
-                            disabled={submitting}
-                            className="
-                              w-full min-h-[110px] rounded-xl border border-slate-200 bg-white
-                              pl-12 pr-4 py-3 text-[15px] text-slate-800 placeholder:text-slate-400
-                              outline-none transition-all duration-200
-                              hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-100
-                              disabled:bg-slate-50 disabled:text-slate-500 resize-none
-                            "
-                            placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành..."
-                          />
-                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                              <MapPinned className="w-5 h-5 text-slate-700" />
+                            </div>
 
-                        {addrHint && (
-                          <div className="mt-3 rounded-xl bg-blue-50 border border-blue-200 p-4">
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                <MapPin className="w-4 h-4 text-blue-600" />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="text-sm font-bold text-slate-900">
+                                  Tự động theo vị trí
+                                </div>
+                                <div className="text-xs font-semibold text-slate-500">
+                                  {loadingHint ? "Đang cập nhật..." : "Tự động"}
+                                </div>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-xs font-semibold text-blue-900 mb-1">
-                                  Gợi ý từ bản đồ
-                                </div>
-                                <div className="text-sm text-blue-700 mb-3">
-                                  {loadingHint ? (
-                                    <span className="flex items-center gap-2">
-                                      <LoadingSpinner size="4" inline />
-                                      Đang tải...
-                                    </span>
-                                  ) : (
-                                    addrHint
-                                  )}
-                                </div>
 
-                                <button
-                                  type="button"
-                                  disabled={submitting || loadingHint}
-                                  onClick={() => setAddress(addrHint)}
-                                  className="
-                                    inline-flex items-center gap-2 rounded-lg
-                                    bg-white border border-blue-200 px-3 py-1.5
-                                    text-xs font-semibold text-blue-700
-                                    hover:bg-blue-50 hover:border-blue-300
-                                    active:scale-[0.98] transition
-                                    disabled:opacity-50 disabled:cursor-not-allowed
-                                  "
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                  Sử dụng địa chỉ này
-                                </button>
+                              <div className="mt-2 text-[14px] text-slate-800 break-words">
+                                {loadingHint ? (
+                                  <span className="inline-flex items-center gap-2 text-slate-500">
+                                    <LoadingSpinner size="4" inline />
+                                    Đang lấy địa chỉ...
+                                  </span>
+                                ) : address ? (
+                                  address
+                                ) : (
+                                  <span className="text-slate-500">
+                                    Chưa có địa chỉ — hãy tìm kiếm hoặc kéo bản
+                                    đồ
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
-                        )}
+                        </div>
                       </FormField>
                     </div>
                   </section>
 
-                  {/* ✅ MAP tách ra file riêng */}
-                  <MapPickerSection
-                    picked={picked}
-                    onChange={setPicked}
-                    disabled={submitting}
-                    onSuggestAddress={(text) => setAddrHint(text)}
-                  />
+                  {/* MAP (phải) */}
+                  <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <div>
+                        <h3 className="flex items-center gap-2 text-base font-bold text-slate-900 mb-1">
+                          <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
+                            <MapPin className="w-4 h-4 text-rose-600" />
+                          </div>
+                          Vị trí trên bản đồ
+                        </h3>
+                        <p className="text-xs text-slate-500 ml-10">
+                          Tìm kiếm hoặc kéo bản đồ để cập nhật địa chỉ tự động
+                        </p>
+                      </div>
+
+                      <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 ring-1 ring-rose-200">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {picked.lat.toFixed(5)}, {picked.lng.toFixed(5)}
+                      </div>
+                    </div>
+
+                    <MapPickerSection
+                      picked={picked}
+                      onChange={setPicked}
+                      disabled={submitting}
+                      embedded
+                      showHeader={false}
+                      mapHeight={250} // map ngắn hơn
+                      onSuggestAddress={(text) => {
+                        const t = (text || "").trim();
+                        if (!t) return;
+
+                        // chọn gợi ý => update ngay address (reverse geocode sẽ sync lại sau)
+                        setAddress(t);
+                        setErrors((p) =>
+                          p.address ? { ...p, address: undefined } : p,
+                        );
+                      }}
+                    />
+                  </section>
                 </div>
 
-                {/* ✅ Service area: tag lớn chung (không lặp) */}
+                {/* Service area */}
                 <ServiceAreaSection
                   selectedProvinces={selectedProvinces}
                   selectedDistricts={selectedDistricts}
@@ -1296,7 +1299,9 @@ export default function EnterpriseProfileUpsertModal({
                               {getWasteTypeIcon(w)}
                             </span>
                             <span
-                              className={`text-xs font-semibold ${active ? "text-emerald-700" : "text-slate-700"}`}
+                              className={`text-xs font-semibold ${
+                                active ? "text-emerald-700" : "text-slate-700"
+                              }`}
                             >
                               {toWasteTypeVi(w)}
                             </span>

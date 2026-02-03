@@ -184,15 +184,6 @@ export default function PortalHeader({
   });
   const derivedUnreadCount = Number(unreadQ.data?.data?.pagination?.total ?? 0);
 
-  console.log(
-    "🔎 [PortalHeader] unread total raw:",
-    unreadQ.data?.data?.pagination?.total,
-    "type:",
-    typeof unreadQ.data?.data?.pagination?.total,
-    "derived:",
-    derivedUnreadCount,
-  );
-
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
       <div className="mx-auto px-3 sm:px-4 lg:px-6 h-14 md:h-16 flex items-center gap-3 md:gap-4 lg:gap-6">
