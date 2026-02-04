@@ -1,20 +1,25 @@
 import { useNavigate } from "react-router-dom";
+import { useAppDispatch } from "@/redux/store/hooks"; // hoặc hooks của bạn
+import { logout } from "@/redux/feature/authSlice";
 import { FiLock, FiArrowLeft, FiLogIn } from "react-icons/fi";
 import endPoint from "@/router/endPoint";
 
 export default function ForbiddenPage() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const handleBackAndReload = () => {
     if (window.history.length > 1) {
       window.history.back();
-      window.setTimeout(() => {
-        window.location.reload();
-      }, 80);
-
+      window.setTimeout(() => window.location.reload(), 80);
       return;
     }
     navigate("/", { replace: true });
+  };
+
+  const handleRelogin = () => {
+    dispatch(logout());
+    navigate(endPoint.LOGIN, { replace: true });
   };
 
   return (
@@ -52,8 +57,8 @@ export default function ForbiddenPage() {
                 Forbidden — Bạn không có quyền truy cập
               </h1>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Trang này yêu cầu quyền cao hơn (ví dụ: Admin). Nếu bạn nghĩ đây
-                là lỗi, hãy liên hệ quản trị viên.
+                Trang này không thuộc phạm vi quyền hạn của tài khoản hiện tại.
+                Vui lòng liên hệ quản trị viên nếu cần thêm quyền truy cập.
               </p>
             </div>
           </div>
@@ -70,7 +75,7 @@ export default function ForbiddenPage() {
             </button>
 
             <button
-              onClick={() => navigate(endPoint.LOGIN)}
+              onClick={handleRelogin}
               className="group px-5 py-3 text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
             >
               <span className="inline-flex items-center">

@@ -1,7 +1,7 @@
 // src/api/admin/enterprise-map.ts
 import { readAccessToken } from "@/utils/authStorage";
 
-const BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, ""); // bỏ "/" cuối nếu có
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, ""); // bỏ "/" cuối nếu có
 
 export interface EnterpriseMapLocation {
   id: number;
