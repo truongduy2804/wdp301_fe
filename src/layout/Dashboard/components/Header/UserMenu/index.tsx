@@ -8,6 +8,7 @@ import {
   Sparkles,
   ChevronRight,
   KeyRound,
+  CreditCard,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -129,6 +130,18 @@ const UserMenu: React.FC<UserMenuProps> = ({
       hoverColor: "hover:bg-blue-50 hover:text-blue-600",
       iconBg: "group-hover:bg-blue-100",
     },
+    ...(role === "ENTERPRISE"
+      ? [
+          {
+            icon: CreditCard,
+            label: "Gói dịch vụ",
+            to: endPoint.SUBSCRIPTION,
+            color: "text-gray-700",
+            hoverColor: "hover:bg-blue-50 hover:text-blue-700",
+            iconBg: "group-hover:bg-blue-100",
+          },
+        ]
+      : []),
     {
       icon: KeyRound,
       label: "Đổi mật khẩu",
@@ -174,6 +187,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
   };
 
   const { label: roleText, grad } = roleBadge(role);
+  const DROPDOWN_Z = 9999;
 
   return (
     <div className={`relative ${className}`}>
@@ -263,8 +277,11 @@ const UserMenu: React.FC<UserMenuProps> = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-40"
-                style={{ backgroundColor: "rgba(0,0,0,0.02)" }}
+                className="fixed inset-0 z-9999"
+                style={{
+                  backgroundColor: "rgba(0,0,0,0.02)",
+                  zIndex: DROPDOWN_Z,
+                }}
               />
             )}
 
@@ -288,6 +305,11 @@ const UserMenu: React.FC<UserMenuProps> = ({
                 damping: 30,
                 mass: 0.8,
               }}
+              style={{
+                zIndex: DROPDOWN_Z + 1, // cao hơn overlay
+                pointerEvents: "auto",
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
               className={`absolute right-0 ${
                 placement === "up" ? "bottom-full mb-3" : "mt-3"
               } w-[248px] rounded-2xl border border-gray-200 bg-white shadow-xl z-50 overflow-hidden`}

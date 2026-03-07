@@ -10,6 +10,7 @@ import {
 } from "@/router/portalRoutes";
 import RequireAuth from "@/router/RequireAuth";
 import ProfilePage from "@/pages/Account/Profile";
+import SubcriptionPage from "@/pages/Account/Subscription";
 import ChangePasswordPage from "@/pages/Account/ChangePassword";
 import NotFoundPage from "@/pages/System/notFound-404";
 import ForbiddenPage from "@/pages/System/forbidden-403";
@@ -27,6 +28,14 @@ export default function App() {
         element={
           <RequireAuth>
             <ProfilePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path={endPoint.SUBSCRIPTION}
+        element={
+          <RequireAuth>
+            <SubcriptionPage />
           </RequireAuth>
         }
       />

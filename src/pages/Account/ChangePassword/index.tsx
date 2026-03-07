@@ -497,7 +497,7 @@ export default function ChangePasswordPage() {
               onClick={() => navigate(-1)}
               disabled={isBusy}
               className="
-                px-5 py-2 rounded-2xl font-semibold hover:scale-[1.05]
+                px-5 py-2 rounded-xl font-semibold hover:scale-[1.05]
                 text-slate-700 bg-white border border-slate-200
                 hover:bg-slate-100  active:scale-[0.98] transition
                 disabled:opacity-60 disabled:cursor-not-allowed
@@ -511,7 +511,7 @@ export default function ChangePasswordPage() {
               onClick={onSubmit}
               disabled={isBusy}
               className="
-                px-6 py-2 rounded-2xl font-semibold text-white hover:scale-[1.02]
+                px-6 py-2 rounded-xl font-semibold text-white hover:scale-[1.02]
                 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800
                 active:scale-[0.98] transition
                 disabled:opacity-60 disabled:cursor-not-allowed

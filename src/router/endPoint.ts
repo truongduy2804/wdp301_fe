@@ -19,6 +19,7 @@ const endPoint = {
   // Account (relative children) - dùng chung cho mọi role
   PROFILE: "/profile",
   CHANGE_PASSWORD: "/change-password",
+  SUBSCRIPTION: "/subscription",
 
   // ===== Enterprise (relative children) =====
   ENTERPRISE_CHILD: {

@@ -18,7 +18,6 @@ export const menuEnterprise = {
       acceptedRequests: "accepted Requests",
       requestHistory: "Completed History",
       collectors: "Collector Management",
-
       settings: "Enterprise Settings",
     },
   },

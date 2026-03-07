@@ -615,14 +615,14 @@ export default function ReportDetailModal({
 
                     {/* Hình ảnh (2) */}
                     <SectionCard
-                      className=" h-full"
+                      className="h-full"
                       title="Hình ảnh"
                       icon={<Images className="h-4 w-4 text-indigo-700" />}
                     >
                       {report.images?.length ? (
                         <div
                           className={[
-                            "grid gap-3 overflow-auto pr-1",
+                            "grid gap-3 overflow-auto custom-scrollbar pr-1",
                             "max-h-60",
                             report.images.length === 1
                               ? "grid-cols-1"

@@ -519,6 +519,8 @@ export default function Sidebar({
     }`}
         >
           <BrandMark
+            sizeClassName="h-14 w-14"
+            textClassName="text-2xl font-black leading-none text-slate-900"
             textMode="inline"
             brandName="ECONET"
             accentSuffix="NET"
@@ -536,7 +538,7 @@ export default function Sidebar({
     }`}
         >
           <BrandMark
-            sizeClassName="h-10 w-10 lg:h-11 lg:w-11"
+            sizeClassName="h-10 w-10 lg:h-12 lg:w-12"
             textMode="none"
             showBadge={false}
           />

@@ -18,6 +18,7 @@ import {
   Users,
   Package,
 } from "lucide-react";
+import BrandMarks from "@/components/ui/BrandMark";
 
 /** BrandMark */
 const BrandMark = ({
@@ -332,11 +333,20 @@ const AuthShowcase: React.FC = () => {
           ))}
         </div>
 
-        {/* ✅ Layout: orbit bự hơn + căn giữa trên/dưới đều (header vẫn in-flow) */}
+        {/*  Layout: orbit bự hơn + căn giữa trên/dưới đều (header vẫn in-flow) */}
         <div className="relative w-full h-[100dvh] px-6 py-4 flex flex-col">
           {/* Header */}
           <div ref={headerRef} className="flex items-center justify-between">
-            <BrandMark textMode="inline" sizeClassName="h-14 w-14" />
+            <div className="flex items-center gap-3">
+              <BrandMarks
+                sizeClassName="h-16 w-16"
+                textMode="inline"
+                brandName="ECONET"
+                accentSuffix="NET"
+                accentClassName="text-emerald-600"
+              />
+            </div>
+
             <div className="hidden xl:inline-flex items-center gap-2 rounded-full border border-emerald-200/70 bg-white px-3 py-1.5 text-sm font-medium text-emerald-800 backdrop-blur">
               <Sparkles className="h-5 w-5" />
               Nền tảng xanh & thông minh
