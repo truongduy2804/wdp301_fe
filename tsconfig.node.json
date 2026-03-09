@@ -24,7 +24,7 @@
       "node"
     ],
     /* ✅ Tắt cảnh báo deprecations */
-    "ignoreDeprecations": "5.0"
+    "ignoreDeprecations": "6.0"
   },
   "include": [
     "vite.config.ts"
