@@ -81,7 +81,8 @@ export const CustomTextInput: React.FC<InputProps> = ({
 
       <input
         id={name}
-        name={name}
+        // @ts-ignore
+        name={register ? register.name : name}
         type={type}
         required={required}
         placeholder=" "
@@ -148,7 +149,8 @@ export const CustomPasswordInput: React.FC<InputProps> = ({
 
       <input
         id={name}
-        name={name}
+        // @ts-ignore
+        name={register ? register.name : name}
         type={show ? "text" : "password"}
         required={required}
         placeholder=" "

@@ -37,16 +37,16 @@ const callCron = async (
   args: string | FetchArgs,
   api: BaseQueryApi,
   extraOptions: {},
-): Promise<QueryReturnValue<CronResponse, FetchBaseQueryError>> => {
+) => {
   const result = await cronRawBase(args, api, extraOptions);
-  return result as QueryReturnValue<CronResponse, FetchBaseQueryError>;
+  return result;
 };
 
 export const cronJobsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     processPendingReports: build.mutation<CronResponse, void>({
       async queryFn(_arg, api, extraOptions) {
-        return await callCron(
+        const res = await callCron(
           {
             url: "cron/process-pending-reports",
             method: "POST",
@@ -54,12 +54,14 @@ export const cronJobsApi = baseApi.injectEndpoints({
           api,
           extraOptions,
         );
+        if (res.error) return { error: res.error as FetchBaseQueryError };
+        return { data: res.data as CronResponse };
       },
     }),
 
     handleTimeoutAttempts: build.mutation<CronResponse, void>({
       async queryFn(_arg, api, extraOptions) {
-        return await callCron(
+        const res = await callCron(
           {
             url: "cron/handle-timeout-attempts",
             method: "POST",
@@ -67,6 +69,8 @@ export const cronJobsApi = baseApi.injectEndpoints({
           api,
           extraOptions,
         );
+        if (res.error) return { error: res.error as FetchBaseQueryError };
+        return { data: res.data as CronResponse };
       },
     }),
   }),
