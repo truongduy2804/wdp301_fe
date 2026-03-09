@@ -3,9 +3,9 @@
 import type React from "react";
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, Chrome } from "lucide-react";
-import { Card } from "../card/card";
-import { Button } from "../button/button";
-import { Input } from "../input/input";
+import { Card } from "@/components/ui/card/card";
+import { Button } from "@/components/ui/button/button";
+import { Input } from "@/components/ui/input/input";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -61,7 +61,7 @@ export default function LoginForm() {
                     type="email"
                     placeholder="your@email.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                     className="pl-10 border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 h-11 hover:border-emerald-300 hover:shadow-md hover:scale-[1.01]"
                   />
                 </div>
@@ -89,7 +89,7 @@ export default function LoginForm() {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                     className="pl-10 pr-10 border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 h-11 hover:border-emerald-300 hover:shadow-md hover:scale-[1.01]"
                   />
                   <button
