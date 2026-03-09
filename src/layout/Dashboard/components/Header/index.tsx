@@ -194,6 +194,7 @@ export default function PortalHeader({
   /* ================= ADMIN: Cron Jobs ================= */
   const [processPendingReports, { isLoading: prLoading }] =
     useProcessPendingReportsMutation();
+
   const [handleTimeoutAttempts, { isLoading: htLoading }] =
     useHandleTimeoutAttemptsMutation();
 
@@ -201,25 +202,37 @@ export default function PortalHeader({
 
   const onProcessPendingReports = useCallback(async () => {
     if (cronBusy) return;
+
     try {
-      await processPendingReports().unwrap();
-      toast.success("Đã trigger xử lý pending reports", { autoClose: 1200 });
-    } catch (e: any) {
-      toast.error(e?.data?.message ?? "Trigger pending reports thất bại", {
-        autoClose: 1400,
+      const res = await processPendingReports().unwrap();
+      toast.success(res.message ?? "Đã trigger xử lý pending reports", {
+        autoClose: 1200,
       });
+    } catch (e: any) {
+      toast.error(
+        e?.data?.message ?? e?.message ?? "Trigger pending reports thất bại",
+        {
+          autoClose: 1400,
+        },
+      );
     }
   }, [cronBusy, processPendingReports]);
 
   const onHandleTimeoutAttempts = useCallback(async () => {
     if (cronBusy) return;
+
     try {
-      await handleTimeoutAttempts().unwrap();
-      toast.success("Đã trigger xử lý timeout attempts", { autoClose: 1200 });
-    } catch (e: any) {
-      toast.error(e?.data?.message ?? "Trigger timeout attempts thất bại", {
-        autoClose: 1400,
+      const res = await handleTimeoutAttempts().unwrap();
+      toast.success(res.message ?? "Đã trigger xử lý timeout attempts", {
+        autoClose: 1200,
       });
+    } catch (e: any) {
+      toast.error(
+        e?.data?.message ?? e?.message ?? "Trigger timeout attempts thất bại",
+        {
+          autoClose: 1400,
+        },
+      );
     }
   }, [cronBusy, handleTimeoutAttempts]);
 

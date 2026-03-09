@@ -34,6 +34,7 @@ import {
   type RenewBankInfo,
   type RenewPaymentInfo,
 } from "./modal";
+import { toast } from "react-toastify";
 
 type RenewResponse = {
   success: boolean;
@@ -129,12 +130,15 @@ export default function EnterpriseSubscription() {
   const [bankInfo, setBankInfo] = useState<RenewBankInfo | null>(null);
   const [paymentInfo, setPaymentInfo] = useState<RenewPaymentInfo | null>(null);
 
+  const hasBootstrappedPaymentRef = useRef(false);
+  const reloadingRef = useRef(false);
+
   // GET /payment/{ref} result
   const [payment, setPayment] = useState<PendingPayment | null>(null);
 
   const pollRef = useRef<number | null>(null);
 
-  // ✅ auto open plan modal when navigated with state
+  // auto open plan modal when navigated with state
   useEffect(() => {
     const shouldOpen = (location.state as any)?.openPlanModal === true;
     if (shouldOpen) setPlanModalOpen(true);
@@ -152,18 +156,54 @@ export default function EnterpriseSubscription() {
     }
   };
 
-  const startPolling = (code: string) => {
+  const startPolling = async (code: string) => {
     stopPolling();
+
+    try {
+      const res = await triggerPayment(code).unwrap();
+      const p = (res as any)?.data ?? null;
+
+      if (p) {
+        setPayment(p);
+        hasBootstrappedPaymentRef.current = true;
+      }
+
+      if (isPaidStatus(p?.status) && !reloadingRef.current) {
+        reloadingRef.current = true;
+        setPayModalOpen(false);
+
+        toast.success("Thanh toán thành công. Gói dịch vụ đã được gia hạn.", {
+          autoClose: 1200,
+        });
+
+        window.setTimeout(() => {
+          window.location.reload();
+        }, 900);
+        return;
+      }
+    } catch {
+      // silent
+    }
+
     pollRef.current = window.setInterval(async () => {
       try {
         const res = await triggerPayment(code).unwrap();
         const p = (res as any)?.data ?? null;
+
         if (p) setPayment(p);
 
-        if (isPaidStatus(p?.status)) {
+        if (isPaidStatus(p?.status) && !reloadingRef.current) {
+          reloadingRef.current = true;
           stopPolling();
           setPayModalOpen(false);
-          refetchSub();
+
+          toast.success("Thanh toán thành công. Gói dịch vụ đã được gia hạn.", {
+            autoClose: 1200,
+          });
+
+          window.setTimeout(() => {
+            window.location.reload();
+          }, 900);
         }
       } catch {
         // silent
@@ -200,20 +240,22 @@ export default function EnterpriseSubscription() {
     | undefined;
   const hasPendingPayment = Boolean(pendingRefCode);
 
-  /** ✅ Resume pending payment: set QR + bankInfo + paymentInfo from GET subscription */
+  /** Resume pending payment: set QR + bankInfo + paymentInfo from GET subscription */
   const resumePayment = () => {
     if (!pendingFromGet?.referenceCode) return;
+
+    hasBootstrappedPaymentRef.current = false;
+    reloadingRef.current = false;
+
+    setPayment(null);
+    setQrUrl(null);
+    setBankInfo(null);
+    setPaymentInfo(null);
+    setReferenceCode(null);
 
     const ref = pendingFromGet.referenceCode as string;
     const { qrUrl: q, bankInfo: b } = pickPendingQr(pendingFromGet);
 
-    // ✅ fill UI immediately from GET /enterprise/subscription
-    setReferenceCode(ref);
-    setQrUrl(q ?? null);
-    setBankInfo((b as RenewBankInfo) ?? null);
-
-    // paymentInfo is used as fallback in modal (planName, expiresAt, status, amount)
-    // get-subscription pendingPayment doesn't include currency/description/durationMonths -> fill reasonable defaults
     const payFallback: RenewPaymentInfo = {
       referenceCode: ref,
       amount: Number(pendingFromGet.amount ?? 0),
@@ -225,20 +267,28 @@ export default function EnterpriseSubscription() {
       status: pendingFromGet.status ?? "PENDING",
     };
 
+    setReferenceCode(ref);
+    setQrUrl(q ?? null);
+    setBankInfo((b as RenewBankInfo) ?? null);
     setPaymentInfo(payFallback);
 
-    // open modal + polling
     setPayModalOpen(true);
     startPolling(ref);
-
-    // (optional) fetch immediately once so createdAt/status updates faster
-    triggerPayment(ref);
   };
 
   const onSubmitPlan = async () => {
     if (!selectedPlanId) return;
 
     try {
+      hasBootstrappedPaymentRef.current = false;
+      reloadingRef.current = false;
+
+      setPayment(null);
+      setQrUrl(null);
+      setBankInfo(null);
+      setPaymentInfo(null);
+      setReferenceCode(null);
+
       const raw = (await renew({
         subscriptionPlanConfigId: selectedPlanId,
       }).unwrap()) as unknown as RenewResponse;
@@ -258,9 +308,6 @@ export default function EnterpriseSubscription() {
 
         setPayModalOpen(true);
         startPolling(code);
-
-        // fetch immediately once
-        triggerPayment(code);
         return;
       }
 
@@ -269,22 +316,8 @@ export default function EnterpriseSubscription() {
       console.error("Create payment failed:", e);
     }
   };
-
   const globalLoading = isLoadingSub || isLoadingPlans;
   const globalError = isSubError || isPlansError;
-
-  if (globalLoading) {
-    return (
-      <div className="min-h-[70vh] w-full flex items-center justify-center p-4 sm:p-6">
-        <div className="flex flex-col items-center gap-3">
-          <LoadingSpinner color="blue" size="12" inline />
-          <div className="text-sm font-semibold text-slate-600">
-            Đang tải thông tin gói...
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (globalError) {
     return (
@@ -341,143 +374,163 @@ export default function EnterpriseSubscription() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-6 space-y-4">
-        {/* Pending payment banner */}
-        {hasPendingPayment ? (
-          <Card className="border-amber-200">
-            <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <Badge tone="amber">Chờ thanh toán</Badge>
-                  <div className="font-bold text-slate-900 truncate">
-                    Bạn có 1 giao dịch đang chờ
+      <main className="mx-auto max-w-5xl px-4 py-6">
+        {globalLoading ? (
+          <Card className="min-h-[60vh] flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3 py-10">
+              <LoadingSpinner color="blue" size="12" inline />
+              <div className="text-sm font-semibold text-slate-600">
+                Đang tải thông tin gói...
+              </div>
+            </div>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {/* Pending payment banner */}
+            {hasPendingPayment ? (
+              <Card className="border-amber-200">
+                <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Badge tone="amber">Chờ thanh toán</Badge>
+                      <div className="font-bold text-slate-900 truncate">
+                        Bạn có 1 giao dịch đang chờ
+                      </div>
+                    </div>
+                    <div className="mt-1 text-xs text-slate-600">
+                      Mã:{" "}
+                      <span className="font-semibold">{pendingRefCode}</span>
+                    </div>
+                  </div>
+
+                  <Button onClick={resumePayment}>Tiếp tục thanh toán</Button>
+                </div>
+              </Card>
+            ) : null}
+
+            {/* HERO */}
+            <Card>
+              <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+                <div className="shrink-0">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 ring-1 ring-emerald-100 flex items-center justify-center">
+                    <Building2 className="h-8 w-8 text-emerald-700" />
                   </div>
                 </div>
-                <div className="mt-1 text-xs text-slate-600">
-                  Mã: <span className="font-semibold">{pendingRefCode}</span>
+
+                <div className="min-w-0 flex-1">
+                  <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 truncate">
+                    {enterpriseName}
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge tone={statusTone}>{statusLabel}</Badge>
+                    {sub?.planName ? (
+                      <Badge tone="blue">{sub.planName}</Badge>
+                    ) : null}
+                  </div>
+
+                  {sub?.endDate ? (
+                    <div className="mt-2 text-sm text-slate-600">
+                      Hết hạn:{" "}
+                      <span className="font-semibold text-slate-900">
+                        {fmtDate(sub.endDate)}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="shrink-0 flex items-center gap-2">
+                  <Button
+                    onClick={() => setPlanModalOpen(true)}
+                    disabled={renewState.isLoading}
+                    className="min-w-[190px]"
+                  >
+                    {sub?.isExpired ? "Gia hạn ngay" : "Gia hạn / Mua thêm"}
+                  </Button>
+
+                  <RefreshButton
+                    onClick={() => {
+                      refetchSub();
+                      refetchPlans();
+                    }}
+                    isFetching={isFetchingSub || isFetchingPlans}
+                  />
                 </div>
               </div>
+            </Card>
 
-              <Button onClick={resumePayment}>Tiếp tục thanh toán</Button>
-            </div>
-          </Card>
-        ) : null}
-
-        {/* HERO */}
-        <Card>
-          <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-            <div className="shrink-0">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-50 ring-1 ring-emerald-100 flex items-center justify-center">
-                <Building2 className="h-8 w-8 text-emerald-700" />
+            {/* Stats */}
+            {sub ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <StatCard
+                  title="Gói hiện tại"
+                  value={sub.planName ?? "—"}
+                  sub={`Chu kỳ: ${sub.durationMonths ?? 0} tháng`}
+                  icon={CreditCard}
+                />
+                <StatCard
+                  title="Giá"
+                  value={`${formatNumber(sub.price ?? 0)} VNĐ`}
+                  sub="Theo chu kỳ hiện tại"
+                  icon={CreditCard}
+                />
+                <StatCard
+                  title="Còn lại"
+                  value={remainingLabel}
+                  sub={`Hết hạn: ${fmtDate(sub.endDate)}`}
+                  icon={Timer}
+                />
               </div>
-            </div>
+            ) : (
+              <Card>
+                <EmptyState
+                  title="Chưa có thông tin gói"
+                  desc="Doanh nghiệp chưa kích hoạt gói hoặc hệ thống chưa trả về dữ liệu."
+                  right={
+                    <Button onClick={() => setPlanModalOpen(true)}>
+                      Chọn gói
+                    </Button>
+                  }
+                />
+              </Card>
+            )}
 
-            <div className="min-w-0 flex-1">
-              <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 truncate">
-                {enterpriseName}
-              </div>
-
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Badge tone={statusTone}>{statusLabel}</Badge>
-                {sub?.planName ? (
-                  <Badge tone="blue">{sub.planName}</Badge>
-                ) : null}
-              </div>
-
-              {sub?.endDate ? (
-                <div className="mt-2 text-sm text-slate-600">
-                  Hết hạn:{" "}
-                  <span className="font-semibold text-slate-900">
-                    {fmtDate(sub.endDate)}
-                  </span>
+            {/* Info boxes */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="p-5" hover={false}>
+                <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Thời gian
                 </div>
-              ) : null}
-            </div>
+                <div className="mt-3 space-y-2 text-sm text-slate-700">
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-emerald-700" />
+                    <span className="font-semibold text-slate-900">
+                      Bắt đầu:
+                    </span>
+                    <span>{fmtDate(sub?.startDate)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-emerald-700" />
+                    <span className="font-semibold text-slate-900">
+                      Kết thúc:
+                    </span>
+                    <span>{fmtDate(sub?.endDate)}</span>
+                  </div>
+                </div>
+              </Card>
 
-            <div className="shrink-0 flex items-center gap-2">
-              <Button
-                onClick={() => setPlanModalOpen(true)}
-                disabled={renewState.isLoading}
-                className="min-w-[190px]"
-              >
-                {sub?.isExpired ? "Gia hạn ngay" : "Gia hạn / Mua thêm"}
-              </Button>
-
-              <RefreshButton
-                onClick={() => {
-                  refetchSub();
-                  refetchPlans();
-                }}
-                isFetching={isFetchingSub || isFetchingPlans}
-              />
+              <Card className="p-5" hover={false}>
+                <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Hướng dẫn
+                </div>
+                <div className="mt-3 text-sm text-slate-700">
+                  Chọn gói → tạo QR → chuyển khoản đúng nội dung → hệ thống tự
+                  cập nhật sau khi thanh toán thành công.
+                </div>
+              </Card>
             </div>
           </div>
-        </Card>
-
-        {/* Stats */}
-        {sub ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard
-              title="Gói hiện tại"
-              value={sub.planName ?? "—"}
-              sub={`Chu kỳ: ${sub.durationMonths ?? 0} tháng`}
-              icon={CreditCard}
-            />
-            <StatCard
-              title="Giá"
-              value={`${formatNumber(sub.price ?? 0)} VNĐ`}
-              sub="Theo chu kỳ hiện tại"
-              icon={CreditCard}
-            />
-            <StatCard
-              title="Còn lại"
-              value={remainingLabel}
-              sub={`Hết hạn: ${fmtDate(sub.endDate)}`}
-              icon={Timer}
-            />
-          </div>
-        ) : (
-          <Card>
-            <EmptyState
-              title="Chưa có thông tin gói"
-              desc="Doanh nghiệp chưa kích hoạt gói hoặc hệ thống chưa trả về dữ liệu."
-              right={
-                <Button onClick={() => setPlanModalOpen(true)}>Chọn gói</Button>
-              }
-            />
-          </Card>
         )}
-
-        {/* Info boxes */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-5" hover={false}>
-            <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Thời gian
-            </div>
-            <div className="mt-3 space-y-2 text-sm text-slate-700">
-              <div className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-emerald-700" />
-                <span className="font-semibold text-slate-900">Bắt đầu:</span>
-                <span>{fmtDate(sub?.startDate)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-emerald-700" />
-                <span className="font-semibold text-slate-900">Kết thúc:</span>
-                <span>{fmtDate(sub?.endDate)}</span>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-5" hover={false}>
-            <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Hướng dẫn
-            </div>
-            <div className="mt-3 text-sm text-slate-700">
-              Chọn gói → tạo QR → chuyển khoản đúng nội dung → hệ thống tự cập
-              nhật sau khi thanh toán thành công.
-            </div>
-          </Card>
-        </div>
       </main>
 
       {/* Modal chọn plan */}
@@ -505,6 +558,7 @@ export default function EnterpriseSubscription() {
         payment={payment}
         polling={Boolean(pollRef.current)}
         fetching={paymentState.isFetching}
+        initialLoading={!hasBootstrappedPaymentRef.current}
       />
     </div>
   );

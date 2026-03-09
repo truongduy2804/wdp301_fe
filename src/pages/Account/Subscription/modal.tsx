@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Copy,
   AlertCircle,
+  Lock,
 } from "lucide-react";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
@@ -99,6 +100,10 @@ function paymentStatusVi(status?: string) {
 function isPaymentSuccess(status?: string) {
   const s = (status ?? "").toUpperCase();
   return s === "PAID" || s === "SUCCESS" || s === "COMPLETED";
+}
+
+function isPaymentExpired(status?: string) {
+  return (status ?? "").toUpperCase() === "EXPIRED";
 }
 
 function paymentTone(status?: string) {
@@ -398,8 +403,7 @@ export function PaymentQrModal({
   bankInfo,
   paymentInfo,
   payment,
-  polling,
-  fetching,
+  initialLoading = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -410,9 +414,10 @@ export function PaymentQrModal({
   bankInfo: RenewBankInfo | null;
   paymentInfo: RenewPaymentInfo | null;
 
-  payment: PendingPayment | null; // GET /payment/{referenceCode}
+  payment: PendingPayment | null;
   polling?: boolean;
   fetching?: boolean;
+  initialLoading?: boolean;
 }) {
   useLockBodyScroll(open);
   const variants = useModalVariants();
@@ -437,36 +442,86 @@ export function PaymentQrModal({
   const duration =
     planConfig?.durationMonths ?? paymentInfo?.durationMonths ?? "—";
 
-  // ✅ nội dung chuyển khoản cũ: "Thanh toan <code>" (không dấu)
   const transferContent =
     bankInfo?.transferContent ||
     (referenceCode ? `Thanh toan ${referenceCode}` : "Thanh toan");
 
-  const showSpinner = Boolean(polling || fetching); // ✅ only spinner on QR top-right (blue)
+  // Chỉ loading full ở lần boot đầu tiên
+  const isContentLoading =
+    open &&
+    Boolean(
+      initialLoading &&
+      (!referenceCode ||
+        !paymentInfo ||
+        !bankInfo ||
+        !qrUrl ||
+        !expiresAt ||
+        !payment),
+    );
 
-  const [successUI, setSuccessUI] = useState(false);
+  const [remainingMs, setRemainingMs] = useState<number | null>(null);
 
-  // ✅ success UI then auto-close
+  useEffect(() => {
+    if (!open) {
+      setRemainingMs(null);
+      return;
+    }
+
+    if (!expiresAt) {
+      setRemainingMs(null);
+      return;
+    }
+
+    const end = new Date(expiresAt).getTime();
+
+    if (Number.isNaN(end)) {
+      setRemainingMs(null);
+      return;
+    }
+
+    const update = () => {
+      const now = Date.now();
+      const left = Math.max(end - now, 0);
+      setRemainingMs(left);
+    };
+
+    update();
+    const timer = window.setInterval(update, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [open, expiresAt]);
+
   useEffect(() => {
     if (!open) return;
     if (!isPaymentSuccess(statusRaw)) return;
-
-    setSuccessUI(true);
-    const t = window.setTimeout(() => {
-      setSuccessUI(false);
-      onClose();
-    }, 1200);
-
-    return () => window.clearTimeout(t);
+    onClose();
   }, [open, statusRaw, onClose]);
 
-  // ESC
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+
+  const countdownText = useMemo(() => {
+    if (remainingMs === null) return null;
+    if (remainingMs <= 0) return "Đã hết hạn";
+
+    const totalSeconds = Math.floor(remainingMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const hh = String(hours).padStart(2, "0");
+    const mm = String(minutes).padStart(2, "0");
+    const ss = String(seconds).padStart(2, "0");
+
+    return `${hh}:${mm}:${ss}`;
+  }, [remainingMs]);
+
+  const qrExpired =
+    isPaymentExpired(statusRaw) || (remainingMs !== null && remainingMs <= 0);
 
   return (
     <AnimatePresence>
@@ -478,9 +533,7 @@ export function PaymentQrModal({
           initial="hidden"
           animate="visible"
           exit="exit"
-          onClick={(e) =>
-            e.target === overlayRef.current && !successUI && onClose()
-          }
+          onClick={(e) => e.target === overlayRef.current && onClose()}
         >
           <motion.div
             variants={variants.panel}
@@ -495,16 +548,13 @@ export function PaymentQrModal({
             "
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="relative bg-emerald-600 px-6 sm:px-8 py-6">
               <button
                 onClick={onClose}
-                disabled={successUI}
                 className="
                   absolute right-4 top-4 grid h-10 w-10 place-items-center
                   rounded-full bg-white/20 hover:bg-white/30 backdrop-blur
                   text-white transition active:scale-[0.98]
-                  disabled:opacity-60 disabled:cursor-not-allowed
                 "
                 aria-label="Đóng"
                 type="button"
@@ -527,228 +577,263 @@ export function PaymentQrModal({
               </div>
             </div>
 
-            {/* Body */}
             <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-6 sm:px-8 py-6 bg-white">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Left: QR */}
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="font-bold text-slate-900">Mã QR</div>
-                    {showSpinner ? (
-                      <LoadingSpinner color="blue" size="5" inline />
-                    ) : null}
+              {isContentLoading ? (
+                <div className="min-h-[480px] rounded-2xl border border-slate-200 bg-slate-50 flex flex-col items-center justify-center">
+                  <LoadingSpinner color="blue" size="12" inline />
+                  <div className="mt-4 text-base font-bold text-slate-800">
+                    Đang tải thông tin thanh toán...
                   </div>
-
-                  <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 flex items-center justify-center min-h-[280px]">
-                    {qrUrl ? (
-                      <img
-                        src={qrUrl}
-                        alt="QR Payment"
-                        className="max-h-[260px] object-contain"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <LoadingSpinner color="blue" size="6" inline />
-                        Đang lấy QR...
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4 space-y-1 text-xs text-slate-600">
-                    <div>
-                      <span className="text-slate-500">Tạo lúc:</span>{" "}
-                      <span className="font-semibold text-slate-800">
-                        {fmtDateTime(createdAt)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Hết hạn:</span>{" "}
-                      <span className="font-semibold text-slate-800">
-                        {fmtDateTime(expiresAt)}
-                      </span>
-                    </div>
+                  <div className="mt-1 text-sm text-slate-500">
+                    Vui lòng chờ trong giây lát
                   </div>
                 </div>
-
-                {/* Right: Info */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="font-bold text-slate-900">
-                      Thông tin thanh toán
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-bold text-slate-900">Mã QR</div>
                     </div>
-                    <Badge tone={tone}>{statusText}</Badge>
-                  </div>
 
-                  {/* ✅ Success UI */}
-                  {successUI ? (
-                    <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="grid h-11 w-11 place-items-center rounded-2xl bg-emerald-600 text-white">
-                          <CheckCircle2 className="h-6 w-6" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-base font-extrabold text-emerald-800">
-                            Thanh toán thành công
+                    <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 flex items-center justify-center min-h-[280px]">
+                      <div className="relative flex items-center justify-center">
+                        {qrUrl ? (
+                          <img
+                            src={qrUrl}
+                            alt="QR Payment"
+                            className={cx(
+                              "max-h-[260px] object-contain transition",
+                              qrExpired &&
+                                "opacity-25 grayscale blur-[1px] select-none pointer-events-none",
+                            )}
+                          />
+                        ) : (
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
+                            <LoadingSpinner color="blue" size="6" inline />
+                            Đang lấy QR...
                           </div>
-                          <div className="mt-1 text-sm text-emerald-700">
-                            Hệ thống đang cập nhật gói dịch vụ...
+                        )}
+                        {qrExpired ? (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-slate-50/88 backdrop-blur-[1px]">
+                            <Lock className="h-7 w-7 text-slate-400" />
                           </div>
-                          <div className="mt-2 text-xs text-emerald-700">
-                            Modal sẽ tự đóng sau giây lát.
-                          </div>
-                        </div>
+                        ) : null}
                       </div>
                     </div>
-                  ) : null}
 
-                  <div
-                    className={cx(
-                      "mt-3 space-y-3 text-sm text-slate-700",
-                      successUI && "opacity-60",
-                    )}
-                  >
-                    {/* Plan summary + details */}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="text-xs font-semibold text-slate-500">
-                            Gói
+                    <div className="mt-4 space-y-2 text-xs text-slate-600">
+                      <div>
+                        <span className="text-slate-500">Tạo lúc:</span>{" "}
+                        <span className="font-semibold text-slate-800">
+                          {fmtDateTime(createdAt)}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="text-slate-500">Hết hạn:</span>{" "}
+                        <span className="font-semibold text-slate-800">
+                          {fmtDateTime(expiresAt)}
+                        </span>
+                      </div>
+
+                      <div
+                        className={cx(
+                          "mt-3 rounded-2xl border px-4 py-3 transition",
+                          qrExpired
+                            ? "border-rose-300 bg-rose-100"
+                            : "border-rose-200 bg-rose-50",
+                        )}
+                      >
+                        <div
+                          className={cx(
+                            "text-[11px] font-semibold uppercase tracking-wider",
+                            qrExpired ? "text-rose-700" : "text-rose-600",
+                          )}
+                        >
+                          {qrExpired ? "Trạng thái mã QR" : "Thời gian còn lại"}
+                        </div>
+
+                        {remainingMs === null ? (
+                          <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-rose-500">
+                            <LoadingSpinner color="blue" size="5" inline />
+                            Đang tính thời gian...
                           </div>
-                          <div className="mt-1 font-bold text-slate-900">
-                            {planName}
+                        ) : qrExpired ? (
+                          <>
+                            <div className="mt-1 text-2xl sm:text-3xl font-black tracking-tight text-rose-700">
+                              QR đã hết hạn
+                            </div>
+                            <div className="mt-1 text-sm text-rose-700">
+                              Mã thanh toán không còn hiệu lực. Vui lòng đóng
+                              cửa sổ này và tạo lại giao dịch mới.
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="mt-1 text-2xl sm:text-3xl font-black tracking-wider text-rose-700">
+                              {countdownText}
+                            </div>
+                            <div className="mt-1 text-xs text-rose-600">
+                              Vui lòng hoàn tất chuyển khoản trước khi mã hết
+                              hạn.
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-bold text-slate-900">
+                        Thông tin thanh toán
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge tone={tone}>{statusText}</Badge>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 space-y-3 text-sm text-slate-700">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="text-xs font-semibold text-slate-500">
+                              Gói
+                            </div>
+                            <div className="mt-1 font-bold text-slate-900">
+                              {planName}
+                            </div>
+                            <div className="text-xs text-slate-500 mt-0.5">
+                              Thời hạn:{" "}
+                              <span className="font-semibold">{duration}</span>{" "}
+                              tháng
+                            </div>
                           </div>
-                          <div className="text-xs text-slate-500 mt-0.5">
-                            Thời hạn:{" "}
-                            <span className="font-semibold">{duration}</span>{" "}
-                            tháng
-                          </div>
+
+                          {planConfig ? (
+                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700">
+                              Thông tin
+                            </span>
+                          ) : null}
                         </div>
 
                         {planConfig ? (
-                          <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700">
-                            Thông tin
-                          </span>
+                          <details className="mt-3">
+                            <summary className="cursor-pointer text-xs font-semibold text-emerald-700">
+                              Xem chi tiết gói
+                            </summary>
+                            <div className="mt-2 rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-700 space-y-1">
+                              <div>
+                                <span className="text-slate-500">Mô tả: </span>
+                                <span className="font-semibold">
+                                  {planConfig.description ?? "—"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Giá: </span>
+                                <span className="font-semibold">
+                                  {formatNumber(Number(planConfig.price ?? 0))}{" "}
+                                  VND
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">
+                                  Hoạt động:{" "}
+                                </span>
+                                <span className="font-semibold">
+                                  {String(planConfig.isActive)}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">
+                                  Ngày tạo:{" "}
+                                </span>
+                                <span className="font-semibold">
+                                  {fmtDateTime(planConfig.createdAt)}
+                                </span>
+                              </div>
+                            </div>
+                          </details>
                         ) : null}
                       </div>
 
-                      {planConfig ? (
-                        <details className="mt-3">
-                          <summary className="cursor-pointer text-xs font-semibold text-emerald-700">
-                            Xem chi tiết gói
-                          </summary>
-                          <div className="mt-2 rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-700 space-y-1">
-                            <div>
-                              <span className="text-slate-500">Mô tả: </span>
-                              <span className="font-semibold">
-                                {planConfig.description ?? "—"}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-slate-500">Giá: </span>
-                              <span className="font-semibold">
-                                {formatNumber(Number(planConfig.price ?? 0))}{" "}
-                                VND
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-slate-500">Active: </span>
-                              <span className="font-semibold">
-                                {String(planConfig.isActive)}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-slate-500">Created: </span>
-                              <span className="font-semibold">
-                                {fmtDateTime(planConfig.createdAt)}
-                              </span>
-                            </div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <div className="text-xs font-semibold text-slate-500">
+                          Số tiền
+                        </div>
+                        <div className="mt-1 text-lg font-black text-slate-900">
+                          {formatNumber(amount)} VND
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-slate-200 bg-white p-3">
+                        <div className="text-xs font-semibold text-slate-500">
+                          Số tài khoản
+                        </div>
+                        <div className="mt-1 flex items-center justify-between gap-2">
+                          <div className="font-bold text-slate-900 break-all">
+                            {bankInfo?.accountNumber ?? "—"}
                           </div>
-                        </details>
-                      ) : null}
-                    </div>
-
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                      <div className="text-xs font-semibold text-slate-500">
-                        Số tiền
-                      </div>
-                      <div className="mt-1 text-lg font-black text-slate-900">
-                        {formatNumber(amount)} VND
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-200 bg-white p-3">
-                      <div className="text-xs font-semibold text-slate-500">
-                        Số tài khoản
-                      </div>
-                      <div className="mt-1 flex items-center justify-between gap-2">
-                        <div className="font-bold text-slate-900 break-all">
-                          {bankInfo?.accountNumber ?? "—"}
+                          <button
+                            type="button"
+                            className="p-2 rounded-xl hover:bg-slate-100 transition"
+                            onClick={() =>
+                              copyText(bankInfo?.accountNumber ?? null)
+                            }
+                            aria-label="Copy account number"
+                          >
+                            <Copy className="h-4 w-4 text-slate-600" />
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          className="p-2 rounded-xl hover:bg-slate-100 transition"
-                          onClick={() =>
-                            copyText(bankInfo?.accountNumber ?? null)
-                          }
-                          aria-label="Copy account number"
-                          disabled={successUI}
-                        >
-                          <Copy className="h-4 w-4 text-slate-600" />
-                        </button>
-                      </div>
 
-                      <div className="text-xs text-slate-500 mt-2">
-                        Chủ TK:{" "}
-                        <span className="font-semibold text-slate-700">
-                          {bankInfo?.accountHolder ?? "—"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* ✅ Nội dung chuyển khoản: "Thanh toan <referenceCode>" */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-3">
-                      <div className="text-xs font-semibold text-slate-500">
-                        Nội dung chuyển khoản
-                      </div>
-                      <div className="mt-1 flex items-start justify-between gap-2">
-                        <div className="font-bold text-slate-900 break-all">
-                          {transferContent}
+                        <div className="text-xs text-slate-500 mt-2">
+                          Chủ TK:{" "}
+                          <span className="font-semibold text-slate-700">
+                            {bankInfo?.accountHolder ?? "—"}
+                          </span>
                         </div>
-                        <button
-                          type="button"
-                          className="p-2 rounded-xl hover:bg-slate-100 transition"
-                          onClick={() => copyText(transferContent)}
-                          aria-label="Copy transfer content"
-                          disabled={successUI}
-                        >
-                          <Copy className="h-4 w-4 text-slate-600" />
-                        </button>
                       </div>
-                    </div>
 
-                    <div className="text-xs text-slate-500 flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-amber-500" />
-                      <div>
-                        Sau khi thanh toán thành công, hệ thống sẽ tự cập nhật
-                        gói dịch vụ.
+                      <div className="rounded-xl border border-slate-200 bg-white p-3">
+                        <div className="text-xs font-semibold text-slate-500">
+                          Nội dung chuyển khoản
+                        </div>
+                        <div className="mt-1 flex items-start justify-between gap-2">
+                          <div className="font-bold text-slate-900 break-all">
+                            {transferContent}
+                          </div>
+                          <button
+                            type="button"
+                            className="p-2 rounded-xl hover:bg-slate-100 transition"
+                            onClick={() => copyText(transferContent)}
+                            aria-label="Copy transfer content"
+                          >
+                            <Copy className="h-4 w-4 text-slate-600" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-slate-500 flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-500" />
+                        <div>
+                          Sau khi thanh toán thành công, hệ thống sẽ tự cập nhật
+                          gói dịch vụ.
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Footer */}
             <div className="border-t border-slate-200 bg-white px-6 sm:px-8 py-4 flex items-center justify-end gap-3">
               <button
                 onClick={onClose}
-                disabled={successUI}
                 className="
                   px-5 py-2 rounded-xl font-semibold
                   text-slate-700 bg-white border border-slate-200
                   hover:bg-slate-50 hover:border-slate-300
                   active:scale-[0.98]
-                  disabled:opacity-60 disabled:cursor-not-allowed
                   transition
                 "
                 type="button"

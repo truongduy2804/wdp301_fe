@@ -11,7 +11,7 @@ function daysUntil(endIso?: string | null) {
 }
 
 export function useEnterpriseRenewSoonToast(params: {
-  enterpriseStatus?: string | null; // ✅ giữ type cho khỏi vỡ chỗ gọi, nhưng không dùng nữa
+  enterpriseStatus?: string | null;
   subIsActive?: boolean;
   subIsExpired?: boolean;
   endDate?: string | null;
@@ -24,40 +24,77 @@ export function useEnterpriseRenewSoonToast(params: {
 
     const { subIsActive, subIsExpired, endDate, onRenewNow } = params;
 
-    // ✅ chỉ chặn khi EXPIRED (đúng yêu cầu bạn)
-    if (subIsExpired) return;
-
-    // ✅ khuyến nghị: vẫn nên yêu cầu sub active, nếu bạn muốn hiện cho cả inactive thì bỏ dòng này
-    if (!subIsActive) return;
-
     const dayLeft = daysUntil(endDate);
+
+    const SOON_TOAST_ID = "renew-soon-on-enter";
+    const EXPIRED_TOAST_ID = "renew-expired-on-enter";
+
+    // Trường hợp 1: gói đã hết hạn
+    if (subIsExpired) {
+      shownRef.current = true;
+
+      toast.info(
+        <div className="w-full">
+          <div className="flex items-start gap-3">
+            <div className="flex-1 text-sm leading-5 text-slate-700">
+              Gói dịch vụ của bạn đã hết hạn. Hãy gia hạn ngay để tiếp tục sử
+              dụng và tránh gián đoạn.
+            </div>
+
+            <button
+              className="
+                shrink-0 mt-[10px]
+                rounded-lg border border-emerald-200 bg-emerald-50
+                px-3 py-1.5 text-xs font-semibold text-emerald-800
+                hover:bg-emerald-100 hover:border-emerald-300
+                active:scale-[0.98] transition
+              "
+              onClick={() => {
+                toast.dismiss(EXPIRED_TOAST_ID);
+                onRenewNow();
+              }}
+              type="button"
+            >
+              Gia hạn ngay
+            </button>
+          </div>
+        </div>,
+        {
+          autoClose: 7000,
+          closeOnClick: false,
+          pauseOnHover: true,
+          toastId: EXPIRED_TOAST_ID,
+        },
+      );
+
+      return;
+    }
+
+    // Trường hợp 2: chưa hết hạn nhưng sắp hết hạn
+    if (!subIsActive) return;
     if (!dayLeft || dayLeft < 1 || dayLeft > 5) return;
 
     shownRef.current = true;
 
-    const TOAST_ID = "renew-soon-on-enter";
-
     toast.info(
       <div className="w-full">
         <div className="flex items-start gap-3">
-          {/* Text */}
           <div className="flex-1 text-sm leading-5 text-slate-700">
             {dayLeft === 1
               ? "Gói dịch vụ sẽ hết hạn trong 1 ngày. Gia hạn để tránh gián đoạn."
               : `Gói dịch vụ sẽ hết hạn trong ${dayLeft} ngày. Gia hạn để tránh gián đoạn.`}
           </div>
 
-          {/* Button nhỏ sát chữ */}
           <button
             className="
-          shrink-0 mt-[10px]
-          rounded-lg  border border-emerald-200 bg-emerald-50
-          px-3 py-1.5 text-xs font-semibold text-emerald-800
-          hover:bg-emerald-100 hover:border-emerald-300
-          active:scale-[0.98] transition
-        "
+              shrink-0 mt-[10px]
+              rounded-lg border border-emerald-200 bg-emerald-50
+              px-3 py-1.5 text-xs font-semibold text-emerald-800
+              hover:bg-emerald-100 hover:border-emerald-300
+              active:scale-[0.98] transition
+            "
             onClick={() => {
-              toast.dismiss(TOAST_ID);
+              toast.dismiss(SOON_TOAST_ID);
               onRenewNow();
             }}
             type="button"
@@ -70,7 +107,7 @@ export function useEnterpriseRenewSoonToast(params: {
         autoClose: 6000,
         closeOnClick: false,
         pauseOnHover: true,
-        toastId: TOAST_ID,
+        toastId: SOON_TOAST_ID,
       },
     );
   }, [params]);
