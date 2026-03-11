@@ -6,7 +6,7 @@
       "ES2023"
     ],
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
