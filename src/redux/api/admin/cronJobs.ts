@@ -19,7 +19,7 @@ type CronResponse = {
 };
 
 const CRON_BASE = `${(
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
+  import.meta.env.VITE_API_BASE_URL || "https://crowdsourced-collection-recycling-platform-dnbye7h0d0c6gkaj.southeastasia-01.azurewebsites.net/"
 ).replace(/\/+$/, "")}/`;
 
 const cronRawBase = fetchBaseQuery({

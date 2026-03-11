@@ -6,6 +6,7 @@ const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, ""); /
 export interface EnterpriseMapLocation {
   id: number;
   name: string;
+  avatar?: string;
   latitude: number;
   longitude: number;
   roleId: number;
@@ -39,6 +40,7 @@ export interface EnterpriseDetailMap extends EnterpriseMapLocation {
   phone: string;
   contactPhone?: string;
   contactEmail?: string;
+  contactName?: string;
   representative: string;
   businessLicense: string;
   wasteTypes?: (string | WasteTypeObj)[];
@@ -47,6 +49,18 @@ export interface EnterpriseDetailMap extends EnterpriseMapLocation {
   registeredDate: string;
   createdAt?: string;
   capacityKg?: number;
+  activeSubscription?: {
+    planName: string;
+    startDate: string;
+    endDate: string;
+  };
+  stats?: {
+    totalCollectors: number;
+    onlineCollectors: number;
+    offlineCollectors: number;
+    totalReports: number;
+  };
+  collectorCount?: number;
   collectors?: CollectorObj[];
 }
 
@@ -115,15 +129,21 @@ export async function fetchEnterprisesMap(
   const data = await safeJson<any>(res);
 
   // Extract linh hoạt theo nhiều format API
-  if (Array.isArray(data)) return data;
+  let results: any[] = [];
+  if (Array.isArray(data)) results = data;
+  else {
+    const d = data?.data;
+    if (Array.isArray(d?.markers)) results = d.markers;
+    else if (Array.isArray(d)) results = d;
+    else if (Array.isArray(d?.result)) results = d.result;
+    else if (Array.isArray(d?.items)) results = d.items;
+  }
 
-  const d = data?.data;
-  if (Array.isArray(d?.markers)) return d.markers;
-  if (Array.isArray(d)) return d;
-  if (Array.isArray(d?.result)) return d.result;
-  if (Array.isArray(d?.items)) return d.items;
-
-  return [];
+  // Ensure 'avatar' is correctly mapped from the API payload (which may nest it inside enterprise)
+  return results.map((item: any) => ({
+    ...item,
+    avatar: item.avatar || item.enterprise?.avatar || undefined,
+  }));
 }
 
 /**
