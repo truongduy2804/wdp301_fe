@@ -266,7 +266,7 @@ export function Dropdown<T extends string>({
               align === "left" ? "left-0" : "right-0",
             )}
           >
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+            <div className="rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
               <div className="p-2 max-h-80 overflow-auto">
                 {options.map((o) => {
                   const active = o.value === value;
@@ -279,7 +279,7 @@ export function Dropdown<T extends string>({
                         setOpen(false);
                       }}
                       className={cx(
-                        "w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-left",
+                        "w-full flex items-center justify-between gap-3 rounded-md px-3 py-2 text-left",
                         "transition-colors",
                         active
                           ? "bg-emerald-50 text-emerald-800"

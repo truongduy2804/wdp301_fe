@@ -108,8 +108,14 @@ function isPaymentExpired(status?: string) {
 
 function paymentTone(status?: string) {
   const s = (status ?? "").toUpperCase();
-  if (s === "FAILED" || s === "CANCELED" || s === "CANCELLED")
+  if (
+    s === "FAILED" ||
+    s === "CANCELED" ||
+    s === "CANCELLED" ||
+    s === "EXPIRED"
+  ) {
     return "rose" as const;
+  }
   if (isPaymentSuccess(s)) return "emerald" as const;
   return "amber" as const;
 }
@@ -223,7 +229,6 @@ export function PlanSelectModal({
             "
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="relative bg-emerald-600 px-6 sm:px-8 py-6">
               <button
                 onClick={onClose}
@@ -253,7 +258,6 @@ export function PlanSelectModal({
               </div>
             </div>
 
-            {/* Body */}
             <div className="flex-1 min-h-0 overflow-y-auto px-6 sm:px-8 py-6 bg-slate-50">
               {plans.length ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -340,7 +344,6 @@ export function PlanSelectModal({
               )}
             </div>
 
-            {/* Footer */}
             <div className="border-t border-slate-200 bg-white px-6 sm:px-8 py-4 flex items-center justify-end gap-3">
               <button
                 onClick={onClose}
@@ -393,7 +396,7 @@ export function PlanSelectModal({
 }
 
 /** =======================================================================
- *  2) Payment QR Modal (success UI + auto close + VI status)
+ *  2) Payment QR Modal
  *  ======================================================================= */
 export function PaymentQrModal({
   open,
@@ -446,17 +449,29 @@ export function PaymentQrModal({
     bankInfo?.transferContent ||
     (referenceCode ? `Thanh toan ${referenceCode}` : "Thanh toan");
 
-  // Chỉ loading full ở lần boot đầu tiên
+  const expiresTs = useMemo(() => {
+    if (!expiresAt) return NaN;
+    const ts = new Date(expiresAt).getTime();
+    return Number.isNaN(ts) ? NaN : ts;
+  }, [expiresAt]);
+
+  const qrExpired = useMemo(() => {
+    if (isPaymentExpired(statusRaw)) return true;
+    if (Number.isFinite(expiresTs) && Date.now() >= expiresTs) return true;
+    return false;
+  }, [statusRaw, expiresTs]);
+
   const isContentLoading =
     open &&
     Boolean(
       initialLoading &&
+      !qrExpired &&
       (!referenceCode ||
         !paymentInfo ||
         !bankInfo ||
-        !qrUrl ||
         !expiresAt ||
-        !payment),
+        !payment ||
+        !qrUrl),
     );
 
   const [remainingMs, setRemainingMs] = useState<number | null>(null);
@@ -467,21 +482,13 @@ export function PaymentQrModal({
       return;
     }
 
-    if (!expiresAt) {
-      setRemainingMs(null);
-      return;
-    }
-
-    const end = new Date(expiresAt).getTime();
-
-    if (Number.isNaN(end)) {
+    if (!Number.isFinite(expiresTs)) {
       setRemainingMs(null);
       return;
     }
 
     const update = () => {
-      const now = Date.now();
-      const left = Math.max(end - now, 0);
+      const left = Math.max(expiresTs - Date.now(), 0);
       setRemainingMs(left);
     };
 
@@ -489,7 +496,7 @@ export function PaymentQrModal({
     const timer = window.setInterval(update, 1000);
 
     return () => window.clearInterval(timer);
-  }, [open, expiresAt]);
+  }, [open, expiresTs]);
 
   useEffect(() => {
     if (!open) return;
@@ -519,9 +526,6 @@ export function PaymentQrModal({
 
     return `${hh}:${mm}:${ss}`;
   }, [remainingMs]);
-
-  const qrExpired =
-    isPaymentExpired(statusRaw) || (remainingMs !== null && remainingMs <= 0);
 
   return (
     <AnimatePresence>
@@ -596,29 +600,30 @@ export function PaymentQrModal({
                     </div>
 
                     <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 flex items-center justify-center min-h-[280px]">
-                      <div className="relative flex items-center justify-center">
-                        {qrUrl ? (
+                      {qrExpired ? (
+                        <div className="flex flex-col items-center justify-center text-center min-h-[260px] w-full rounded-2xl bg-slate-50">
+                          <Lock className="h-7 w-7 text-slate-400" />
+                          <div className="mt-3 text-sm font-semibold text-slate-700">
+                            QR đã hết hạn
+                          </div>
+                          <div className="mt-1 text-xs text-slate-500">
+                            Vui lòng đóng cửa sổ này và tạo giao dịch mới.
+                          </div>
+                        </div>
+                      ) : qrUrl ? (
+                        <div className="relative flex items-center justify-center">
                           <img
                             src={qrUrl}
                             alt="QR Payment"
-                            className={cx(
-                              "max-h-[260px] object-contain transition",
-                              qrExpired &&
-                                "opacity-25 grayscale blur-[1px] select-none pointer-events-none",
-                            )}
+                            className="max-h-[260px] object-contain transition"
                           />
-                        ) : (
-                          <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <LoadingSpinner color="blue" size="6" inline />
-                            Đang lấy QR...
-                          </div>
-                        )}
-                        {qrExpired ? (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-slate-50/88 backdrop-blur-[1px]">
-                            <Lock className="h-7 w-7 text-slate-400" />
-                          </div>
-                        ) : null}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <LoadingSpinner color="blue" size="6" inline />
+                          Đang lấy QR...
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-4 space-y-2 text-xs text-slate-600">
@@ -653,7 +658,7 @@ export function PaymentQrModal({
                           {qrExpired ? "Trạng thái mã QR" : "Thời gian còn lại"}
                         </div>
 
-                        {remainingMs === null ? (
+                        {remainingMs === null && !qrExpired ? (
                           <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-rose-500">
                             <LoadingSpinner color="blue" size="5" inline />
                             Đang tính thời gian...
@@ -734,14 +739,6 @@ export function PaymentQrModal({
                                 <span className="font-semibold">
                                   {formatNumber(Number(planConfig.price ?? 0))}{" "}
                                   VND
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-slate-500">
-                                  Hoạt động:{" "}
-                                </span>
-                                <span className="font-semibold">
-                                  {String(planConfig.isActive)}
                                 </span>
                               </div>
                               <div>

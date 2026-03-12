@@ -125,9 +125,11 @@ function FormField({
 
 // (Bạn bảo bỏ focus thì mình để hover đẹp + không “ring focus”)
 const inputBase =
-  "w-full h-11 rounded-xl border bg-white pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100";
-const inputOk = "border-slate-200 hover:border-blue-400";
-const inputErr = "border-rose-300 hover:border-rose-400";
+  "w-full h-11 rounded-xl border bg-white pl-10 pr-3 text-sm outline-none ";
+const inputOk =
+  "border-slate-300 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 ";
+const inputErr =
+  "border-slate-300 focus-within:border-red-400 focus-within:ring-1 focus-within:ring-red-400 ";
 
 export default function AccountProfileUpsertModal({
   open,

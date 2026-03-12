@@ -1,233 +1,219 @@
-// src/pages/enterprise/EnterpriseRequestHistoryPage.tsx
 import React, { useMemo, useState } from "react";
-import dayjs, { type Dayjs } from "dayjs";
-import { History, MapPinned, Filter, Download } from "lucide-react";
+import dayjs from "dayjs";
+import { ClipboardCheck, RefreshCw } from "lucide-react";
 
+import LoadingSpinner from "@/components/ui/loadingSpinner";
 import {
   Card,
-  Badge,
-  Dropdown,
-  DateRangePill,
-  EmptyState,
-  cx,
-  formatNumber,
   Button,
-} from "../../../components/ui/page/componentUI";
+  Badge,
+  EmptyState,
+  formatNumber,
+} from "@/components/ui/page/componentUI";
 
-import {
-  mockRequests,
-  type RequestItem,
-  type Zone,
-  type WasteType,
-  ZONE_OPTIONS,
-  WASTE_OPTIONS,
-} from "../data/mockEnterprise";
+import ReportsHistoryTable from "../components/reportsHistoryTable";
+import ReportDetailModal from "../PendingRequests/detailPage";
 
-type ZoneFilter = Zone | "ALL";
-type WasteFilter = WasteType | "ALL";
+import { useGetAcceptedReportsQuery } from "@/redux/api/enterprise/reports";
 
-function exportHistoryCSV(rows: RequestItem[]) {
-  const header = [
-    "id",
-    "zone",
-    "wasteType",
-    "estKg",
-    "actualKg",
-    "collector",
-    "createdAt",
-    "completedAt",
-  ];
-  const lines = [
-    header.join(","),
-    ...rows.map((r) =>
-      [
-        r.id,
-        `"${r.zone}"`,
-        `"${r.wasteType}"`,
-        r.estKg,
-        r.actualKg ?? "",
-        `"${r.collectorName ?? ""}"`,
-        `"${r.createdAt}"`,
-        `"${r.completedAt ?? ""}"`,
-      ].join(","),
-    ),
-  ];
+import type {
+  AcceptedEnterpriseReport,
+  EnterpriseReport,
+  WaitingReportDetail,
+} from "@/redux/api/enterprise/reports/types";
 
-  const blob = new Blob([lines.join("\n")], {
-    type: "text/csv;charset=utf-8;",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "enterprise-history.csv";
-  a.click();
-  URL.revokeObjectURL(url);
+function mapAcceptedToEnterpriseReport(
+  item: AcceptedEnterpriseReport,
+): EnterpriseReport {
+  return {
+    id: item.id,
+    address: item.address,
+    latitude: item.latitude ?? null,
+    longitude: item.longitude ?? null,
+    description: item.description ?? null,
+    status: item.status,
+    createdAt: item.assignedAt ?? null,
+    updatedAt: item.completedAt ?? null,
+    citizen: item.citizen
+      ? {
+          id: item.citizen.id ?? null,
+          fullName: item.citizen.fullName,
+          phone: item.citizen.phone ?? null,
+          email: item.citizen.email ?? null,
+          avatar: item.citizen.avatar ?? null,
+        }
+      : null,
+  };
 }
 
-export default function EnterpriseRequestHistoryPage() {
-  const [rows] = useState<RequestItem[]>(mockRequests);
-  const [zone, setZone] = useState<ZoneFilter>("ALL");
-  const [wasteType, setWasteType] = useState<WasteFilter>("ALL");
-  const [range, setRange] = useState<[Dayjs | null, Dayjs | null]>([
-    dayjs().subtract(30, "day"),
-    dayjs(),
-  ]);
+function mapAcceptedToDetail(
+  item: AcceptedEnterpriseReport,
+): WaitingReportDetail {
+  return {
+    isCancelled: false,
+    cancelReason: null,
+    distanceKm: null,
+    report: {
+      id: item.reportId ?? item.id,
+      status: item.status,
+      address: item.address,
+      latitude: item.latitude ?? 0,
+      longitude: item.longitude ?? 0,
+      provinceCode: "",
+      districtCode: "",
+      wardCode: "",
+      description: item.description ?? null,
+      createdAt: item.assignedAt ?? item.completedAt ?? dayjs().toISOString(),
+      wasteItems: item.wasteItems ?? [],
+      images: item.images ?? [],
+      citizen: {
+        id: item.citizen?.id ?? null,
+        fullName: item.citizen?.fullName ?? "Không rõ",
+        phone: item.citizen?.phone ?? null,
+        email: item.citizen?.email ?? null,
+        avatar: item.citizen?.avatar ?? null,
+      },
+    },
+  };
+}
 
-  const completed = useMemo(
-    () => rows.filter((r) => r.status === "COMPLETED"),
-    [rows],
-  );
+export default function EnterpriseApprovedRequestsPage() {
+  const { data, isLoading, isFetching, isError, error, refetch } =
+    useGetAcceptedReportsQuery(undefined, {
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    });
+
+  const rows: AcceptedEnterpriseReport[] = data?.data ?? [];
 
   const filtered = useMemo(() => {
-    const [a, b] = range;
-    return completed.filter((r) => {
-      if (zone !== "ALL" && r.zone !== zone) return false;
-      if (wasteType !== "ALL" && r.wasteType !== wasteType) return false;
+    return rows.filter(
+      (r) =>
+        String(r.status ?? "")
+          .trim()
+          .toUpperCase() === "COMPLETED",
+    );
+  }, [rows]);
 
-      if (a && b) {
-        const t = dayjs(r.completedAt ?? r.createdAt);
-        if (t.isBefore(a.startOf("day")) || t.isAfter(b.endOf("day")))
-          return false;
-      }
-      return true;
-    });
-  }, [completed, zone, wasteType, range]);
+  const tableData = useMemo<EnterpriseReport[]>(() => {
+    return filtered.map(mapAcceptedToEnterpriseReport);
+  }, [filtered]);
 
-  const totalKg = useMemo(
-    () => filtered.reduce((s, r) => s + (r.actualKg ?? r.estKg ?? 0), 0),
-    [filtered],
-  );
+  const [viewOpen, setViewOpen] = useState(false);
+  const [selectedReport, setSelectedReport] =
+    useState<AcceptedEnterpriseReport | null>(null);
+
+  const selectedMeta = useMemo<EnterpriseReport | null>(() => {
+    if (!selectedReport) return null;
+    return mapAcceptedToEnterpriseReport(selectedReport);
+  }, [selectedReport]);
+
+  const selectedDetail = useMemo<WaitingReportDetail | null>(() => {
+    if (!selectedReport) return null;
+    return mapAcceptedToDetail(selectedReport);
+  }, [selectedReport]);
+
+  const onView = (id: number) => {
+    const found = filtered.find((x) => x.id === id) ?? null;
+    setSelectedReport(found);
+    setViewOpen(true);
+  };
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-100">
-      {/* Top bar */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6">
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
         <Card className="p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0">
-              <div className="flex items-center gap-3">
+            <div className="min-w-0 text-center lg:text-left">
+              <div className="flex items-center justify-center gap-3 lg:justify-start">
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-2.5">
-                  <History className="h-5 w-5 text-emerald-700" />
+                  <ClipboardCheck className="h-5 w-5 text-emerald-700" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-                    Lịch sử đơn đã hoàn tất
+                  <h1 className="truncate text-lg font-bold text-slate-900 sm:text-xl">
+                    Đơn đã hoàn thành
                   </h1>
                   <p className="text-sm text-slate-600">
-                    Tổng hợp đơn đã xử lý xong theo khu vực & loại rác.
+                    Danh sách đơn doanh nghiệp đã hoàn thành xử lý
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Dropdown<ZoneFilter>
-                label="Khu vực"
-                value={zone}
-                onChange={setZone}
-                icon={MapPinned}
-                options={ZONE_OPTIONS}
-              />
-              <Dropdown<WasteFilter>
-                label="Loại rác"
-                value={wasteType}
-                onChange={setWasteType}
-                icon={Filter}
-                options={WASTE_OPTIONS}
-              />
-
-              <div
-                className={cx(
-                  "inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm",
-                  "hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors",
-                )}
-              >
-                <span className="text-xs font-semibold text-slate-600">
-                  Khoảng ngày
-                </span>
-                <DateRangePill
-                  value={range}
-                  onChange={setRange}
-                  className={cx(
-                    "!border-0 !shadow-none !bg-transparent !p-0 hover:!bg-transparent",
-                  )}
-                />
-              </div>
-
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <Badge tone="emerald">{formatNumber(filtered.length)} đơn</Badge>
-              <Badge tone="slate">{formatNumber(totalKg)} kg</Badge>
 
               <Button
-                variant="outline"
-                onClick={() => exportHistoryCSV(filtered)}
+                variant="ghost"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                className="
+                  !rounded-2xl !px-3 !py-2
+                  !bg-white !border !border-slate-200
+                  !text-slate-800 !font-medium
+                  hover:!border-emerald-300 hover:!bg-emerald-50/60
+                  hover:!text-emerald-800
+                  active:!bg-emerald-100/60
+                  disabled:!opacity-70 disabled:!cursor-not-allowed
+                  transition-all duration-200 ease-out
+                  shadow-sm hover:shadow
+                "
               >
-                <Download className="h-4 w-4" />
-                Xuất CSV
+                <span className="inline-flex items-center gap-2">
+                  <RefreshCw
+                    className={`h-4 w-4 ${
+                      isFetching
+                        ? "animate-spin text-emerald-700"
+                        : "text-slate-600"
+                    }`}
+                  />
+                  {isFetching ? "Đang tải..." : "Tải lại"}
+                </span>
               </Button>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Table */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
         <Card className="overflow-hidden" hover={false}>
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div className="py-10">
+              <LoadingSpinner color="blue" size="10" />
+            </div>
+          ) : isError ? (
+            <div className="p-6 text-center">
+              <div className="font-semibold text-rose-600">Lỗi tải dữ liệu</div>
+              <pre className="mt-2 whitespace-pre-wrap text-left text-xs text-slate-600">
+                {JSON.stringify(error, null, 2)}
+              </pre>
+            </div>
+          ) : tableData.length === 0 ? (
             <EmptyState
-              title="Chưa có dữ liệu lịch sử"
-              desc="Thử đổi bộ lọc hoặc khoảng ngày."
+              title="Không có đơn đã hoàn thành"
+              desc="Hiện chưa có đơn nào ở trạng thái hoàn thành."
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-slate-50 border-y border-slate-200">
-                  <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                    <th className="px-4 py-3">Mã</th>
-                    <th className="px-4 py-3">Khu vực</th>
-                    <th className="px-4 py-3">Loại rác</th>
-                    <th className="px-4 py-3">Ước tính</th>
-                    <th className="px-4 py-3">Thực tế</th>
-                    <th className="px-4 py-3">Collector</th>
-                    <th className="px-4 py-3">Hoàn tất</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="border-b border-slate-100 hover:bg-emerald-50/30 transition-colors"
-                    >
-                      <td className="px-4 py-3 font-semibold text-slate-900">
-                        {r.id}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
-                        {r.zone}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge tone="slate">{r.wasteType}</Badge>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-slate-900">
-                        {formatNumber(r.estKg)} kg
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-slate-900">
-                        {formatNumber(r.actualKg ?? r.estKg)} kg
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
-                        {r.collectorName ?? "-"}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
-                        {dayjs(r.completedAt ?? r.createdAt).format(
-                          "DD/MM/YYYY HH:mm",
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ReportsHistoryTable
+              data={tableData}
+              onView={onView}
+              onPrefetchDetail={() => undefined}
+            />
           )}
         </Card>
       </div>
+
+      <ReportDetailModal
+        open={viewOpen}
+        onClose={() => {
+          setViewOpen(false);
+          setSelectedReport(null);
+        }}
+        loading={false}
+        detail={selectedDetail}
+        meta={selectedMeta}
+      />
     </div>
   );
 }

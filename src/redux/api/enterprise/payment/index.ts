@@ -1,6 +1,6 @@
-// src/redux/api/payment.ts
 import { baseApi } from "@/redux/api/baseApi";
 import type { GetPaymentResponse } from "./types";
+import { EnterpriseTransactionHistoryResponse } from "./types";
 
 /** ===== API ===== */
 export const enterprisePaymentApi = baseApi.injectEndpoints({
@@ -12,6 +12,17 @@ export const enterprisePaymentApi = baseApi.injectEndpoints({
       }),
       providesTags: ["EnterprisePayment"],
     }),
+
+    getEnterpriseTransactionHistory: builder.query<
+      EnterpriseTransactionHistoryResponse,
+      { page?: number; limit?: number }
+    >({
+      query: ({ page = 1, limit = 10 }) => ({
+        url: `enterprise/transactions?page=${page}&limit=${limit}`,
+        method: "GET",
+      }),
+      providesTags: ["EnterprisePayment"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -19,4 +30,6 @@ export const enterprisePaymentApi = baseApi.injectEndpoints({
 export const {
   useGetEnterprisePaymentQuery,
   useLazyGetEnterprisePaymentQuery,
+  useGetEnterpriseTransactionHistoryQuery,
+  useLazyGetEnterpriseTransactionHistoryQuery,
 } = enterprisePaymentApi;

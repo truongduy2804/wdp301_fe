@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { Users, RefreshCw } from "lucide-react";
 
@@ -24,23 +24,26 @@ import {
 import type {
   Collector,
   CollectorStatus,
+  CollectorWorkingHours,
   CreateCollectorBody,
   GetCollectorsParams,
-  UpdateCollectorBody,
 } from "@/redux/api/enterprise/collectors/types";
 
 import CollectorsTable from "./collectorsTable";
 import CollectorDetailModal from "./collectorDetailModal";
-import CollectorUpsertModal from "./collectorUpsertModal";
+import CollectorCreateModal from "./collectorCreateModal";
+import CollectorEditModal from "./collectorEditModal";
 import ConfirmDeleteModal from "./confirmDeleteModal";
 
 /* ================= Helpers ================= */
 function useDebounced<T>(value: T, delay = 350) {
   const [v, setV] = useState(value);
+
   useEffect(() => {
     const id = window.setTimeout(() => setV(value), delay);
     return () => window.clearTimeout(id);
   }, [value, delay]);
+
   return v;
 }
 
@@ -56,7 +59,6 @@ type ListMeta = {
 function parseList(listRes: any): { items: Collector[]; meta: ListMeta } {
   const data = listRes?.data;
 
-  // legacy array
   if (Array.isArray(data)) {
     return {
       items: data,
@@ -84,18 +86,24 @@ type StatusFilter = CollectorStatus | "";
 
 const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "", label: "Tất cả" },
-  { value: "AVAILABLE", label: "Sẵn sàng" },
-  { value: "ON_TASK", label: "Đang làm" },
+  { value: "ONLINE_AVAILABLE", label: "Sẵn sàng" },
+  // { value: "ONLINE_BUSY", label: "Đang bận" },
   { value: "OFFLINE", label: "Ngoại tuyến" },
 ];
 
+type UpsertValues = {
+  email?: string;
+  fullName: string;
+  phone: string;
+  avatar?: File | Blob | null;
+  workingHours?: CollectorWorkingHours;
+};
+
 export default function EnterpriseCollectorsPage() {
-  // filters
   const [status, setStatus] = useState<StatusFilter>("");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounced(search.trim(), 350);
 
-  // pagination
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
@@ -127,7 +135,6 @@ export default function EnterpriseCollectorsPage() {
   const countForBadge =
     typeof meta.totalItems === "number" ? meta.totalItems : items.length;
 
-  // ===== Mutations =====
   const [createCollector, { isLoading: creating }] =
     useCreateCollectorMutation();
   const [updateCollector, { isLoading: updating }] =
@@ -135,7 +142,6 @@ export default function EnterpriseCollectorsPage() {
   const [deleteCollector, { isLoading: deleting }] =
     useDeleteCollectorMutation();
 
-  // ===== View detail =====
   const [viewOpen, setViewOpen] = useState(false);
   const [fetchDetail, detail] = useLazyGetCollectorByIdQuery();
 
@@ -144,7 +150,6 @@ export default function EnterpriseCollectorsPage() {
     fetchDetail(id);
   };
 
-  // ===== Create/Edit modal =====
   const [upsertOpen, setUpsertOpen] = useState(false);
   const [editing, setEditing] = useState<Collector | null>(null);
 
@@ -158,29 +163,29 @@ export default function EnterpriseCollectorsPage() {
     setUpsertOpen(true);
   };
 
-  const onSubmitUpsert = async (
-    values: CreateCollectorBody &
-      UpdateCollectorBody & { status?: CollectorStatus },
-  ) => {
+  const onSubmitUpsert = async (values: UpsertValues) => {
     try {
       if (!editing) {
         const payload: CreateCollectorBody = {
-          email: values.email!,
-          fullName: values.fullName!,
-          phone: values.phone!,
+          email: values.email ?? "",
+          fullName: values.fullName,
+          phone: values.phone,
+          workingHours: values.workingHours as CollectorWorkingHours,
         };
 
         await createCollector(payload).unwrap();
-        toast.success("Đã tạo collector", { autoClose: 1400 });
+        toast.success("Đã tạo nhân sự thu gom", { autoClose: 1400 });
       } else {
-        const body: UpdateCollectorBody = {
-          fullName: values.fullName,
-          phone: values.phone,
-          status: values.status,
-        };
+        await updateCollector({
+          id: editing.id,
+          body: {
+            fullName: values.fullName,
+            phone: values.phone,
+            avatar: values.avatar ?? undefined,
+          },
+        }).unwrap();
 
-        await updateCollector({ id: editing.id, body }).unwrap();
-        toast.success("Đã cập nhật collector", { autoClose: 1400 });
+        toast.success("Đã cập nhật nhân sự thu gom", { autoClose: 1400 });
       }
 
       setUpsertOpen(false);
@@ -190,7 +195,6 @@ export default function EnterpriseCollectorsPage() {
     }
   };
 
-  // ===== Delete confirm =====
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Collector | null>(null);
 
@@ -201,9 +205,10 @@ export default function EnterpriseCollectorsPage() {
 
   const onConfirmDelete = async () => {
     if (!deleteTarget) return;
+
     try {
       await deleteCollector(deleteTarget.id).unwrap();
-      toast.success("Đã xoá collector", { autoClose: 1400 });
+      toast.success("Đã xoá nhân sự thu gom", { autoClose: 1400 });
       setDeleteOpen(false);
       setDeleteTarget(null);
     } catch (e: any) {
@@ -211,7 +216,6 @@ export default function EnterpriseCollectorsPage() {
     }
   };
 
-  // ===== Pagination UI =====
   const computedTotalPages =
     typeof meta.totalPages === "number"
       ? meta.totalPages
@@ -229,8 +233,7 @@ export default function EnterpriseCollectorsPage() {
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-100">
-      {/* Header */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6">
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
         <Card hover={false} className="overflow-visible">
           <CardHeader
             title={
@@ -239,30 +242,30 @@ export default function EnterpriseCollectorsPage() {
                   <Users className="h-5 w-5 text-emerald-700" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-lg sm:text-xl font-semibold text-slate-900 truncate">
-                    Quản lí nhân sự thu gom
+                  <h1 className="truncate text-lg font-semibold text-slate-900 sm:text-xl">
+                    Quản lý nhân sự thu gom
                   </h1>
                   <p className="text-sm font-normal text-slate-600">
-                    Tạo / sửa / xoá collector, tìm kiếm & lọc theo trạng thái
+                    Tạo, chỉnh sửa, xoá nhân sự; tìm kiếm và lọc theo trạng thái
                   </p>
                 </div>
               </div>
             }
             right={
-              <div className="relative z-[20] flex flex-wrap items-center justify-start sm:justify-end gap-2 w-full">
-                <div className="w-full sm:w-auto inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                  <span className="text-xs font-medium text-slate-600 shrink-0">
+              <div className="relative z-[20] flex w-full flex-wrap items-center justify-start gap-2 sm:justify-end">
+                <div className="inline-flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm sm:w-auto">
+                  <span className="shrink-0 text-xs font-medium text-slate-600">
                     Tìm kiếm
                   </span>
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Tên hoặc email…"
-                    className="w-full sm:w-[180px] bg-transparent text-sm font-normal outline-none placeholder:text-slate-400"
+                    className="w-full bg-transparent text-sm font-normal outline-none placeholder:text-slate-400 sm:w-[180px]"
                   />
                 </div>
 
-                <div className="w-full sm:w-auto sm:min-w-0">
+                <div className="w-full sm:min-w-0 sm:w-auto">
                   <Dropdown<StatusFilter>
                     label="Trạng thái"
                     value={status}
@@ -280,9 +283,7 @@ export default function EnterpriseCollectorsPage() {
                   variant="ghost"
                   onClick={() => refetch()}
                   disabled={isFetching}
-                  className="!rounded-2xl !px-3 !py-2 !bg-white !border !border-slate-200 !text-slate-800 !font-medium
-                    hover:!border-emerald-300 hover:!bg-emerald-50/60 hover:!text-emerald-800
-                    active:!bg-emerald-100/60 disabled:!opacity-70 disabled:!cursor-not-allowed transition-all duration-200 ease-out shadow-sm hover:shadow"
+                  className="!rounded-2xl !border !border-slate-200 !bg-white !px-3 !py-2 !font-medium !text-slate-800 shadow-sm transition-all duration-200 ease-out hover:!border-emerald-300 hover:!bg-emerald-50/60 hover:!text-emerald-800 hover:shadow active:!bg-emerald-100/60 disabled:!cursor-not-allowed disabled:!opacity-70"
                 >
                   <span className="inline-flex items-center gap-2">
                     <RefreshCw
@@ -299,10 +300,9 @@ export default function EnterpriseCollectorsPage() {
                 <Button
                   onClick={onCreateOpen}
                   disabled={creating || updating || deleting}
-                  className="!rounded-2xl !px-3 !py-2 !bg-emerald-600 !text-white !font-medium
-                    hover:!bg-emerald-700 active:!bg-emerald-800 disabled:!opacity-70 transition-all duration-200 ease-out shadow-sm hover:shadow w-full sm:w-auto"
+                  className="w-full !rounded-2xl !bg-emerald-600 !px-3 !py-2 !font-medium !text-white shadow-sm transition-all duration-200 ease-out hover:!bg-emerald-700 hover:shadow active:!bg-emerald-800 disabled:!opacity-70 sm:w-auto"
                 >
-                  + Tạo collector
+                  + Tạo nhân sự
                 </Button>
               </div>
             }
@@ -310,8 +310,7 @@ export default function EnterpriseCollectorsPage() {
         </Card>
       </div>
 
-      {/* Content */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
         <Card className="overflow-hidden" hover={false}>
           {isLoading ? (
             <div className="py-10">
@@ -319,19 +318,18 @@ export default function EnterpriseCollectorsPage() {
             </div>
           ) : isError ? (
             <div className="p-6 text-center">
-              <div className="text-rose-600 font-semibold">Lỗi tải dữ liệu</div>
-              <pre className="mt-2 text-xs text-slate-600 text-left whitespace-pre-wrap">
+              <div className="font-semibold text-rose-600">Lỗi tải dữ liệu</div>
+              <pre className="mt-2 whitespace-pre-wrap text-left text-xs text-slate-600">
                 {JSON.stringify(error, null, 2)}
               </pre>
             </div>
           ) : items.length === 0 ? (
             <EmptyState
-              title="Danh sách collector đang trống"
-              desc="Thử đổi bộ lọc hoặc tạo collector mới."
+              title="Danh sách nhân sự thu gom đang trống"
+              desc="Thử đổi bộ lọc hoặc tạo nhân sự thu gom mới."
             />
           ) : (
             <>
-              {/* ✅ NHỚ: CollectorsTable phải rowKey = id (antd Table: rowKey={(r)=>r.id}) */}
               <CollectorsTable
                 data={items}
                 busy={creating || updating || deleting}
@@ -340,7 +338,7 @@ export default function EnterpriseCollectorsPage() {
                 onDelete={onAskDelete}
               />
 
-              <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-slate-100">
+              <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-4 py-3">
                 <div className="text-sm text-slate-600">
                   Trang{" "}
                   <span className="font-semibold text-slate-900">{page}</span>
@@ -380,7 +378,6 @@ export default function EnterpriseCollectorsPage() {
         </Card>
       </div>
 
-      {/* View Modal */}
       <CollectorDetailModal
         open={viewOpen}
         onClose={() => setViewOpen(false)}
@@ -388,32 +385,41 @@ export default function EnterpriseCollectorsPage() {
         detail={detail.data?.data ?? null}
       />
 
-      {/* Create/Edit Modal */}
-      <CollectorUpsertModal
-        open={upsertOpen}
-        mode={editing ? "edit" : "create"}
-        initial={editing}
-        submitting={creating || updating}
-        onClose={() => {
-          if (creating || updating) return;
-          setUpsertOpen(false);
-          setEditing(null);
-        }}
-        onSubmit={onSubmitUpsert}
-      />
+      {editing ? (
+        <CollectorEditModal
+          open={upsertOpen}
+          initial={editing}
+          submitting={creating || updating}
+          onClose={() => {
+            if (creating || updating) return;
+            setUpsertOpen(false);
+            setEditing(null);
+          }}
+          onSubmit={onSubmitUpsert}
+        />
+      ) : (
+        <CollectorCreateModal
+          open={upsertOpen}
+          submitting={creating || updating}
+          onClose={() => {
+            if (creating || updating) return;
+            setUpsertOpen(false);
+          }}
+          onSubmit={onSubmitUpsert}
+        />
+      )}
 
-      {/* Delete Confirm */}
       <ConfirmDeleteModal
         open={deleteOpen}
         loading={deleting}
         title={
           deleteTarget
-            ? `Xoá người thu gom rác "${deleteTarget.fullName}"?`
-            : "Xoá collector?"
+            ? `Xoá nhân sự thu gom "${deleteTarget.fullName}"?`
+            : "Xoá nhân sự thu gom?"
         }
         desc={
           deleteTarget
-            ? `Bạn có chắc chắn muốn xoá người này ?`
+            ? "Bạn có chắc chắn muốn xoá nhân sự này?"
             : "Bạn chắc chắn muốn xoá?"
         }
         onClose={() => {

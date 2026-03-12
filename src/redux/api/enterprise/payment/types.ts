@@ -41,6 +41,31 @@ export type RenewSubscriptionResponse = ApiEnvelope<{
   qrCode?: string;
   [k: string]: any;
 }>;
+export interface EnterpriseTransactionItem {
+  id: number;
+  referenceCode: string;
+  amount: number;
+  currency: string;
+  description: string;
+  planName: string;
+  paidAt: string;
+  method: string;
+  status: string;
+}
 
+export interface EnterpriseTransactionHistoryResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    transactions: EnterpriseTransactionItem[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
 /** GET payment/{referenceCode} */
 export type GetPaymentResponse = ApiEnvelope<PendingPayment>;

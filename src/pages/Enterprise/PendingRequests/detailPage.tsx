@@ -345,10 +345,10 @@ export default function ReportDetailModal({
             aria-modal="true"
             className="
               fixed inset-x-4 sm:inset-x-6 md:inset-x-10
-              top-[3vh] bottom-[3vh] sm:top-[6vh] sm:bottom-[6vh]
+              top-[3vh] bottom-[3vh] sm:top-[3vh] sm:bottom-[3vh]
               mx-auto max-w-5xl
               flex flex-col overflow-hidden
-              rounded-2xl border border-slate-200 bg-white shadow-2xl
+              rounded-2xl bg-emerald-600 shadow-2xl
             "
           >
             {/* HEADER */}
@@ -356,7 +356,7 @@ export default function ReportDetailModal({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="m-0 text-lg sm:text-xl font-extrabold text-slate-900">
+                    <h2 className="m-0 text-lg sm:text-xl font-extrabold text-white">
                       Chi tiết đơn{" "}
                       {report ? `#${report.id}` : meta?.id ? `#${meta.id}` : ""}
                     </h2>
@@ -364,7 +364,7 @@ export default function ReportDetailModal({
                     <TagPill kind="reportStatus" value={statusCode} />
                   </div>
 
-                  <div className="mt-1 flex items-center gap-2 text-sm text-slate-600">
+                  <div className="mt-1 flex items-center gap-2 text-sm text-slate-200">
                     <span className="truncate">
                       {geoName ?? report?.address ?? meta?.address ?? "—"}
                     </span>
@@ -386,11 +386,11 @@ export default function ReportDetailModal({
                 <motion.button
                   whileHover={{ rotate: 90 }}
                   transition={{ type: "spring", stiffness: 500, damping: 18 }}
-                  className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-md hover:bg-gray-100 "
+                  className="relateive group right-4 top-4 grid h-9 w-9 place-items-center rounded-md hover:bg-slate-200"
                   onClick={onClose}
                   aria-label="Đóng"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5 text-white group-hover:text-black" />
                 </motion.button>
               </div>
             </div>
@@ -701,9 +701,9 @@ export default function ReportDetailModal({
               <button
                 onClick={onClose}
                 className="
-                  rounded-xl border border-slate-200 bg-white px-4 py-2
-                  font-extrabold text-slate-700
-                  hover:bg-slate-50 active:scale-[0.98] transition
+                  rounded-xl border border-slate-200 bg-emerald-600 px-4 py-2
+                  font-extrabold text-slate-100
+                  hover:brightness-90 hover:scale-[1.02] transition
                 "
                 type="button"
               >

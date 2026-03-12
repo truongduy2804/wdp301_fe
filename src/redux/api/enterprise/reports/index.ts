@@ -1,5 +1,6 @@
 import { baseApi } from "@/redux/api/baseApi";
 import type {
+  AcceptedEnterpriseReport,
   ApiEnvelope,
   EnterpriseReport,
   WaitingReportDetail,
@@ -37,6 +38,7 @@ export const enterpriseReportsApi = baseApi.injectEndpoints({
       invalidatesTags: (_res, _err, id) => [
         { type: "WaitingReports", id },
         { type: "WaitingReports", id: "LIST" },
+        { type: "AcceptedReports", id: "LIST" },
       ],
     }),
 
@@ -54,6 +56,23 @@ export const enterpriseReportsApi = baseApi.injectEndpoints({
         { type: "WaitingReports", id: "LIST" },
       ],
     }),
+
+    getAcceptedReports: b.query<ApiEnvelope<AcceptedEnterpriseReport[]>, void>({
+      query: () => ({
+        url: "enterprise/reports/accepted",
+        method: "GET",
+      }),
+      providesTags: (res) =>
+        res?.data
+          ? [
+              { type: "AcceptedReports" as const, id: "LIST" },
+              ...res.data.map((r) => ({
+                type: "AcceptedReports" as const,
+                id: r.id,
+              })),
+            ]
+          : [{ type: "AcceptedReports" as const, id: "LIST" }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -63,4 +82,5 @@ export const {
   useLazyGetWaitingReportDetailQuery,
   useAcceptReportMutation,
   useRejectReportMutation,
+  useGetAcceptedReportsQuery,
 } = enterpriseReportsApi;

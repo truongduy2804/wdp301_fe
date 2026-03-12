@@ -6,15 +6,22 @@ export type ApiEnvelope<T> = {
 };
 
 export type CitizenSummary = {
-  id: number;
+  id?: number | null;
   fullName: string;
   phone?: string | null;
   email?: string | null;
   avatar?: string | null;
 };
 
+export type CollectorSummary = {
+  id: number;
+  employeeCode?: string | null;
+  fullName: string;
+  phone?: string | null;
+  avatar?: string | null;
+};
+
 export type EnterpriseReport = {
-  // list /waiting trả về
   id: number;
   citizenId?: number | null;
   currentEnterpriseId?: number | null;
@@ -27,7 +34,7 @@ export type EnterpriseReport = {
   wardCode?: string | null;
 
   description?: string | null;
-  status?: string | null; // "PENDING"
+  status?: string | null;
   sentAt?: string | null;
   expiredAt?: string | null;
 
@@ -39,7 +46,7 @@ export type EnterpriseReport = {
 
   attemptId?: number | null;
 
-  citizen?: CitizenSummary | null; // list có citizen
+  citizen?: CitizenSummary | null;
 };
 
 export type WasteItem = {
@@ -48,7 +55,6 @@ export type WasteItem = {
 };
 
 export type ReportDetail = {
-  // detail /waiting/:id trả về nằm trong data.report
   id: number;
   status: string;
 
@@ -74,4 +80,27 @@ export type WaitingReportDetail = {
   cancelReason: string | null;
   report: ReportDetail;
   distanceKm?: number | null;
+};
+
+/**
+ * GET /enterprise/reports/accepted
+ */
+export type AcceptedEnterpriseReport = {
+  id: number;
+  reportId: number;
+  status: string;
+
+  address: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  description?: string | null;
+
+  assignedAt?: string | null;
+  completedAt?: string | null;
+
+  wasteItems: WasteItem[];
+  images: string[];
+
+  citizen: CitizenSummary;
+  collector?: CollectorSummary | null;
 };
