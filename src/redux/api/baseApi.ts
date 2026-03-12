@@ -11,9 +11,9 @@ import { logout, setTokens } from "@/redux/feature/authSlice";
 import { tagTypes } from "./tagTypes";
 import { readRefreshToken } from "@/utils/authStorage";
 
-const PROD_BASE =
-  (import.meta.env.VITE_API_BASE_URL + "api/v1")?.replace(/\/+$/, "") ||
-  "http://localhost:8000/api/v1";
+const PROD_BASE = import.meta.env.VITE_API_BASE_URL
+  ? (import.meta.env.VITE_API_BASE_URL + "api/v1").replace(/\/+$/, "")
+  : "https://crowdsourced-collection-recycling-platform-dnbye7h0d0c6gkaj.southeastasia-01.azurewebsites.net/api/v1";
 
 const API_BASE = PROD_BASE.replace(/\/+$/, "") + "/";
 
