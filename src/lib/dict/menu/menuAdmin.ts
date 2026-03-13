@@ -7,6 +7,8 @@ export const menuAdmin = {
       systemMonitoring: "Giám sát hệ thống",
       complaintsDisputes: "Khiếu nại / Tranh chấp",
       enterpriseMap: "Bản đồ doanh nghiệp",
+      giftManagement: "Quản lý quà tặng",
+      redemptionHistory: "Lịch sử đổi quà",
     },
   },
   en: {
@@ -16,6 +18,8 @@ export const menuAdmin = {
       systemMonitoring: "System Monitoring",
       complaintsDisputes: "Complaints / Disputes",
       enterpriseMap: "Enterprise Map",
+      giftManagement: "Gift Management",
+      redemptionHistory: "Redemption History",
     },
   },
 } as const;

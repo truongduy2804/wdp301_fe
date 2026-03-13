@@ -50,6 +50,8 @@ const endPoint = {
     ACCOUNTS: "accounts",
     COMPLAINTS: "complaints",
     ENTERPRISE_MAP: "enterprise-map",
+    GIFTS: "gifts",
+    REDEMPTIONS: "redemptions",
   },
 } as const;
 
