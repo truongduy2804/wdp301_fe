@@ -11,6 +11,10 @@ import {
   Users,
 } from "lucide-react";
 import dayjs, { type Dayjs } from "dayjs";
+import { useNavigate } from "react-router-dom";
+import endPoint from "@/router/endPoint";
+import { useGetEnterpriseSubscriptionQuery } from "@/redux/api/enterprise/subscription";
+import { useEnterpriseRenewSoonToast } from "@/hooks/useEnterpriseRenewToast";
 
 import {
   ResponsiveContainer,
@@ -206,6 +210,25 @@ const CHART = {
 
 /* ===================== Page ===================== */
 export default function EnterpriseStatsPage() {
+  const navigate = useNavigate();
+
+  // gọi để lấy endDate / trạng thái (nhẹ)
+  const { data } = useGetEnterpriseSubscriptionQuery();
+
+  const payload = data?.data;
+  const sub = payload?.subscription;
+
+  // toast nhắc nhở trên trang chính
+  useEnterpriseRenewSoonToast({
+    enterpriseStatus: payload?.enterpriseStatus,
+    subIsActive: sub?.isActive,
+    subIsExpired: sub?.isExpired,
+    endDate: sub?.endDate ?? null,
+    onRenewNow: () => {
+      navigate(endPoint.SUBSCRIPTION, { state: { openPlanModal: true } });
+    },
+  });
+
   const [preset, setPreset] = useState<DatePreset>("7d");
   const [zone, setZone] = useState<Zone | "ALL">("ALL");
   const [wasteType, setWasteType] = useState<WasteType | "ALL">("ALL");

@@ -133,20 +133,8 @@ export default function EnterprisePendingRequestsPage() {
             </div>
 
             <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2">
-              <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                <span className="text-xs font-semibold text-slate-600">
-                  Khoảng ngày
-                </span>
-                <DateRangePill
-                  value={range}
-                  onChange={setRange}
-                  className="!border-0 !shadow-none !bg-transparent !p-0 hover:!bg-transparent"
-                />
-              </div>
-
               <Badge tone="emerald">{formatNumber(filtered.length)} đơn</Badge>
 
-              {/* ✅ NÚT TẢI LẠI GIỐNG TRANG COLLECTOR */}
               <Button
                 variant="ghost"
                 onClick={() => refetch()}

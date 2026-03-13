@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState } from "react";
-import { Eye, Pencil, Trash2, Mail, Phone } from "lucide-react";
+import { Eye, Pencil, Trash2, Mail, Phone, UserCircle2 } from "lucide-react";
 import type {
   Collector,
   CollectorStatus,
@@ -29,10 +29,8 @@ function Avatar({ src, name }: { src: string | null; name: string | null }) {
 
   if (!src || broken) {
     return (
-      <div className="h-10 w-10 rounded-2xl border border-slate-200 bg-slate-100 grid place-items-center shrink-0">
-        <span className="text-xs font-extrabold text-slate-700">
-          {initials}
-        </span>
+      <div className="h-10 w-10 rounded-full border border-slate-300 bg-slate-200 grid place-items-center shrink-0 overflow-hidden">
+        <UserCircle2 className="h-8 w-8 text-slate-500" />
       </div>
     );
   }
@@ -58,9 +56,9 @@ function CollectorsTable({ data, busy, onView, onEdit, onDelete }: Props) {
         <thead className="bg-slate-50 border-b border-slate-100">
           <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-slate-700 [&>th]:font-extrabold">
             <th className="text-center w-[90px]">ID</th>
-            <th className="text-left min-w-[280px]">Collector</th>
-            <th className="text-left min-w-[220px]">Email</th>
-            <th className="text-left w-[170px]">SĐT</th>
+            <th className="text-center min-w-[280px]">Nhân sự</th>
+            <th className="text-center min-w-[220px]">Email</th>
+            <th className="text-center w-[170px]">SĐT</th>
             <th className="text-center w-[160px]">Trạng thái</th>
             <th className="text-center w-[260px]">Thao tác</th>
           </tr>
@@ -78,18 +76,17 @@ function CollectorsTable({ data, busy, onView, onEdit, onDelete }: Props) {
 
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <Avatar
-                    src={(r as any).avatar ?? null}
-                    name={r.fullName ?? null}
-                  />
+                  <Avatar src={r.avatar ?? null} name={r.fullName ?? null} />
                   <div className="min-w-0">
                     <div className="font-extrabold text-slate-900 truncate">
                       {r.fullName ?? "—"}
                     </div>
                     <div className="mt-0.5 text-xs text-slate-500 truncate">
-                      {(r as any).enterpriseName
-                        ? `DN: ${(r as any).enterpriseName}`
-                        : " "}
+                      {(r as any).employeeCode
+                        ? `M\u00e3: ${(r as any).employeeCode}`
+                        : (r as any).enterpriseName
+                          ? `DN: ${(r as any).enterpriseName}`
+                          : " "}
                     </div>
                   </div>
                 </div>

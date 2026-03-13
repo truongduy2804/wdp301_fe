@@ -29,12 +29,12 @@ export function enterpriseMenu(
     ],
     [
       t.acceptedRequests,
-      CheckCircle2,
+      History,
       `/${endPoint.ENTERPRISE_CHILD.ACCEPTED_REQUESTS}`,
     ],
     [
       t.requestHistory,
-      History,
+      CheckCircle2,
       `/${endPoint.ENTERPRISE_CHILD.REQUEST_HISTORY}`,
     ],
     [t.settings, Settings, `/${endPoint.ENTERPRISE_CHILD.SETTINGS}`],

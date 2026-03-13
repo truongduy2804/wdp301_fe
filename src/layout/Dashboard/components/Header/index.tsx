@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { Bell, Menu } from "lucide-react";
+import { Bell, Menu, FileText, Timer, Loader2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { Switch } from "antd";
 import { toast } from "react-toastify";
-
 import UserMenu from "./UserMenu";
 import NotificationPanel from "./Notification/notificationPanel";
 
@@ -15,6 +14,14 @@ import {
 } from "@/redux/api/enterprise/orderAcceptance";
 
 import { useGetNotificationsQuery } from "@/redux/api/enterprise/notifications";
+
+import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store/store";
+
+import {
+  useProcessPendingReportsMutation,
+  useHandleTimeoutAttemptsMutation,
+} from "@/redux/api/admin/cronJobs";
 
 /* ================= Types ================= */
 export type PortalRole = Role;
@@ -98,8 +105,16 @@ export default function PortalHeader({
   const title = useMemo(() => {
     if (pageTitle) return pageTitle;
     if (isEnterprise) return "Bảng điều khiển doanh nghiệp";
-    return userName ? `Chào, ${userName}!` : "Portal";
+    return userName ? `` : "Portal";
   }, [pageTitle, isEnterprise, userName]);
+
+  /* ================= ADMIN gate ================= */
+  const isAdmin = useSelector((s: RootState) => {
+    // chỉnh nếu shape auth khác
+    const r1 = (s as any)?.auth?.user?.role;
+    const r2 = (s as any)?.auth?.role;
+    return r1 === "ADMIN" || r2 === "ADMIN";
+  });
 
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -176,6 +191,51 @@ export default function PortalHeader({
     </span>
   );
 
+  /* ================= ADMIN: Cron Jobs ================= */
+  const [processPendingReports, { isLoading: prLoading }] =
+    useProcessPendingReportsMutation();
+
+  const [handleTimeoutAttempts, { isLoading: htLoading }] =
+    useHandleTimeoutAttemptsMutation();
+
+  const cronBusy = prLoading || htLoading;
+
+  const onProcessPendingReports = useCallback(async () => {
+    if (cronBusy) return;
+
+    try {
+      const res = await processPendingReports().unwrap();
+      toast.success(res.message ?? "Đã trigger xử lý pending reports", {
+        autoClose: 1200,
+      });
+    } catch (e: any) {
+      toast.error(
+        e?.data?.message ?? e?.message ?? "Trigger pending reports thất bại",
+        {
+          autoClose: 1400,
+        },
+      );
+    }
+  }, [cronBusy, processPendingReports]);
+
+  const onHandleTimeoutAttempts = useCallback(async () => {
+    if (cronBusy) return;
+
+    try {
+      const res = await handleTimeoutAttempts().unwrap();
+      toast.success(res.message ?? "Đã trigger xử lý timeout attempts", {
+        autoClose: 1200,
+      });
+    } catch (e: any) {
+      toast.error(
+        e?.data?.message ?? e?.message ?? "Trigger timeout attempts thất bại",
+        {
+          autoClose: 1400,
+        },
+      );
+    }
+  }, [cronBusy, handleTimeoutAttempts]);
+
   /* ================= Notifications badge (API) ================= */
   const unreadQ = useGetNotificationsQuery({
     page: 1,
@@ -232,6 +292,77 @@ export default function PortalHeader({
           </div>
         )}
 
+        {/* ADMIN: cron buttons (desktop) */}
+        {isAdmin && (
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={onProcessPendingReports}
+              disabled={cronBusy}
+              className={[
+                "group inline-flex items-center gap-2 rounded-2xl px-3.5 py-2 text-sm font-semibold",
+                "border shadow-sm transition-all duration-200",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40",
+                cronBusy
+                  ? "cursor-not-allowed opacity-70"
+                  : " hover:shadow-sm active:translate-y-0 active:shadow-sm",
+                "border-emerald-200 bg-gradient-to-b from-emerald-50 to-white text-emerald-800",
+              ].join(" ")}
+              title="POST /cron/process-pending-reports"
+            >
+              <span className="grid place-items-center w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-200 group-hover:bg-emerald-200/70 transition-colors">
+                {prLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FileText className="w-4 h-4" />
+                )}
+              </span>
+
+              <span className="leading-none">
+                {prLoading ? "Đang chạy..." : "Process reports"}
+              </span>
+
+              {!cronBusy && (
+                <span className="ml-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-700">
+                  CRON
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={onHandleTimeoutAttempts}
+              disabled={cronBusy}
+              className={[
+                "group inline-flex items-center gap-2 rounded-2xl px-3.5 py-2 text-sm font-semibold",
+                "border shadow-sm transition-all duration-200",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40",
+                cronBusy
+                  ? "cursor-not-allowed opacity-70"
+                  : " hover:shadow-sm active:translate-y-0 active:shadow-sm",
+                "border-indigo-200 bg-gradient-to-b from-indigo-50 to-white text-indigo-800",
+              ].join(" ")}
+              title="POST /cron/handle-timeout-attempts"
+            >
+              <span className="grid place-items-center w-8 h-8 rounded-xl bg-indigo-100 border border-indigo-200 group-hover:bg-indigo-200/70 transition-colors">
+                {htLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Timer className="w-4 h-4" />
+                )}
+              </span>
+
+              <span className="leading-none">
+                {htLoading ? "Đang chạy..." : "Handle timeouts"}
+              </span>
+
+              {!cronBusy && (
+                <span className="ml-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-700">
+                  CRON
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+
         <div className="flex items-center gap-2 shrink-0">
           <div className="relative" ref={notificationRef}>
             <button
@@ -254,7 +385,6 @@ export default function PortalHeader({
                   onClick={() => setShowNotifications(false)}
                 />
 
-                {/* ✅ FIX dính viền: mobile có padding, desktop bám phải */}
                 <div
                   className="
                     fixed md:absolute z-50

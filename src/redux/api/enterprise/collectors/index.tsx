@@ -3,6 +3,7 @@ import type {
   ApiResponse,
   Collector,
   CollectorListData,
+  CollectorListMeta,
   CreateCollectorBody,
   GetCollectorsParams,
   UpdateCollectorBody,
@@ -10,7 +11,177 @@ import type {
 
 const TAG = "Collectors" as const;
 
-/** ===== helper: lấy mảng items + meta từ draft.data ===== */
+const LEGACY_TO_API_STATUS: Record<string, string> = {
+  AVAILABLE: "ONLINE_AVAILABLE",
+  ON_TASK: "ONLINE_BUSY",
+};
+
+function normalizeStatus(status: unknown): string {
+  const raw =
+    typeof status === "string"
+      ? status
+      : ((status as any)?.availability ??
+        (status as any)?.status ??
+        (status as any)?.value);
+
+  const key = String(raw ?? "")
+    .trim()
+    .toUpperCase();
+  if (!key) return "OFFLINE";
+  return LEGACY_TO_API_STATUS[key] ?? key;
+}
+
+function statusToApi(status?: string): string | undefined {
+  if (!status) return undefined;
+  const key = String(status).trim().toUpperCase();
+  if (!key) return undefined;
+  return LEGACY_TO_API_STATUS[key] ?? key;
+}
+
+function normalizeCollector(raw: any): Collector {
+  const user = raw?.user ?? {};
+  const rawStatus = raw?.status;
+  const statusInfo =
+    rawStatus && typeof rawStatus === "object"
+      ? {
+          ...rawStatus,
+          availability: normalizeStatus(rawStatus?.availability),
+        }
+      : undefined;
+
+  return {
+    ...raw,
+    id: Number(raw?.id ?? 0),
+    employeeCode:
+      raw?.employeeCode ??
+      raw?.employee_code ??
+      raw?.collectorCode ??
+      undefined,
+    fullName: raw?.fullName ?? user?.fullName ?? raw?.name ?? "",
+    email: raw?.email ?? user?.email ?? "",
+    phone: raw?.phone ?? user?.phone ?? "",
+    avatar: raw?.avatar ?? user?.avatar ?? null,
+    status: normalizeStatus(rawStatus),
+    statusInfo,
+    statusUpdatedAt: raw?.statusUpdatedAt ?? statusInfo?.updatedAt,
+    user: raw?.user ?? undefined,
+  };
+}
+
+function normalizeListMeta(metaRaw: any, listRaw: any): CollectorListMeta {
+  const total =
+    metaRaw?.total ?? metaRaw?.totalItems ?? listRaw?.total ?? undefined;
+  const page =
+    metaRaw?.page ?? metaRaw?.currentPage ?? listRaw?.page ?? undefined;
+  const limit =
+    metaRaw?.limit ?? metaRaw?.itemsPerPage ?? listRaw?.limit ?? undefined;
+
+  const computedTotalPages =
+    metaRaw?.totalPages ??
+    listRaw?.totalPages ??
+    (typeof total === "number" && typeof limit === "number" && limit > 0
+      ? Math.max(1, Math.ceil(total / limit))
+      : undefined);
+
+  const hasNextPage =
+    typeof metaRaw?.hasNextPage === "boolean"
+      ? metaRaw.hasNextPage
+      : typeof page === "number" && typeof computedTotalPages === "number"
+        ? page < computedTotalPages
+        : undefined;
+
+  const hasPrevPage =
+    typeof metaRaw?.hasPrevPage === "boolean"
+      ? metaRaw.hasPrevPage
+      : typeof page === "number"
+        ? page > 1
+        : undefined;
+
+  return {
+    total,
+    page,
+    limit,
+    totalPages: computedTotalPages,
+    totalItems: total,
+    currentPage: page,
+    itemsPerPage: limit,
+    hasNextPage,
+    hasPrevPage,
+  };
+}
+
+function normalizeListData(raw: any): CollectorListData {
+  if (Array.isArray(raw)) {
+    return raw.map(normalizeCollector);
+  }
+
+  const rows = Array.isArray(raw?.items)
+    ? raw.items
+    : Array.isArray(raw?.results)
+      ? raw.results
+      : Array.isArray(raw?.data)
+        ? raw.data
+        : [];
+
+  const items = rows.map(normalizeCollector);
+  const meta = normalizeListMeta(raw?.meta ?? {}, raw);
+
+  return {
+    items,
+    meta,
+    data: items,
+    total: meta.total,
+    page: meta.page,
+    limit: meta.limit,
+    totalPages: meta.totalPages,
+  };
+}
+
+function toRequestParams(
+  params: GetCollectorsParams | void,
+): GetCollectorsParams | undefined {
+  if (!params) return undefined;
+
+  const search = params.search?.trim();
+
+  return {
+    ...params,
+    status: statusToApi(params.status),
+    search: search || undefined,
+  };
+}
+
+function toUpdateCollectorFormData(body: UpdateCollectorBody): FormData {
+  const fd = new FormData();
+
+  fd.append("fullName", body.fullName ?? "");
+
+  if (body.phone !== undefined) {
+    fd.append("phone", body.phone ?? "");
+  }
+
+  if (body.avatar instanceof Blob) {
+    fd.append("avatar", body.avatar);
+  }
+
+  return fd;
+}
+
+function getItemsFromListData(
+  data: CollectorListData | undefined,
+): Collector[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+
+  return Array.isArray(data.items)
+    ? data.items
+    : Array.isArray(data.results)
+      ? data.results
+      : Array.isArray(data.data)
+        ? data.data
+        : [];
+}
+
 function getListBag(draft: any): {
   arr: Collector[];
   setArr: (next: Collector[]) => void;
@@ -19,13 +190,11 @@ function getListBag(draft: any): {
   if (!draft) return null;
 
   if (draft.data == null) {
-    // tạo container tối thiểu nếu draft trống
     draft.data = { items: [] as Collector[], meta: undefined };
   }
 
   const data = draft.data;
 
-  // dạng legacy array
   if (Array.isArray(data)) {
     return {
       arr: data,
@@ -36,21 +205,26 @@ function getListBag(draft: any): {
     };
   }
 
-  // dạng object
   const arr: Collector[] = Array.isArray(data.items)
     ? data.items
     : Array.isArray(data.results)
       ? data.results
-      : [];
+      : Array.isArray(data.data)
+        ? data.data
+        : [];
 
-  // đảm bảo items tồn tại để mutate
-  if (!Array.isArray(data.items) && !Array.isArray(data.results)) {
+  if (
+    !Array.isArray(data.items) &&
+    !Array.isArray(data.results) &&
+    !Array.isArray(data.data)
+  ) {
     data.items = arr;
   }
 
   const setArr = (next: Collector[]) => {
     if (Array.isArray(data.items)) data.items = next;
     else if (Array.isArray(data.results)) data.results = next;
+    else if (Array.isArray(data.data)) data.data = next;
     else data.items = next;
   };
 
@@ -63,7 +237,10 @@ function matchesFilter(
 ): boolean {
   if (!args) return true;
 
-  if (args.status && c.status !== args.status) return false;
+  if (args.status) {
+    const target = statusToApi(args.status);
+    if (target && normalizeStatus(c.status) !== target) return false;
+  }
 
   if (args.search) {
     const s = args.search.trim().toLowerCase();
@@ -77,12 +254,43 @@ function matchesFilter(
   return true;
 }
 
-function bumpMeta(meta: any, delta: number, limit: number) {
+function bumpMeta(meta: any, delta: number, fallbackLimit: number) {
   if (!meta) return;
-  if (typeof meta.totalItems === "number") {
-    meta.totalItems = Math.max(0, meta.totalItems + delta);
-    meta.totalPages = Math.max(1, Math.ceil(meta.totalItems / (limit || 10)));
-  }
+
+  const currentTotal =
+    typeof meta.totalItems === "number"
+      ? meta.totalItems
+      : typeof meta.total === "number"
+        ? meta.total
+        : undefined;
+
+  if (typeof currentTotal !== "number") return;
+
+  const nextTotal = Math.max(0, currentTotal + delta);
+  const limit =
+    typeof meta.itemsPerPage === "number"
+      ? meta.itemsPerPage
+      : typeof meta.limit === "number"
+        ? meta.limit
+        : fallbackLimit;
+
+  const totalPages = Math.max(1, Math.ceil(nextTotal / (limit || 10)));
+  const page =
+    typeof meta.currentPage === "number"
+      ? meta.currentPage
+      : typeof meta.page === "number"
+        ? meta.page
+        : 1;
+
+  meta.totalItems = nextTotal;
+  meta.total = nextTotal;
+  meta.itemsPerPage = limit;
+  meta.limit = limit;
+  meta.totalPages = totalPages;
+  meta.currentPage = page;
+  meta.page = page;
+  meta.hasNextPage = page < totalPages;
+  meta.hasPrevPage = page > 1;
 }
 
 export const collectorsApi = baseApi.injectEndpoints({
@@ -94,14 +302,17 @@ export const collectorsApi = baseApi.injectEndpoints({
       query: (params) => ({
         url: "enterprise/collectors",
         method: "GET",
-        params: params ?? undefined,
+        params: toRequestParams(params),
+      }),
+      transformResponse: (
+        res: ApiResponse<any>,
+      ): ApiResponse<CollectorListData> => ({
+        ...res,
+        data: normalizeListData(res?.data),
       }),
       keepUnusedDataFor: 120,
       providesTags: (res) => {
-        const data = res?.data;
-        const items = Array.isArray(data)
-          ? data
-          : (data?.items ?? data?.results ?? []);
+        const items = getItemsFromListData(res?.data);
 
         return [
           { type: TAG, id: "LIST" },
@@ -115,6 +326,10 @@ export const collectorsApi = baseApi.injectEndpoints({
         url: `enterprise/collectors/${id}`,
         method: "GET",
       }),
+      transformResponse: (res: ApiResponse<any>): ApiResponse<Collector> => ({
+        ...res,
+        data: normalizeCollector(res?.data),
+      }),
       keepUnusedDataFor: 120,
       providesTags: (_res, _err, id) => [{ type: TAG, id }],
     }),
@@ -124,18 +339,21 @@ export const collectorsApi = baseApi.injectEndpoints({
       CreateCollectorBody
     >({
       query: (body) => ({
-        url: "enterprise/collectors",
+        url: "collectors",
         method: "POST",
         body,
       }),
-      invalidatesTags: [{ type: TAG, id: "LIST" }], // đảm bảo list đúng nếu filter phức tạp
+      transformResponse: (res: ApiResponse<any>): ApiResponse<Collector> => ({
+        ...res,
+        data: normalizeCollector(res?.data),
+      }),
+      invalidatesTags: [{ type: TAG, id: "LIST" }],
       async onQueryStarted(_body, { dispatch, getState, queryFulfilled }) {
         try {
           const { data: res } = await queryFulfilled;
           const created = res?.data;
           if (!created) return;
 
-          // patch mọi cache list đang active (để UI cập nhật ngay)
           const state = getState();
           const targets = collectorsApi.util.selectInvalidatedBy(state, [
             { type: TAG, id: "LIST" },
@@ -148,7 +366,6 @@ export const collectorsApi = baseApi.injectEndpoints({
             const page = args?.page ?? 1;
             const limit = args?.limit ?? 10;
 
-            // create: chỉ insert ở page 1 + match filter/search
             if (page !== 1) continue;
             if (!matchesFilter(created, args)) continue;
 
@@ -186,9 +403,12 @@ export const collectorsApi = baseApi.injectEndpoints({
       query: ({ id, body }) => ({
         url: `enterprise/collectors/${id}`,
         method: "PATCH",
-        body,
+        body: toUpdateCollectorFormData(body),
       }),
-      // update có thể làm đổi filter => invalidate LIST để chắc chắn đúng
+      transformResponse: (res: ApiResponse<any>): ApiResponse<Collector> => ({
+        ...res,
+        data: normalizeCollector(res?.data),
+      }),
       invalidatesTags: (_res, _err, arg) => [
         { type: TAG, id: arg.id },
         { type: TAG, id: "LIST" },
@@ -201,7 +421,6 @@ export const collectorsApi = baseApi.injectEndpoints({
 
           const state = getState();
 
-          // patch detail cache
           dispatch(
             collectorsApi.util.updateQueryData(
               "getCollectorById",
@@ -214,7 +433,6 @@ export const collectorsApi = baseApi.injectEndpoints({
             ),
           );
 
-          // patch mọi list cache có tag id đó
           const targets = collectorsApi.util.selectInvalidatedBy(state, [
             { type: TAG, id: arg.id },
           ]);
@@ -234,11 +452,8 @@ export const collectorsApi = baseApi.injectEndpoints({
                   if (!bag) return;
 
                   const idx = bag.arr.findIndex((x) => x.id === updated.id);
-
-                  // ✅ update: KHÔNG tự chèn nếu không thấy trong page hiện tại
                   if (idx < 0) return;
 
-                  // nếu sau update không còn match filter/search => remove khỏi list hiện tại
                   if (!matchesFilter(updated, args)) {
                     const next = bag.arr.filter((x) => x.id !== updated.id);
                     bag.setArr(next);

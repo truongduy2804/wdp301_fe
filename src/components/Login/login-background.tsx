@@ -136,7 +136,7 @@ export default function LoginBackground() {
                       type="email"
                       placeholder="your@email.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                       className="pl-12 h-12 bg-gray-50 border-2 border-gray-200 hover:border-emerald-300 focus:border-emerald-500 focus:bg-white focus:shadow-md transition-all duration-300 rounded-lg font-medium text-gray-900 group-hover:bg-gray-100"
                       required
                     />
@@ -157,7 +157,7 @@ export default function LoginBackground() {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                       className="pl-12 pr-12 h-12 bg-gray-50 border-2 border-gray-200 hover:border-emerald-300 focus:border-emerald-500 focus:bg-white focus:shadow-md transition-all duration-300 rounded-lg font-medium text-gray-900 group-hover:bg-gray-100"
                       required
                     />

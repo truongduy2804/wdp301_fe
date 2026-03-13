@@ -1,47 +1,105 @@
-export type CollectorStatus = "AVAILABLE" | "ON_TASK" | "OFFLINE";
+export type CollectorStatus =
+  | "ONLINE_AVAILABLE"
+  | "ONLINE_BUSY"
+  | "OFFLINE"
+  | "AVAILABLE"
+  | "ON_TASK"
+  | (string & {});
 
 export type CollectorStatistics = {
   totalAssignments?: number;
   completedAssignments?: number;
   pendingAssignments?: number;
-
-  // nếu backend có fields khác thì cứ optional thêm
   totalTasks?: number;
   completedTasks?: number;
   successRate?: number;
   averageScore?: number;
 };
 
+export type CollectorUser = {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  avatar?: string | null;
+};
+
+export type CollectorWorkingDay = {
+  start?: string;
+  end?: string;
+  active?: boolean;
+};
+
+export type CollectorWorkingHours = Record<
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday"
+  | "Sunday",
+  CollectorWorkingDay
+>;
+
+export type CollectorRuntimeStatus = {
+  collectorId?: number;
+  availability?: CollectorStatus;
+  currentLatitude?: number | null;
+  currentLongitude?: number | null;
+  lastOnlineAt?: string;
+  lastOfflineAt?: string;
+  lastActivityAt?: string;
+  lastAssignedAt?: string;
+  deviceId?: string | null;
+  queueLength?: number;
+  consecutiveSkipCount?: number;
+  updatedAt?: string;
+};
+
 export type Collector = {
   id: number;
-  email: string;
-  fullName: string;
-  phone: string;
-  status: CollectorStatus;
+  employeeCode?: string;
 
+  email?: string;
+  fullName?: string;
+  phone?: string;
   avatar?: string | null;
+
+  status: CollectorStatus;
+  statusInfo?: CollectorRuntimeStatus;
+
+  userId?: number;
+  enterpriseId?: number;
+  primaryZoneId?: number | null;
+  secondaryZoneId?: number | null;
+  workingHours?: CollectorWorkingHours;
+  trustScore?: number;
+  earnings?: number;
+  skipCount?: number;
+  isActive?: boolean;
+
   createdAt?: string;
   updatedAt?: string;
-
+  deletedAt?: string | null;
   statusUpdatedAt?: string;
   enterpriseName?: string;
   statistics?: CollectorStatistics;
+
+  user?: CollectorUser;
 };
 
-/** body */
 export type CreateCollectorBody = {
   email: string;
   fullName: string;
   phone: string;
+  workingHours: CollectorWorkingHours;
 };
 
 export type UpdateCollectorBody = {
-  fullName?: string;
+  fullName: string;
   phone?: string;
-  status?: CollectorStatus;
+  avatar?: File | Blob | null;
 };
 
-/** backend wrap */
 export type ApiResponse<T> = {
   success?: boolean;
   statusCode?: number;
@@ -49,25 +107,29 @@ export type ApiResponse<T> = {
   data: T;
 };
 
-/** list meta chuẩn theo screenshot */
 export type CollectorListMeta = {
-  totalItems: number;
-  currentPage: number;
-  totalPages: number;
-  itemsPerPage: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+  totalItems?: number;
+  currentPage?: number;
+  itemsPerPage?: number;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
 };
 
 export type CollectorListData =
-  | Collector[] // fallback legacy
+  | Collector[]
   | {
-      items: Collector[];
-      meta: CollectorListMeta;
-
-      // fallback nếu backend đổi tên (optional)
+      items?: Collector[];
       results?: Collector[];
+      data?: Collector[];
+      meta?: CollectorListMeta;
       total?: number;
+      page?: number;
+      limit?: number;
+      totalPages?: number;
     };
 
 export type GetCollectorsParams = {

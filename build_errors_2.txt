@@ -1,0 +1,42 @@
+src/components/Login/login-background.tsx(4,23): error TS2307: Cannot find module '@/components/ui/input/input' or its corresponding type declarations.
+src/components/Login/login-background.tsx(139,34): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/Login/login-background.tsx(160,34): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/Login/login-form.tsx(8,23): error TS2307: Cannot find module '@/components/ui/input/input' or its corresponding type declarations.
+src/components/Login/login-form.tsx(122,32): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/Login/login-form.tsx(150,32): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/Login/LoginForm.tsx(6,22): error TS2307: Cannot find module '../card/card' or its corresponding type declarations.
+src/components/Login/LoginForm.tsx(7,24): error TS2307: Cannot find module '../button/button' or its corresponding type declarations.
+src/components/Login/LoginForm.tsx(8,23): error TS2307: Cannot find module '../input/input' or its corresponding type declarations.
+src/components/Login/LoginForm.tsx(64,32): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/Login/LoginForm.tsx(92,32): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/ui/Form_Input/index.tsx(84,9): error TS2783: 'name' is specified more than once, so this usage will be overwritten.
+src/components/ui/Form_Input/index.tsx(151,9): error TS2783: 'name' is specified more than once, so this usage will be overwritten.
+src/layout/Home/components/Header/index.tsx(488,21): error TS2322: Type '{ placement: "up"; showNameOnMobile: true; mockRole: any; mockUser: { fullname: string; email: string; role: any; avatarUrl: string | undefined; }; homeHref: "/"; }' is not assignable to type 'IntrinsicAttributes & UserMenuProps'.
+  Property 'mockRole' does not exist on type 'IntrinsicAttributes & UserMenuProps'.
+src/layout/Home/components/Header/index.tsx(666,19): error TS2322: Type '{ mockRole: any; mockUser: { fullname: string; email: string; role: any; avatarUrl: string | undefined; }; homeHref: "/"; }' is not assignable to type 'IntrinsicAttributes & UserMenuProps'.
+  Property 'mockRole' does not exist on type 'IntrinsicAttributes & UserMenuProps'.
+src/redux/api/admin/cronJobs.ts(48,13): error TS2322: Type '(_arg: void, api: BaseQueryApi, extraOptions: {}) => Promise<QueryReturnValue<CronResponse, FetchBaseQueryError>>' is not assignable to type '(arg: void, api: BaseQueryApi, extraOptions: {}, baseQuery: (arg: string | FetchArgs) => MaybePromise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>) => MaybePromise<...>'.
+  Type 'Promise<QueryReturnValue<CronResponse, FetchBaseQueryError>>' is not assignable to type 'MaybePromise<QueryReturnValue<CronResponse, FetchBaseQueryError, FetchBaseQueryMeta | undefined>>'.
+    Type 'Promise<QueryReturnValue<CronResponse, FetchBaseQueryError>>' is not assignable to type 'PromiseLike<QueryReturnValue<CronResponse, FetchBaseQueryError, FetchBaseQueryMeta | undefined>>'.
+      Types of property 'then' are incompatible.
+        Type '<TResult1 = QueryReturnValue<CronResponse, FetchBaseQueryError>, TResult2 = never>(onfulfilled?: ((value: QueryReturnValue<CronResponse, FetchBaseQueryError>) => TResult1 | PromiseLike<...>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<...>) | ... 1 more ... | undefined) => Promise<...>' is not assignable to type '<TResult1 = QueryReturnValue<CronResponse, FetchBaseQueryError, FetchBaseQueryMeta | undefined>, TResult2 = never>(onfulfilled?: ((value: QueryReturnValue<...>) => TResult1 | PromiseLike<...>) | ... 1 more ... | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<...>) | ... 1 more ... | undefined) => P...'.
+          Types of parameters 'onfulfilled' and 'onfulfilled' are incompatible.
+            Types of parameters 'value' and 'value' are incompatible.
+              Type 'QueryReturnValue<CronResponse, FetchBaseQueryError>' is not assignable to type 'QueryReturnValue<CronResponse, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+                Type '{ error: FetchBaseQueryError; data?: undefined; meta?: unknown; }' is not assignable to type 'QueryReturnValue<CronResponse, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+                  Type '{ error: FetchBaseQueryError; data?: undefined; meta?: unknown; }' is not assignable to type '{ error: FetchBaseQueryError; data?: undefined; meta?: FetchBaseQueryMeta | undefined; }'.
+                    Types of property 'meta' are incompatible.
+                      Type 'unknown' is not assignable to type 'FetchBaseQueryMeta | undefined'.
+src/redux/api/admin/cronJobs.ts(61,13): error TS2322: Type '(_arg: void, api: BaseQueryApi, extraOptions: {}) => Promise<QueryReturnValue<CronResponse, FetchBaseQueryError>>' is not assignable to type '(arg: void, api: BaseQueryApi, extraOptions: {}, baseQuery: (arg: string | FetchArgs) => MaybePromise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>) => MaybePromise<...>'.
+  Type 'Promise<QueryReturnValue<CronResponse, FetchBaseQueryError>>' is not assignable to type 'MaybePromise<QueryReturnValue<CronResponse, FetchBaseQueryError, FetchBaseQueryMeta | undefined>>'.
+    Type 'Promise<QueryReturnValue<CronResponse, FetchBaseQueryError>>' is not assignable to type 'PromiseLike<QueryReturnValue<CronResponse, FetchBaseQueryError, FetchBaseQueryMeta | undefined>>'.
+      Types of property 'then' are incompatible.
+        Type '<TResult1 = QueryReturnValue<CronResponse, FetchBaseQueryError>, TResult2 = never>(onfulfilled?: ((value: QueryReturnValue<CronResponse, FetchBaseQueryError>) => TResult1 | PromiseLike<...>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<...>) | ... 1 more ... | undefined) => Promise<...>' is not assignable to type '<TResult1 = QueryReturnValue<CronResponse, FetchBaseQueryError, FetchBaseQueryMeta | undefined>, TResult2 = never>(onfulfilled?: ((value: QueryReturnValue<...>) => TResult1 | PromiseLike<...>) | ... 1 more ... | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<...>) | ... 1 more ... | undefined) => P...'.
+          Types of parameters 'onfulfilled' and 'onfulfilled' are incompatible.
+            Types of parameters 'value' and 'value' are incompatible.
+              Type 'QueryReturnValue<CronResponse, FetchBaseQueryError>' is not assignable to type 'QueryReturnValue<CronResponse, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+                Type '{ error: FetchBaseQueryError; data?: undefined; meta?: unknown; }' is not assignable to type 'QueryReturnValue<CronResponse, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+                  Type '{ error: FetchBaseQueryError; data?: undefined; meta?: unknown; }' is not assignable to type '{ error: FetchBaseQueryError; data?: undefined; meta?: FetchBaseQueryMeta | undefined; }'.
+                    Types of property 'meta' are incompatible.
+                      Type 'unknown' is not assignable to type 'FetchBaseQueryMeta | undefined'.
+vite.config.ts(3,8): error TS1259: Module '"path"' can only be default-imported using the 'allowSyntheticDefaultImports' flag

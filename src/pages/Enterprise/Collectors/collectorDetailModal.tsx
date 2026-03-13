@@ -1,41 +1,157 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import dayjs from "dayjs";
-import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-  easeOut,
-  easeIn,
-} from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import type { Variants } from "framer-motion";
 import {
   Mail,
   Phone,
-  Building2,
   CalendarClock,
   X,
   User,
   Clock,
-  TrendingUp,
-  CheckCircle2,
+  ShieldCheck,
   AlertCircle,
+  Wallet,
+  Activity,
+  BadgeCheck,
+  TrendingUp,
+  Zap,
+  ChevronRight,
 } from "lucide-react";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
 import type { Collector } from "@/redux/api/enterprise/collectors/types";
-import TagPill from "../components/tagPill";
+
+/* ─── Types ─── */
+
+type WorkingHourItem = {
+  start?: string;
+  end?: string;
+  active?: boolean;
+};
+
+type DayKey =
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday"
+  | "Sunday";
+
+type WorkingHours = Partial<Record<DayKey, WorkingHourItem>>;
+
+type CollectorDetailData = Collector & {
+  employeeCode?: string | null;
+  trustScore?: number | null;
+  earnings?: number | null;
+  skipCount?: number | null;
+  isActive?: boolean;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  workingHours?: WorkingHours;
+  user?: {
+    fullName?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    avatar?: string | null;
+  };
+  status?: {
+    availability?: string | null;
+    lastOnlineAt?: string | null;
+    lastOfflineAt?: string | null;
+    lastActivityAt?: string | null;
+    lastAssignedAt?: string | null;
+    queueLength?: number | null;
+    updatedAt?: string | null;
+  };
+};
 
 type Props = {
   open: boolean;
   onClose: () => void;
   loading?: boolean;
-  detail: Collector | null;
+  detail: CollectorDetailData | null;
 };
+
+/* ─── Constants ─── */
+
+const DAY_ORDER: DayKey[] = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+const DAY_LABELS: Record<DayKey, string> = {
+  Monday: "Thứ 2",
+  Tuesday: "Thứ 3",
+  Wednesday: "Thứ 4",
+  Thursday: "Thứ 5",
+  Friday: "Thứ 6",
+  Saturday: "Thứ 7",
+  Sunday: "Chủ nhật",
+};
+
+/* ─── Helpers ─── */
 
 function formatDateTime(iso?: string | null) {
   if (!iso) return "—";
   const d = dayjs(iso);
-  return `${d.format("HH:mm")} • ${d.format("DD/MM/YYYY")}`;
+  if (!d.isValid()) return "—";
+  return `${d.format("HH:mm")} · ${d.format("DD/MM/YYYY")}`;
+}
+
+function formatMoney(value?: number | null) {
+  const n = Number(value ?? 0);
+  if (!Number.isFinite(n)) return "0";
+  return new Intl.NumberFormat("vi-VN").format(n);
+}
+
+function formatCollectorStatus(status?: string | null) {
+  const key = String(status ?? "")
+    .trim()
+    .toUpperCase();
+  if (key === "ONLINE_AVAILABLE" || key === "AVAILABLE")
+    return "Sẵn sàng nhận việc";
+  if (key === "ONLINE_BUSY" || key === "ON_TASK") return "Đang làm việc";
+  if (key === "OFFLINE") return "Ngoại tuyến";
+  return "Không rõ";
+}
+
+function getStatusConfig(status?: string | null) {
+  const key = String(status ?? "")
+    .trim()
+    .toUpperCase();
+
+  if (key === "ONLINE_AVAILABLE" || key === "AVAILABLE") {
+    return {
+      dot: "bg-emerald-500",
+      text: "text-emerald-700",
+      border: "border-emerald-200",
+      bg: "bg-emerald-50",
+    };
+  }
+
+  if (key === "ONLINE_BUSY" || key === "ON_TASK") {
+    return {
+      dot: "bg-amber-400",
+      text: "text-amber-700",
+      border: "border-amber-200",
+      bg: "bg-amber-50",
+    };
+  }
+
+  return {
+    dot: "bg-slate-400",
+    text: "text-slate-600",
+    border: "border-slate-200",
+    bg: "bg-slate-100",
+  };
 }
 
 function useLockBodyScroll(open: boolean) {
@@ -49,14 +165,23 @@ function useLockBodyScroll(open: boolean) {
   }, [open]);
 }
 
-function Avatar({ src, name }: { src: string | null; name: string | null }) {
+/* ─── Sub-components ─── */
+
+const Avatar = React.memo(function Avatar({
+  src,
+  name,
+}: {
+  src?: string | null;
+  name?: string | null;
+}) {
   const [broken, setBroken] = useState(false);
 
   const initials = useMemo(() => {
     const n = (name ?? "").trim();
-    if (!n) return "U";
-    const parts = n.split(/\s+/).slice(0, 2);
-    return parts
+    if (!n) return "CL";
+    return n
+      .split(/\s+/)
+      .slice(0, 2)
       .map((p) => p[0]?.toUpperCase())
       .filter(Boolean)
       .join("");
@@ -64,349 +189,638 @@ function Avatar({ src, name }: { src: string | null; name: string | null }) {
 
   if (!src || broken) {
     return (
-      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg ring-4 ring-emerald-100">
+      <div className="flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-emerald-600 text-[22px] font-bold text-white shadow-md ring-4 ring-slate-50">
         {initials}
       </div>
     );
   }
 
   return (
-    <img
-      src={src}
-      alt={name ?? "Avatar"}
-      className="w-20 h-20 rounded-full object-cover shadow-lg ring-4 ring-emerald-100"
-      onError={() => setBroken(true)}
-      loading="lazy"
-      decoding="async"
-    />
+    <div className="h-[72px] w-[72px] rounded-2xl shadow-sm ring-4 ring-slate-50">
+      <img
+        src={src}
+        alt={name ?? "Avatar"}
+        className="h-full w-full rounded-2xl object-cover"
+        onError={() => setBroken(true)}
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
   );
-}
+});
 
-function StatCard({
+const StatCard = React.memo(function StatCard({
   label,
   value,
   icon: Icon,
-  trend,
+  accent,
 }: {
   label: string;
   value: React.ReactNode;
-  icon?: any;
-  trend?: "up" | "down" | "neutral";
+  icon: any;
+  accent: "emerald" | "blue" | "amber" | "teal";
 }) {
+  const accentMap = {
+    emerald: {
+      num: "text-emerald-700",
+      iconBg: "bg-emerald-100",
+      iconColor: "text-emerald-700",
+    },
+    blue: {
+      num: "text-sky-700",
+      iconBg: "bg-sky-100",
+      iconColor: "text-sky-600",
+    },
+    amber: {
+      num: "text-amber-700",
+      iconBg: "bg-amber-100",
+      iconColor: "text-amber-600",
+    },
+    teal: {
+      num: "text-teal-700",
+      iconBg: "bg-teal-100",
+      iconColor: "text-teal-600",
+    },
+  } as const;
+
+  const a = accentMap[accent];
+
   return (
-    <div className="bg-gradient-to-br from-white to-emerald-50/30 rounded-xl p-5 border border-emerald-100 hover:border-emerald-300 transition-all duration-300 hover:shadow-md group">
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-sm font-medium text-gray-600">{label}</span>
-        {Icon && (
-          <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-            <Icon className="w-5 h-5 text-emerald-600" />
-          </div>
-        )}
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-colors duration-200 hover:bg-slate-100">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-semibold uppercase  text-slate-700">
+          {label}
+        </span>
+        <div
+          className={`flex h-7 w-7 items-center justify-center rounded-xl ${a.iconBg}`}
+        >
+          <Icon className={`h-3.5 w-3.5 ${a.iconColor}`} />
+        </div>
       </div>
-      <div className="flex items-end justify-between">
-        <span className="text-2xl font-bold text-gray-900">{value}</span>
-        {trend && (
-          <TrendingUp
-            className={`w-4 h-4 ${
-              trend === "up"
-                ? "text-emerald-600"
-                : trend === "down"
-                  ? "text-red-500 rotate-180"
-                  : "text-gray-400"
-            }`}
-          />
-        )}
+      <div className={`mt-3 text-[26px] font-bold tracking-tight ${a.num}`}>
+        {value}
       </div>
     </div>
   );
-}
+});
 
-function InfoRow({
+const InfoRow = React.memo(function InfoRow({
   icon: Icon,
   label,
   value,
+  accent = false,
 }: {
   icon: any;
   label: string;
   value: React.ReactNode;
+  accent?: boolean;
 }) {
   return (
-    <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-emerald-50/50 transition-colors">
-      <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <Icon className="w-5 h-5 text-emerald-600" />
+    <div className="group flex items-center gap-4 bg-white px-3 py-3 transition-colors duration-150 hover:bg-slate-50">
+      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 group-hover:bg-blue-400">
+        <Icon className="h-4 w-4 text-emerald-600 group-hover:text-white " />
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-gray-500 mb-1">{label}</div>
-        <div className="text-base text-gray-900 break-words">{value}</div>
+      <div className="min-w-0 flex-1">
+        <div className="mb-0.5 text-[12px] font-semibold uppercase text-slate-700">
+          {label}
+        </div>
+        <div
+          className={`truncate text-sm font-medium ${accent ? "text-emerald-700" : "text-slate-800"}`}
+        >
+          {value}
+        </div>
       </div>
+      <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-slate-300 opacity-0 transition-opacity group-hover:opacity-100" />
     </div>
   );
-}
+});
+
+const SectionHeader = React.memo(function SectionHeader({
+  title,
+  icon: Icon,
+}: {
+  title: string;
+  icon: any;
+}) {
+  return (
+    <div className="mb-4 flex items-center gap-3">
+      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600">
+        <Icon className="h-3.5 w-3.5 text-slate-50" />
+      </div>
+      <h3 className="text-[12px] font-bold uppercase text-slate-800">
+        {title}
+      </h3>
+      <div className="h-[1px] flex-1 bg-slate-200" />
+    </div>
+  );
+});
+
+const TimelineCard = React.memo(function TimelineCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-2 text-[12px] font-bold uppercase text-slate-700">
+        {label}
+      </div>
+      <div className="text-sm font-medium text-slate-700">{value}</div>
+    </div>
+  );
+});
+
+/* ─── Main Modal ─── */
 
 export default function CollectorDetailModal({
   open,
   onClose,
-  loading,
+  loading = false,
   detail,
 }: Props) {
   useLockBodyScroll(open);
 
   const reduceMotion = useReducedMotion();
   const overlayRef = useRef<HTMLDivElement | null>(null);
-
-  // portal safety
   const [mounted, setMounted] = useState(false);
+
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-    window.addEventListener("keydown", onKey);
+
+    window.addEventListener("keydown", onKey, { passive: true });
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  const variants = useMemo(() => {
-    const d = reduceMotion ? 0.08 : 0.14;
-    return {
-      overlay: {
+  const animations = useMemo(
+    () =>
+      reduceMotion
+        ? {
+            overlay: {
+              hidden: { opacity: 0 },
+              visible: { opacity: 1 },
+              exit: { opacity: 0 },
+            },
+            panel: {
+              hidden: { opacity: 0 },
+              visible: { opacity: 1 },
+              exit: { opacity: 0 },
+            },
+          }
+        : {
+            overlay: {
+              hidden: { opacity: 0 },
+              visible: { opacity: 1, transition: { duration: 0.14 } },
+              exit: { opacity: 0, transition: { duration: 0.12 } },
+            },
+            panel: {
+              hidden: { opacity: 0, y: 10, scale: 0.985 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] },
+              },
+              exit: {
+                opacity: 0,
+                y: 6,
+                scale: 0.99,
+                transition: { duration: 0.12, ease: [0.4, 0, 1, 1] },
+              },
+            },
+          },
+    [reduceMotion],
+  );
+
+  const orderedWorkingHours = useMemo(() => {
+    const working: WorkingHours = detail?.workingHours ?? {};
+
+    return DAY_ORDER.map((day) => ({
+      key: day,
+      label: DAY_LABELS[day],
+      data: working[day] ?? { active: false, start: "00:00", end: "00:00" },
+    }));
+  }, [detail?.workingHours]);
+
+  const profile = useMemo(
+    () => ({
+      fullName: detail?.user?.fullName ?? "—",
+      email: detail?.user?.email ?? "—",
+      phone: detail?.user?.phone ?? "—",
+      avatar: detail?.user?.avatar ?? null,
+      employeeCode: detail?.employeeCode ?? "—",
+      status: detail?.status?.availability ?? null,
+      isActive: Boolean(detail?.isActive),
+      trustScore: detail?.trustScore ?? 0,
+      earnings: detail?.earnings ?? 0,
+      skipCount: detail?.skipCount ?? 0,
+      queueLength: detail?.status?.queueLength ?? 0,
+      lastActivityAt: detail?.status?.lastActivityAt ?? null,
+      lastAssignedAt: detail?.status?.lastAssignedAt ?? null,
+      lastOnlineAt: detail?.status?.lastOnlineAt ?? null,
+      updatedAt: detail?.updatedAt ?? null,
+      createdAt: detail?.createdAt ?? null,
+      statusUpdatedAt: detail?.status?.updatedAt ?? null,
+    }),
+    [detail],
+  );
+
+  const statusCfg = useMemo(
+    () => getStatusConfig(profile.status),
+    [profile.status],
+  );
+
+  const overlayVariants = useMemo<Variants>(() => {
+    if (reduceMotion) {
+      return {
         hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { duration: d } },
-        exit: { opacity: 0, transition: { duration: d } },
+        visible: { opacity: 1 },
+        exit: { opacity: 0 },
+      };
+    }
+
+    return {
+      hidden: { opacity: 0 },
+      visible: {
+        opacity: 1,
+        transition: { duration: 0.14 },
       },
-      panel: {
-        hidden: { opacity: 0, y: 10, scale: 0.985 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          transition: { duration: d, ease: easeOut },
+      exit: {
+        opacity: 0,
+        transition: { duration: 0.12 },
+      },
+    };
+  }, [reduceMotion]);
+
+  const panelVariants = useMemo<Variants>(() => {
+    if (reduceMotion) {
+      return {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 },
+        exit: { opacity: 0 },
+      };
+    }
+
+    return {
+      hidden: { opacity: 0, y: 10, scale: 0.985 },
+      visible: {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        transition: {
+          duration: 0.18,
+          ease: [0.22, 1, 0.36, 1] as const,
         },
-        exit: {
-          opacity: 0,
-          y: 10,
-          scale: 0.985,
-          transition: { duration: d, ease: easeIn },
+      },
+      exit: {
+        opacity: 0,
+        y: 6,
+        scale: 0.99,
+        transition: {
+          duration: 0.12,
+          ease: [0.4, 0, 1, 1] as const,
         },
       },
     };
   }, [reduceMotion]);
 
-  const stats = (detail as any)?.statistics ?? null;
-
   if (!mounted) return null;
 
   return createPortal(
-    <AnimatePresence>
-      {open ? (
+    <AnimatePresence mode="wait" initial={false}>
+      {open && (
         <motion.div
           ref={overlayRef}
           initial="hidden"
           animate="visible"
           exit="exit"
-          variants={variants.overlay}
-          className="fixed inset-0 z-[99999] bg-black/45"
+          variants={overlayVariants}
+          className="fixed inset-0 z-[99999] bg-slate-900/45 backdrop-blur-[2px]"
           onClick={(e) => {
             if (e.target === overlayRef.current) onClose();
           }}
         >
           <motion.div
-            variants={variants.panel}
+            variants={panelVariants}
             role="dialog"
             aria-modal="true"
-            className="
-              fixed inset-x-4 sm:inset-x-6 md:inset-x-10
-              top-[4vh] bottom-[4vh]
-              mx-auto max-w-2xl
-              flex flex-col overflow-hidden
-              rounded-md  bg-white shadow-2xl
-            "
+            aria-label="Chi tiết collector"
+            className="fixed inset-x-3 top-[2vh] bottom-[2vh] mx-auto flex max-w-5xl flex-col overflow-hidden rounded-lg bg-slate-100 shadow-2xl shadow-slate-300/40"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Scroll container (nội dung dài -> scroll ở đây) */}
-            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-              {/* Header with gradient background */}
-              <div className="relative bg-emerald-600 px-8 pt-8 pb-24">
-                <div className="absolute top-4 right-4">
-                  <button
-                    onClick={onClose}
-                    className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
-                    type="button"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+            <div className="flex h-full min-h-0 flex-col">
+              {/* Header fixed */}
+              <div className="relative shrink-0 bg-emerald-600 px-6 py-6 sm:px-8">
+                <button
+                  onClick={onClose}
+                  className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/20 text-white backdrop-blur transition hover:bg-white/30 active:scale-[0.98]"
+                  aria-label="Đóng"
+                  type="button"
+                >
+                  <X className="h-5 w-5" />
+                </button>
 
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm">
-                    <span className="text-sm font-medium text-white">
-                      {detail
+                <div className="flex items-center gap-3 pr-12">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
+                    <User className="h-6 w-6 text-white" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <h2 className="truncate text-lg font-bold text-white sm:text-xl">
+                      {detail?.id
                         ? `Collector #${detail.id}`
                         : "Chi tiết collector"}
-                    </span>
-                  </div>
-
-                  {/* Giữ như UI cũ của bạn (nếu TagPill signature khác thì thay lại theo component của bạn) */}
-                  {detail?.status ? (
-                    <TagPill
-                      kind="collectorStatus"
-                      value={
-                        (detail as any).status === "AVAILABLE"
-                          ? "Sẵn sàng"
-                          : (detail as any).status === "ON_TASK"
-                            ? "Đang làm"
-                            : "default"
-                      }
-                    />
-                  ) : null}
-                </div>
-              </div>
-
-              {/* Profile section overlapping header */}
-              <div className="relative px-8 -mt-16 pb-6">
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
-                  <div className="flex items-start gap-6">
-                    <Avatar
-                      src={(detail as any)?.avatar ?? null}
-                      name={detail?.fullName ?? null}
-                    />
-                    <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                        {detail?.fullName ?? "—"}
-                      </h2>
-                      {(detail as any)?.enterpriseName && (
-                        <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg inline-flex">
-                          <Building2 className="w-4 h-4" />
-                          <span className="text-sm font-medium">
-                            {(detail as any).enterpriseName}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                    </h2>
+                    <p className="text-sm text-emerald-50">
+                      Hiển thị thông tin hồ sơ, trạng thái và lịch làm việc của
+                      collector
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {loading ? (
-                <div className="flex items-center justify-center py-20">
-                  <LoadingSpinner color="blue" size="10" />
-                </div>
-              ) : !detail ? (
-                <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                  <AlertCircle className="w-16 h-16 mb-4" />
-                  <p className="text-lg">Không có dữ liệu</p>
-                </div>
-              ) : (
-                <div className="px-8 pb-8 space-y-6">
-                  {/* Contact Information */}
-                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 bg-gradient-to-r from-emerald-50 to-white border-b border-emerald-100">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-                          <User className="w-4 h-4 text-emerald-600" />
-                        </div>
-                        Thông tin liên hệ
-                      </h3>
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <InfoRow
-                        icon={Mail}
-                        label="Email"
-                        value={detail.email || "—"}
-                      />
-                      <InfoRow
-                        icon={Phone}
-                        label="Số điện thoại"
-                        value={detail.phone || "—"}
-                      />
+              {/* Body scroll only */}
+              <div className="min-h-0 flex-1 overflow-y-auto custom-scrollbar">
+                {loading ? (
+                  <div className="flex items-center justify-center px-6 py-24 sm:px-8">
+                    <div className="flex flex-col items-center gap-3">
+                      <LoadingSpinner color="blue" size="10" />
+                      <span className="text-[14px] font-semibold uppercase text-slate-700">
+                        Đang tải dữ liệu...
+                      </span>
                     </div>
                   </div>
-
-                  {/* System Information */}
-                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 bg-gradient-to-r from-emerald-50 to-white border-b border-emerald-100">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-                          <Clock className="w-4 h-4 text-emerald-600" />
-                        </div>
-                        Thông tin hệ thống
-                      </h3>
+                ) : !detail ? (
+                  <div className="flex flex-col items-center justify-center px-6 py-24 sm:px-8">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-200">
+                      <AlertCircle className="h-7 w-7 text-slate-500" />
                     </div>
-                    <div className="p-4 space-y-2">
-                      <InfoRow
-                        icon={Building2}
-                        label="Doanh nghiệp"
-                        value={(detail as any)?.enterpriseName ?? "—"}
-                      />
-                      <InfoRow
-                        icon={CalendarClock}
-                        label="Thời gian tạo"
-                        value={formatDateTime(
-                          (detail as any)?.createdAt ?? null,
-                        )}
-                      />
-                      <InfoRow
-                        icon={CalendarClock}
-                        label="Cập nhật trạng thái"
-                        value={formatDateTime(
-                          (detail as any)?.statusUpdatedAt ?? null,
-                        )}
-                      />
-                    </div>
+                    <p className="mt-4 text-sm font-medium text-slate-500">
+                      Không có dữ liệu collector
+                    </p>
                   </div>
+                ) : (
+                  <>
+                    <div className="relative px-6 pb-6 pt-6 sm:px-8">
+                      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                        <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:gap-8">
+                          <div className="flex items-start gap-4">
+                            <Avatar
+                              src={profile.avatar}
+                              name={profile.fullName}
+                            />
 
-                  {/* Statistics (để đúng API của bạn: totalAssignments/completedAssignments/pendingAssignments) */}
-                  {stats ? (
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-                          <TrendingUp className="w-4 h-4 text-emerald-600" />
+                            <div className="min-w-0 pt-0.5">
+                              <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                                {profile.fullName}
+                              </h2>
+
+                              <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                                <span
+                                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border}`}
+                                >
+                                  <span className="relative flex h-1.5 w-1.5">
+                                    <span
+                                      className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-60 ${statusCfg.dot}`}
+                                    />
+                                    <span
+                                      className={`relative inline-flex h-1.5 w-1.5 rounded-full ${statusCfg.dot}`}
+                                    />
+                                  </span>
+                                  {formatCollectorStatus(profile.status)}
+                                </span>
+
+                                <span
+                                  className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                                    profile.isActive
+                                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                      : "border-rose-200 bg-rose-50 text-rose-700"
+                                  }`}
+                                >
+                                  {profile.isActive
+                                    ? "Đang hoạt động"
+                                    : "Ngưng hoạt động"}
+                                </span>
+                              </div>
+
+                              <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 ring-1 ring-slate-200">
+                                <Zap className="h-3 w-3 text-slate-500" />
+                                <span className="font-mono text-[11px] font-semibold text-slate-600">
+                                  {profile.employeeCode}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid flex-1 grid-cols-2 gap-3 md:grid-cols-4">
+                            <StatCard
+                              label="Điểm uy tín"
+                              value={profile.trustScore}
+                              icon={ShieldCheck}
+                              accent="emerald"
+                            />
+                            <StatCard
+                              label="Thu nhập"
+                              value={
+                                <span className="text-[20px]">
+                                  {formatMoney(profile.earnings)}
+                                  <span className="ml-1 text-sm font-normal text-slate-500">
+                                    đ
+                                  </span>
+                                </span>
+                              }
+                              icon={Wallet}
+                              accent="blue"
+                            />
+                            <StatCard
+                              label="Bỏ qua"
+                              value={profile.skipCount}
+                              icon={AlertCircle}
+                              accent="amber"
+                            />
+                            <StatCard
+                              label="Hàng chờ"
+                              value={profile.queueLength}
+                              icon={Activity}
+                              accent="teal"
+                            />
+                          </div>
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Thống kê hoạt động
-                        </h3>
+                      </div>
+                    </div>
+
+                    <div className="space-y-8 px-6 pb-8 sm:px-8">
+                      <div className="grid gap-6 lg:grid-cols-2">
+                        <div>
+                          <SectionHeader
+                            title="Thông tin liên hệ"
+                            icon={User}
+                          />
+                          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                            <InfoRow
+                              icon={Mail}
+                              label="Email"
+                              value={profile.email}
+                            />
+                            <div className="mx-3 h-px bg-slate-200" />
+                            <InfoRow
+                              icon={Phone}
+                              label="Điện thoại"
+                              value={profile.phone}
+                            />
+                            <div className="mx-3 h-px bg-slate-200" />
+                            <InfoRow
+                              icon={BadgeCheck}
+                              label="Mã nhân sự"
+                              value={profile.employeeCode}
+                              accent
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <SectionHeader
+                            title="Trạng thái hoạt động"
+                            icon={TrendingUp}
+                          />
+                          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                            <InfoRow
+                              icon={Clock}
+                              label="Trạng thái hiện tại"
+                              value={formatCollectorStatus(profile.status)}
+                            />
+                            <div className="mx-3 h-px bg-slate-200" />
+                            <InfoRow
+                              icon={Activity}
+                              label="Hoạt động gần nhất"
+                              value={formatDateTime(profile.lastActivityAt)}
+                            />
+                            <div className="mx-3 h-px bg-slate-200" />
+                            <InfoRow
+                              icon={CalendarClock}
+                              label="Phân công gần nhất"
+                              value={formatDateTime(profile.lastAssignedAt)}
+                            />
+                            <div className="mx-3 h-px bg-slate-200" />
+                            <InfoRow
+                              icon={CalendarClock}
+                              label="Online gần nhất"
+                              value={formatDateTime(profile.lastOnlineAt)}
+                            />
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <StatCard
-                          label="Tổng nhiệm vụ"
-                          value={stats.totalAssignments ?? 0}
-                          icon={CheckCircle2}
-                          trend="neutral"
+                      <div>
+                        <SectionHeader
+                          title="Mốc thời gian"
+                          icon={CalendarClock}
                         />
-                        <StatCard
-                          label="Hoàn thành"
-                          value={stats.completedAssignments ?? 0}
-                          icon={CheckCircle2}
-                          trend="up"
+                        <div className="grid gap-3 md:grid-cols-3">
+                          <TimelineCard
+                            label="Tạo hồ sơ"
+                            value={formatDateTime(profile.createdAt)}
+                          />
+                          <TimelineCard
+                            label="Cập nhật hồ sơ"
+                            value={formatDateTime(profile.updatedAt)}
+                          />
+                          <TimelineCard
+                            label="Cập nhật trạng thái"
+                            value={formatDateTime(profile.statusUpdatedAt)}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <SectionHeader
+                          title="Lịch làm việc"
+                          icon={CalendarClock}
                         />
-                        <StatCard
-                          label="Đang chờ"
-                          value={stats.pendingAssignments ?? 0}
-                          icon={CheckCircle2}
-                          trend="neutral"
-                        />
+                        <div className="grid grid-cols-7 gap-2">
+                          {orderedWorkingHours.map((item, i) => {
+                            const active = Boolean(item.data?.active);
+
+                            return (
+                              <motion.div
+                                key={item.key}
+                                initial={
+                                  reduceMotion ? false : { opacity: 0, y: 4 }
+                                }
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{
+                                  delay: reduceMotion ? 0 : i * 0.025,
+                                  duration: 0.18,
+                                  ease: [0.22, 1, 0.36, 1],
+                                }}
+                                className={`flex flex-col items-center rounded-2xl border px-1 py-3 transition-colors duration-200 ${
+                                  active
+                                    ? "border-emerald-200 bg-emerald-50 hover:brightness-95"
+                                    : "border-slate-200 bg-white text-slate-400"
+                                }`}
+                              >
+                                <span
+                                  className={`text-[14px] font-bold uppercase tracking-wider ${
+                                    active
+                                      ? "text-emerald-800"
+                                      : "text-slate-700"
+                                  }`}
+                                >
+                                  {item.label}
+                                </span>
+
+                                {active ? (
+                                  <div className="mt-2 flex flex-col items-center gap-0.5">
+                                    <span className="font-mono text-[14px] font-semibold text-slate-700">
+                                      {item.data?.start ?? "--:--"}
+                                    </span>
+                                    <span className="h-3 w-px bg-slate-300" />
+                                    <span className="font-mono text-[14px] font-semibold text-slate-700">
+                                      {item.data?.end ?? "--:--"}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="mt-2 text-[14px] font-medium text-slate-500">
+                                    Nghỉ
+                                  </span>
+                                )}
+
+                                {active && (
+                                  <div className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                )}
+                              </motion.div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
-                  ) : null}
+                  </>
+                )}
+              </div>
 
-                  {/* Footer */}
-                  <div className="flex justify-end pt-2">
-                    <button
-                      onClick={onClose}
-                      className="px-6 py-2 bg-emerald-600 text-white rounded-xl hover:brightness-90 transition-all duration-200 shadow-emerald-500/30  hover:scale-105"
-                      type="button"
-                    >
-                      Đóng
-                    </button>
-                  </div>
+              {/* Footer fixed */}
+              <div className="shrink-0 border-t border-slate-200 bg-white px-6 py-4 sm:px-8">
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    onClick={onClose}
+                    className="rounded-xl bg-emerald-600 px-6 py-2 font-semibold text-white transition hover:scale-[1.02] hover:bg-emerald-700 active:scale-[0.98] active:bg-emerald-800"
+                    type="button"
+                  >
+                    Đóng
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           </motion.div>
         </motion.div>
-      ) : null}
+      )}
     </AnimatePresence>,
     document.body,
   );

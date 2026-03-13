@@ -47,8 +47,8 @@ export default function ReportsHistoryTable({
         render: (_: unknown, r: EnterpriseReport) => {
           const name = (r as any)?.citizen?.fullName ?? "—";
           return (
-            <div className="inline-flex items-center gap-2 justify-center min-w-0 w-full">
-              <User2 className="h-4 w-4 text-slate-500 shrink-0" />
+            <div className="inline-flex items-center justify-center min-w-0 w-full gap-2">
+              <User2 className="h-4 w-4 shrink-0 text-slate-500" />
               <Tooltip destroyOnHidden title={name}>
                 <span className="min-w-0 truncate font-semibold text-slate-800">
                   {name}
@@ -67,7 +67,7 @@ export default function ReportsHistoryTable({
         render: (_: unknown, r: EnterpriseReport) => {
           const phone = (r as any)?.citizen?.phone ?? "—";
           return (
-            <div className="inline-flex items-center gap-2 justify-center">
+            <div className="inline-flex items-center justify-center gap-2">
               <Phone className="h-4 w-4 text-slate-500" />
               {phone !== "—" ? (
                 <a
@@ -111,6 +111,7 @@ export default function ReportsHistoryTable({
           );
         },
       },
+
       {
         title: <div className="text-center font-semibold">Trạng thái</div>,
         key: "status",
@@ -118,6 +119,7 @@ export default function ReportsHistoryTable({
         width: 140,
         render: (_: unknown, r: EnterpriseReport) => {
           const status = String((r as any)?.status ?? "PENDING").toUpperCase();
+
           return (
             <div className="flex justify-center">
               <TagPill kind="reportStatus" value={status} />
@@ -164,10 +166,10 @@ export default function ReportsHistoryTable({
       size="middle"
       tableLayout="fixed"
       className="
-    [&_.ant-table]:bg-transparent
-    [&_.ant-table-thead>tr>th]:text-center
-    [&_.ant-table-cell]:align-middle
-  "
+        [&_.ant-table]:bg-transparent
+        [&_.ant-table-thead>tr>th]:text-center
+        [&_.ant-table-cell]:align-middle
+      "
       rowClassName={() =>
         "transition-colors duration-200 hover:!bg-emerald-50/30"
       }

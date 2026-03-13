@@ -257,9 +257,8 @@ const SiteNav: React.FC = () => {
       style={{ isolation: "isolate" }}
     >
       <motion.span
-        className={`absolute top-0 left-0 rounded-xl pointer-events-none overflow-hidden transition-opacity duration-150 ${
-          isLegalRoute && moreOpen ? "opacity-0" : "opacity-100"
-        }`}
+        className={`absolute top-0 left-0 rounded-xl pointer-events-none overflow-hidden transition-opacity duration-150 ${isLegalRoute && moreOpen ? "opacity-0" : "opacity-100"
+          }`}
         style={{ x, y, width: w, height: h }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-green-500/10 to-lime-500/10" />
@@ -485,13 +484,6 @@ const MobileNav: React.FC<{
                   <UserMenu
                     placement="up"
                     showNameOnMobile
-                    mockRole={(user?.role ?? "CITIZEN") as any}
-                    mockUser={{
-                      fullname: user?.fullname ?? "User",
-                      email: user?.email ?? "user@example.com",
-                      role: (user?.role ?? "CITIZEN") as any,
-                      avatarUrl: user?.avatarUrl,
-                    }}
                     homeHref={endPoint.HOMEPAGE}
                   />
                 </div>
@@ -662,16 +654,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({ variant = "site" }) => {
                 )}
 
                 {/* ✅ Replace login/register with your existing UserMenu */}
-                <UserMenu
-                  mockRole={role as any}
-                  mockUser={{
-                    fullname: user.fullname,
-                    email: user.email,
-                    role: role as any,
-                    avatarUrl: user.avatarUrl,
-                  }}
-                  homeHref={endPoint.HOMEPAGE}
-                />
+                <UserMenu homeHref={endPoint.HOMEPAGE} />
               </>
             ) : (
               <>

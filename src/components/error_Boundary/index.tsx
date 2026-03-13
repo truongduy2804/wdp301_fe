@@ -178,7 +178,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 {isDetailsOpen && (
                   <div className="bg-gray-900/5 backdrop-blur-sm p-5 rounded-2xl border border-gray-200/30 animate-slide-down">
                     <div className="relative">
-                      <pre className="text-xs text-gray-700 overflow-auto max-h-40 font-mono bg-white/70 p-4 pr-12 rounded-xl border border-gray-200/50 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                      <pre className="text-xs text-gray-700 overflow-auto custom-scrollbar max-h-40 font-mono bg-white/70 p-4 pr-12 rounded-xl border border-gray-200/50 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                         {error?.toString()}
                         {errorInfo?.componentStack}
                       </pre>

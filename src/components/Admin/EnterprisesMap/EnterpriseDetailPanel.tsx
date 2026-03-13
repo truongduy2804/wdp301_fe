@@ -15,6 +15,19 @@ import type { EnterpriseDetailMap } from "@/api/admin/enterprise-map";
 import { fetchEnterpriseDetailMap } from "@/api/admin/enterprise-map";
 import { motion, AnimatePresence } from "framer-motion";
 import { translateStatus } from "@/utils/statusTranslation";
+import { format } from "date-fns";
+
+const translateWasteType = (type: string) => {
+  const map: Record<string, string> = {
+    ORGANIC: "Hữu cơ",
+    RECYCLABLE: "Tái chế",
+    HAZARDOUS: "Nguy hại",
+    INORGANIC: "Vô cơ",
+    OTHER: "Khác",
+  };
+  return map[type] || type;
+};
+
 
 interface EnterpriseDetailPanelProps {
   enterpriseId: number | null;
@@ -97,20 +110,25 @@ const EnterpriseDetailPanel: React.FC<EnterpriseDetailPanelProps> = ({
                 <div className="space-y-6">
                   {/* Hero Section */}
                   <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shrink-0 shadow-lg">
-                      <Building2 className="w-6 h-6" />
-                    </div>
+                    {enterprise.avatar ? (
+                      <div className="w-16 h-16 rounded-xl overflow-hidden shadow-lg shrink-0">
+                        <img src={enterprise.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shrink-0 shadow-lg">
+                        <Building2 className="w-6 h-6" />
+                      </div>
+                    )}
                     <div>
                       <h3 className="font-bold text-slate-900 text-lg leading-tight">
                         {enterprise.name}
                       </h3>
                       <div className="flex items-center gap-2 mt-2">
                         <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                            enterprise.status === "ACTIVE"
-                              ? "bg-emerald-600 text-white"
-                              : "bg-slate-600 text-white"
-                          }`}
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${enterprise.status === "ACTIVE"
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-600 text-white"
+                            }`}
                         >
                           {translateStatus(enterprise.status)}
                         </span>
@@ -156,6 +174,20 @@ const EnterpriseDetailPanel: React.FC<EnterpriseDetailPanelProps> = ({
                   {/* Address & Contact Info */}
                   <div className="space-y-4 pt-2">
                     <div className="space-y-3">
+                      {enterprise.contactName && (
+                        <div className="flex items-start gap-3 text-slate-700">
+                          <User className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                          <div className="space-y-1">
+                            <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">
+                              Người đại diện/Liên hệ
+                            </p>
+                            <p className="text-sm font-medium leading-relaxed">
+                              {enterprise.contactName}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex items-start gap-3 text-slate-700">
                         <Mail className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
                         <div className="space-y-1">
@@ -181,8 +213,49 @@ const EnterpriseDetailPanel: React.FC<EnterpriseDetailPanelProps> = ({
                           </p>
                         </div>
                       </div>
+
+                      {enterprise.wasteTypes && enterprise.wasteTypes.length > 0 && (
+                        <div className="flex items-start gap-3 text-slate-700">
+                          <Trash2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                          <div className="space-y-1">
+                            <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-2">
+                              Loại rác thu gom
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {enterprise.wasteTypes.map((type, idx) => (
+                                <span
+                                  key={idx}
+                                  className="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-medium"
+                                >
+                                  {typeof type === "string" ? translateWasteType(type) : ((type as any).wasteType ? translateWasteType((type as any).wasteType) : JSON.stringify(type))}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
+
+                  {/* Subscription & Stats */}
+                  {(enterprise.activeSubscription || enterprise.stats) && (
+                    <div className="space-y-3 pt-2">
+                      {enterprise.activeSubscription && (
+                        <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
+                          <div>
+                            <p className="text-[11px] text-blue-600 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
+                              <ShieldCheck className="w-3.5 h-3.5" /> Gói hiện tại
+                            </p>
+                            <p className="text-sm font-semibold text-blue-900">{enterprise.activeSubscription.planName}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] text-slate-500 font-medium">Hạn sử dụng</p>
+                            <p className="text-xs text-slate-700 font-semibold">{format(new Date(enterprise.activeSubscription.endDate), "dd/MM/yyyy")}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Collectors */}
                   {Array.isArray(enterprise.collectors) &&
