@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 
 function daysUntil(endIso?: string | null) {
   if (!endIso) return null;
+
   const end = new Date(endIso).getTime();
   if (Number.isNaN(end)) return null;
 
@@ -22,15 +23,22 @@ export function useEnterpriseRenewSoonToast(params: {
   useEffect(() => {
     if (shownRef.current) return;
 
-    const { subIsActive, subIsExpired, endDate, onRenewNow } = params;
+    const { enterpriseStatus, subIsActive, subIsExpired, endDate, onRenewNow } =
+      params;
+
+    const status = (enterpriseStatus ?? "").toUpperCase();
+
+    const isEnterpriseExpired = status === "EXPIRED";
 
     const dayLeft = daysUntil(endDate);
 
     const SOON_TOAST_ID = "renew-soon-on-enter";
     const EXPIRED_TOAST_ID = "renew-expired-on-enter";
 
-    // Trường hợp 1: gói đã hết hạn
-    if (subIsExpired) {
+    /** ===============================
+     *  Case 1: Enterprise expired
+     *  =============================== */
+    if (isEnterpriseExpired || subIsExpired) {
       shownRef.current = true;
 
       toast.info(
@@ -70,7 +78,9 @@ export function useEnterpriseRenewSoonToast(params: {
       return;
     }
 
-    // Trường hợp 2: chưa hết hạn nhưng sắp hết hạn
+    /** ===============================
+     *  Case 2: Expiring soon
+     *  =============================== */
     if (!subIsActive) return;
     if (!dayLeft || dayLeft < 1 || dayLeft > 5) return;
 

@@ -5,7 +5,7 @@ import {
   CalendarDays,
   Timer,
   ReceiptText,
-  ChevronsRight ,
+  ChevronsRight,
   CheckCircle2,
   Clock3,
   XCircle,
@@ -390,6 +390,8 @@ export default function EnterpriseSubscription() {
       { skip: !historyModalOpen },
     );
 
+  const [renewingDirect, setRenewingDirect] = useState(false);
+
   const previewTransactions = previewHistoryData?.data?.transactions ?? [];
   const previewPagination = previewHistoryData?.data?.pagination;
   const totalTransactions = previewPagination?.total ?? 0;
@@ -406,6 +408,43 @@ export default function EnterpriseSubscription() {
   useEffect(() => {
     if (!selectedPlanId && plans.length) setSelectedPlanId(plans[0].id);
   }, [plans, selectedPlanId]);
+
+  useEffect(() => {
+    const shouldResume = (location.state as any)?.resumePendingPayment === true;
+    if (shouldResume) {
+      resumePayment();
+    }
+  }, [location.state]);
+
+  const handleRenewDirect = async (planId?: number) => {
+    if (!planId) return;
+
+    try {
+      setRenewingDirect(true);
+
+      const res = await renew({
+        subscriptionPlanConfigId: planId,
+      }).unwrap();
+
+      const code = res?.data?.payment?.referenceCode;
+      const qr = res?.data?.qrCode?.qrUrl;
+      const bank = res?.data?.qrCode?.bankInfo;
+      const pay = res?.data?.payment;
+
+      if (code) {
+        setReferenceCode(code);
+        setQrUrl(qr ?? null);
+        setBankInfo(bank ?? null);
+        setPaymentInfo(pay ?? null);
+
+        startPolling(code);
+      }
+    } catch (err) {
+      console.error("Renew failed:", err);
+    } finally {
+      setRenewingDirect(false);
+    }
+  };
 
   const stopPolling = () => {
     if (pollRef.current) {
@@ -473,18 +512,44 @@ export default function EnterpriseSubscription() {
     return () => stopPolling();
   }, []);
 
-  const enterpriseName = payload?.enterpriseName ?? "Doanh nghiệp";
-  const statusTone = toneFromSub({
-    isActive: sub?.isActive,
-    isExpired: sub?.isExpired,
-  });
+  type EnterpriseStatus = "ACTIVE" | "EXPIRED" | "PENDING" | "INACTIVE";
+  type BadgeTone = "emerald" | "rose" | "amber" | "slate";
 
-  const statusLabel = useMemo(() => {
-    if (!payload) return "—";
-    if (sub?.isExpired) return "Hết hạn";
-    if (sub?.isActive) return "Đang hoạt động";
-    return payload.enterpriseStatus || "Không rõ";
-  }, [payload, sub?.isActive, sub?.isExpired]);
+  const enterpriseName: string = payload?.enterpriseName ?? "Doanh nghiệp";
+
+  const enterpriseStatus = payload?.enterpriseStatus as
+    | EnterpriseStatus
+    | undefined;
+
+  const statusTone = useMemo<BadgeTone>(() => {
+    switch (enterpriseStatus) {
+      case "ACTIVE":
+        return "emerald";
+      case "EXPIRED":
+        return "rose";
+      case "PENDING":
+        return "amber";
+      case "INACTIVE":
+        return "slate";
+      default:
+        return "slate";
+    }
+  }, [enterpriseStatus]);
+
+  const statusLabel = useMemo<string>(() => {
+    switch (enterpriseStatus) {
+      case "ACTIVE":
+        return "Đang hoạt động";
+      case "EXPIRED":
+        return "Hết hạn";
+      case "PENDING":
+        return "Chờ kích hoạt";
+      case "INACTIVE":
+        return "Không hoạt động";
+      default:
+        return "Không rõ";
+    }
+  }, [enterpriseStatus]);
 
   const remainingLabel = useMemo(() => {
     const tr = sub?.timeRemaining;
@@ -691,6 +756,7 @@ export default function EnterpriseSubscription() {
 
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <Badge tone={statusTone}>{statusLabel}</Badge>
+
                     {sub?.planName ? (
                       <Badge tone="blue">{sub.planName}</Badge>
                     ) : null}
@@ -812,6 +878,8 @@ export default function EnterpriseSubscription() {
           stopPolling();
           setPayModalOpen(false);
         }}
+        onRenew={handleRenewDirect}
+        renewing={renewingDirect}
         qrUrl={qrUrl}
         referenceCode={referenceCode}
         bankInfo={bankInfo}

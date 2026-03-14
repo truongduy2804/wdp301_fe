@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from "react";
-import dayjs from "dayjs";
 import { ClipboardCheck, RefreshCw } from "lucide-react";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
@@ -12,14 +11,13 @@ import {
 } from "@/components/ui/page/componentUI";
 
 import ReportsHistoryTable from "../components/reportsHistoryTable";
-import ReportDetailModal from "../PendingRequests/detailPage";
+import ReportDetailModal from "./detailPage";
 
 import { useGetAcceptedReportsQuery } from "@/redux/api/enterprise/reports";
 
 import type {
   AcceptedEnterpriseReport,
   EnterpriseReport,
-  WaitingReportDetail,
 } from "@/redux/api/enterprise/reports/types";
 
 function mapAcceptedToEnterpriseReport(
@@ -46,37 +44,6 @@ function mapAcceptedToEnterpriseReport(
   };
 }
 
-function mapAcceptedToDetail(
-  item: AcceptedEnterpriseReport,
-): WaitingReportDetail {
-  return {
-    isCancelled: false,
-    cancelReason: null,
-    distanceKm: null,
-    report: {
-      id: item.reportId ?? item.id,
-      status: item.status,
-      address: item.address,
-      latitude: item.latitude ?? 0,
-      longitude: item.longitude ?? 0,
-      provinceCode: "",
-      districtCode: "",
-      wardCode: "",
-      description: item.description ?? null,
-      createdAt: item.assignedAt ?? item.completedAt ?? dayjs().toISOString(),
-      wasteItems: item.wasteItems ?? [],
-      images: item.images ?? [],
-      citizen: {
-        id: item.citizen?.id ?? null,
-        fullName: item.citizen?.fullName ?? "Không rõ",
-        phone: item.citizen?.phone ?? null,
-        email: item.citizen?.email ?? null,
-        avatar: item.citizen?.avatar ?? null,
-      },
-    },
-  };
-}
-
 export default function EnterpriseApprovedRequestsPage() {
   const { data, isLoading, isFetching, isError, error, refetch } =
     useGetAcceptedReportsQuery(undefined, {
@@ -87,8 +54,17 @@ export default function EnterpriseApprovedRequestsPage() {
 
   const rows: AcceptedEnterpriseReport[] = data?.data ?? [];
 
+  const ACTIVE_STATUSES = [
+    "COLLECTOR_PENDING",
+    "ASSIGNED",
+    "ON_THE_WAY",
+    "ARRIVED",
+  ] as const;
+
   const filtered = useMemo(() => {
-    return rows.filter((r) => r.status === "COLLECTOR_PENDING");
+    return rows.filter((r) =>
+      ACTIVE_STATUSES.includes(r.status as (typeof ACTIVE_STATUSES)[number]),
+    );
   }, [rows]);
 
   const tableData = useMemo<EnterpriseReport[]>(() => {
@@ -98,16 +74,6 @@ export default function EnterpriseApprovedRequestsPage() {
   const [viewOpen, setViewOpen] = useState(false);
   const [selectedReport, setSelectedReport] =
     useState<AcceptedEnterpriseReport | null>(null);
-
-  const selectedMeta = useMemo<EnterpriseReport | null>(() => {
-    if (!selectedReport) return null;
-    return mapAcceptedToEnterpriseReport(selectedReport);
-  }, [selectedReport]);
-
-  const selectedDetail = useMemo<WaitingReportDetail | null>(() => {
-    if (!selectedReport) return null;
-    return mapAcceptedToDetail(selectedReport);
-  }, [selectedReport]);
 
   const onView = (id: number) => {
     const found = filtered.find((x) => x.id === id) ?? null;
@@ -206,8 +172,7 @@ export default function EnterpriseApprovedRequestsPage() {
           setSelectedReport(null);
         }}
         loading={false}
-        detail={selectedDetail}
-        meta={selectedMeta}
+        report={viewOpen ? selectedReport : null}
       />
     </div>
   );

@@ -176,7 +176,7 @@ export default function EnterprisePendingRequestsPage() {
           ) : filtered.length === 0 ? (
             <EmptyState
               title="Danh sách đơn chờ đang trống"
-              desc="Thử đổi khoảng ngày."
+              desc="Hiện chưa có đơn nào cần phản hồi"
             />
           ) : (
             <WaitingReportsTable

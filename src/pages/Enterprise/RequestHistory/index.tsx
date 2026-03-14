@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from "react";
-import dayjs from "dayjs";
 import { ClipboardCheck, RefreshCw } from "lucide-react";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
@@ -12,14 +11,13 @@ import {
 } from "@/components/ui/page/componentUI";
 
 import ReportsHistoryTable from "../components/reportsHistoryTable";
-import ReportDetailModal from "../PendingRequests/detailPage";
+import ReportDetailModal from "../AcceptedRequests/detailPage";
 
 import { useGetAcceptedReportsQuery } from "@/redux/api/enterprise/reports";
 
 import type {
   AcceptedEnterpriseReport,
   EnterpriseReport,
-  WaitingReportDetail,
 } from "@/redux/api/enterprise/reports/types";
 
 function mapAcceptedToEnterpriseReport(
@@ -27,13 +25,24 @@ function mapAcceptedToEnterpriseReport(
 ): EnterpriseReport {
   return {
     id: item.id,
+    reportId: item.reportId,
     address: item.address,
     latitude: item.latitude ?? null,
     longitude: item.longitude ?? null,
+    provinceCode: item.provinceCode ?? null,
+    districtCode: item.districtCode ?? null,
+    wardCode: item.wardCode ?? null,
     description: item.description ?? null,
     status: item.status,
     createdAt: item.assignedAt ?? null,
     updatedAt: item.completedAt ?? null,
+    assignedAt: item.assignedAt ?? null,
+    completedAt: item.completedAt ?? null,
+    wasteItems: item.wasteItems ?? [],
+    actualWasteItems: item.actualWasteItems ?? [],
+    actualWeight: item.actualWeight ?? null,
+    accuracyBucket: item.accuracyBucket ?? null,
+    images: item.images ?? [],
     citizen: item.citizen
       ? {
           id: item.citizen.id ?? null,
@@ -43,37 +52,15 @@ function mapAcceptedToEnterpriseReport(
           avatar: item.citizen.avatar ?? null,
         }
       : null,
-  };
-}
-
-function mapAcceptedToDetail(
-  item: AcceptedEnterpriseReport,
-): WaitingReportDetail {
-  return {
-    isCancelled: false,
-    cancelReason: null,
-    distanceKm: null,
-    report: {
-      id: item.reportId ?? item.id,
-      status: item.status,
-      address: item.address,
-      latitude: item.latitude ?? 0,
-      longitude: item.longitude ?? 0,
-      provinceCode: "",
-      districtCode: "",
-      wardCode: "",
-      description: item.description ?? null,
-      createdAt: item.assignedAt ?? item.completedAt ?? dayjs().toISOString(),
-      wasteItems: item.wasteItems ?? [],
-      images: item.images ?? [],
-      citizen: {
-        id: item.citizen?.id ?? null,
-        fullName: item.citizen?.fullName ?? "Không rõ",
-        phone: item.citizen?.phone ?? null,
-        email: item.citizen?.email ?? null,
-        avatar: item.citizen?.avatar ?? null,
-      },
-    },
+    collector: item.collector
+      ? {
+          id: item.collector.id,
+          employeeCode: item.collector.employeeCode ?? null,
+          fullName: item.collector.fullName,
+          phone: item.collector.phone ?? null,
+          avatar: item.collector.avatar ?? null,
+        }
+      : null,
   };
 }
 
@@ -103,16 +90,6 @@ export default function EnterpriseApprovedRequestsPage() {
   const [viewOpen, setViewOpen] = useState(false);
   const [selectedReport, setSelectedReport] =
     useState<AcceptedEnterpriseReport | null>(null);
-
-  const selectedMeta = useMemo<EnterpriseReport | null>(() => {
-    if (!selectedReport) return null;
-    return mapAcceptedToEnterpriseReport(selectedReport);
-  }, [selectedReport]);
-
-  const selectedDetail = useMemo<WaitingReportDetail | null>(() => {
-    if (!selectedReport) return null;
-    return mapAcceptedToDetail(selectedReport);
-  }, [selectedReport]);
 
   const onView = (id: number) => {
     const found = filtered.find((x) => x.id === id) ?? null;
@@ -211,8 +188,7 @@ export default function EnterpriseApprovedRequestsPage() {
           setSelectedReport(null);
         }}
         loading={false}
-        detail={selectedDetail}
-        meta={selectedMeta}
+        report={viewOpen ? selectedReport : null}
       />
     </div>
   );

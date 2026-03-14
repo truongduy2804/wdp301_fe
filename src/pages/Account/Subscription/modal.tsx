@@ -401,6 +401,8 @@ export function PlanSelectModal({
 export function PaymentQrModal({
   open,
   onClose,
+  onRenew,
+  renewing = false,
   qrUrl,
   referenceCode,
   bankInfo,
@@ -410,7 +412,8 @@ export function PaymentQrModal({
 }: {
   open: boolean;
   onClose: () => void;
-
+  onRenew?: (subscriptionPlanConfigId?: number) => void;
+  renewing?: boolean;
   qrUrl: string | null;
   referenceCode: string | null;
 
@@ -441,6 +444,11 @@ export function PaymentQrModal({
     ) || 0;
 
   const planConfig = (payment as any)?.subscriptionPlanConfig ?? null;
+  const subscriptionPlanConfigId =
+    (payment as any)?.subscriptionPlanConfig?.id ??
+    (payment as any)?.subscriptionPlanConfigId ??
+    null;
+
   const planName = planConfig?.name ?? paymentInfo?.planName ?? "—";
   const duration =
     planConfig?.durationMonths ?? paymentInfo?.durationMonths ?? "—";
@@ -609,6 +617,34 @@ export function PaymentQrModal({
                           <div className="mt-1 text-xs text-slate-500">
                             Vui lòng đóng cửa sổ này và tạo giao dịch mới.
                           </div>
+                          {onRenew && (
+                            <button
+                              onClick={() =>
+                                onRenew?.(subscriptionPlanConfigId)
+                              }
+                              disabled={renewing}
+                              className="
+    mt-4 px-4 py-2 rounded-xl
+    bg-emerald-600 text-white text-sm font-semibold
+    hover:bg-emerald-700 active:scale-[0.98]
+    disabled:opacity-60 disabled:cursor-not-allowed
+    transition inline-flex items-center gap-2
+  "
+                            >
+                              {renewing ? (
+                                <>
+                                  <LoadingSpinner
+                                    color="white"
+                                    size="4"
+                                    inline
+                                  />
+                                  Đang tạo QR...
+                                </>
+                              ) : (
+                                "Gia hạn lại"
+                              )}
+                            </button>
+                          )}
                         </div>
                       ) : qrUrl ? (
                         <div className="relative flex items-center justify-center">

@@ -52,9 +52,12 @@ const REPORT_STATUS: Record<string, { label: string; cls: string }> = {
     label: "Đã phân công",
     cls: "bg-blue-50 text-blue-700 border-blue-200",
   },
-
+  ARRIVED: {
+    label: "Đã đến địa điểm",
+    cls: "bg-blue-50 text-blue-700 border-blue-200",
+  },
   ON_THE_WAY: {
-    label: "Đang đến",
+    label: "Nhân viên đang di chuyển",
     cls: "bg-indigo-50 text-indigo-700 border-indigo-200",
   },
 
@@ -96,7 +99,7 @@ const WASTE_TYPE: Record<string, { label: string; cls: string }> = {
 
 const COLLECTOR_STATUS: Record<string, { label: string; cls: string }> = {
   ONLINE_AVAILABLE: {
-    label: "Sẵn sàng",
+    label: "Hoạt động",
     cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
   ONLINE_BUSY: {

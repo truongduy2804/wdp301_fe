@@ -40,6 +40,7 @@ import {
   Dropdown,
   DateRangePill,
 } from "../../../components/ui/page/componentUI";
+import { usePendingPaymentToast } from "@/hooks/usePendingPaymentToast";
 
 /* ===================== Types ===================== */
 type DatePreset = "7d" | "30d" | "90d" | "custom";
@@ -217,8 +218,18 @@ export default function EnterpriseStatsPage() {
 
   const payload = data?.data;
   const sub = payload?.subscription;
+  const pendingPayment = payload?.pendingPayment ?? null;
 
   // toast nhắc nhở trên trang chính
+  usePendingPaymentToast({
+    pendingPayment,
+    onResumePayment: () => {
+      navigate(endPoint.SUBSCRIPTION, {
+        state: { resumePendingPayment: true },
+      });
+    },
+  });
+
   useEnterpriseRenewSoonToast({
     enterpriseStatus: payload?.enterpriseStatus,
     subIsActive: sub?.isActive,
