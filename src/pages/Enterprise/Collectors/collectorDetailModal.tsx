@@ -9,13 +9,9 @@ import {
   CalendarClock,
   X,
   User,
-  Clock,
   ShieldCheck,
   AlertCircle,
-  Wallet,
-  Activity,
   BadgeCheck,
-  TrendingUp,
   Zap,
   ChevronRight,
 } from "lucide-react";
@@ -45,7 +41,6 @@ type WorkingHours = Partial<Record<DayKey, WorkingHourItem>>;
 type CollectorDetailData = Collector & {
   employeeCode?: string | null;
   trustScore?: number | null;
-  earnings?: number | null;
   skipCount?: number | null;
   isActive?: boolean;
   createdAt?: string | null;
@@ -59,11 +54,6 @@ type CollectorDetailData = Collector & {
   };
   status?: {
     availability?: string | null;
-    lastOnlineAt?: string | null;
-    lastOfflineAt?: string | null;
-    lastActivityAt?: string | null;
-    lastAssignedAt?: string | null;
-    queueLength?: number | null;
     updatedAt?: string | null;
   };
 };
@@ -106,18 +96,13 @@ function formatDateTime(iso?: string | null) {
   return `${d.format("HH:mm")} · ${d.format("DD/MM/YYYY")}`;
 }
 
-function formatMoney(value?: number | null) {
-  const n = Number(value ?? 0);
-  if (!Number.isFinite(n)) return "0";
-  return new Intl.NumberFormat("vi-VN").format(n);
-}
-
 function formatCollectorStatus(status?: string | null) {
   const key = String(status ?? "")
     .trim()
     .toUpperCase();
+
   if (key === "ONLINE_AVAILABLE" || key === "AVAILABLE")
-    return "Sẵn sàng nhận việc";
+    return "Đang hoạt động";
   if (key === "ONLINE_BUSY" || key === "ON_TASK") return "Đang làm việc";
   if (key === "OFFLINE") return "Ngoại tuyến";
   return "Không rõ";
@@ -218,13 +203,18 @@ const StatCard = React.memo(function StatCard({
   label: string;
   value: React.ReactNode;
   icon: any;
-  accent: "emerald" | "blue" | "amber" | "teal";
+  accent: "emerald" | "blue" | "amber" | "teal" | "red";
 }) {
   const accentMap = {
     emerald: {
       num: "text-emerald-700",
       iconBg: "bg-emerald-100",
       iconColor: "text-emerald-700",
+    },
+    red: {
+      num: "text-red-700",
+      iconBg: "bg-red-100",
+      iconColor: "text-red-700",
     },
     blue: {
       num: "text-sky-700",
@@ -248,7 +238,7 @@ const StatCard = React.memo(function StatCard({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-colors duration-200 hover:bg-slate-100">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold uppercase  text-slate-700">
+        <span className="text-[11px] font-semibold uppercase text-slate-700">
           {label}
         </span>
         <div
@@ -278,14 +268,16 @@ const InfoRow = React.memo(function InfoRow({
   return (
     <div className="group flex items-center gap-4 bg-white px-3 py-3 transition-colors duration-150 hover:bg-slate-50">
       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 group-hover:bg-blue-400">
-        <Icon className="h-4 w-4 text-emerald-600 group-hover:text-white " />
+        <Icon className="h-4 w-4 text-emerald-600 group-hover:text-white" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="mb-0.5 text-[12px] font-semibold uppercase text-slate-700">
           {label}
         </div>
         <div
-          className={`truncate text-sm font-medium ${accent ? "text-emerald-700" : "text-slate-800"}`}
+          className={`truncate text-sm font-medium ${
+            accent ? "text-emerald-700" : "text-slate-800"
+          }`}
         >
           {value}
         </div>
@@ -311,23 +303,6 @@ const SectionHeader = React.memo(function SectionHeader({
         {title}
       </h3>
       <div className="h-[1px] flex-1 bg-slate-200" />
-    </div>
-  );
-});
-
-const TimelineCard = React.memo(function TimelineCard({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-2 text-[12px] font-bold uppercase text-slate-700">
-        {label}
-      </div>
-      <div className="text-sm font-medium text-slate-700">{value}</div>
     </div>
   );
 });
@@ -359,46 +334,6 @@ export default function CollectorDetailModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  const animations = useMemo(
-    () =>
-      reduceMotion
-        ? {
-            overlay: {
-              hidden: { opacity: 0 },
-              visible: { opacity: 1 },
-              exit: { opacity: 0 },
-            },
-            panel: {
-              hidden: { opacity: 0 },
-              visible: { opacity: 1 },
-              exit: { opacity: 0 },
-            },
-          }
-        : {
-            overlay: {
-              hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { duration: 0.14 } },
-              exit: { opacity: 0, transition: { duration: 0.12 } },
-            },
-            panel: {
-              hidden: { opacity: 0, y: 10, scale: 0.985 },
-              visible: {
-                opacity: 1,
-                y: 0,
-                scale: 1,
-                transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] },
-              },
-              exit: {
-                opacity: 0,
-                y: 6,
-                scale: 0.99,
-                transition: { duration: 0.12, ease: [0.4, 0, 1, 1] },
-              },
-            },
-          },
-    [reduceMotion],
-  );
-
   const orderedWorkingHours = useMemo(() => {
     const working: WorkingHours = detail?.workingHours ?? {};
 
@@ -408,7 +343,7 @@ export default function CollectorDetailModal({
       data: working[day] ?? { active: false, start: "00:00", end: "00:00" },
     }));
   }, [detail?.workingHours]);
-
+  console.log("detail,", detail);
   const profile = useMemo(
     () => ({
       fullName: detail?.user?.fullName ?? "—",
@@ -416,25 +351,19 @@ export default function CollectorDetailModal({
       phone: detail?.user?.phone ?? "—",
       avatar: detail?.user?.avatar ?? null,
       employeeCode: detail?.employeeCode ?? "—",
-      status: detail?.status?.availability ?? null,
-      isActive: Boolean(detail?.isActive),
+      availability: detail?.status ?? null,
       trustScore: detail?.trustScore ?? 0,
-      earnings: detail?.earnings ?? 0,
       skipCount: detail?.skipCount ?? 0,
-      queueLength: detail?.status?.queueLength ?? 0,
-      lastActivityAt: detail?.status?.lastActivityAt ?? null,
-      lastAssignedAt: detail?.status?.lastAssignedAt ?? null,
-      lastOnlineAt: detail?.status?.lastOnlineAt ?? null,
-      updatedAt: detail?.updatedAt ?? null,
       createdAt: detail?.createdAt ?? null,
+      updatedAt: detail?.updatedAt ?? null,
       statusUpdatedAt: detail?.status?.updatedAt ?? null,
     }),
     [detail],
   );
 
   const statusCfg = useMemo(
-    () => getStatusConfig(profile.status),
-    [profile.status],
+    () => getStatusConfig(profile.availability),
+    [profile.availability],
   );
 
   const overlayVariants = useMemo<Variants>(() => {
@@ -516,7 +445,6 @@ export default function CollectorDetailModal({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex h-full min-h-0 flex-col">
-              {/* Header fixed */}
               <div className="relative shrink-0 bg-emerald-600 px-6 py-6 sm:px-8">
                 <button
                   onClick={onClose}
@@ -546,7 +474,6 @@ export default function CollectorDetailModal({
                 </div>
               </div>
 
-              {/* Body scroll only */}
               <div className="min-h-0 flex-1 overflow-y-auto custom-scrollbar">
                 {loading ? (
                   <div className="flex items-center justify-center px-6 py-24 sm:px-8">
@@ -594,19 +521,7 @@ export default function CollectorDetailModal({
                                       className={`relative inline-flex h-1.5 w-1.5 rounded-full ${statusCfg.dot}`}
                                     />
                                   </span>
-                                  {formatCollectorStatus(profile.status)}
-                                </span>
-
-                                <span
-                                  className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
-                                    profile.isActive
-                                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                      : "border-rose-200 bg-rose-50 text-rose-700"
-                                  }`}
-                                >
-                                  {profile.isActive
-                                    ? "Đang hoạt động"
-                                    : "Ngưng hoạt động"}
+                                  {formatCollectorStatus(profile.availability)}
                                 </span>
                               </div>
 
@@ -624,32 +539,14 @@ export default function CollectorDetailModal({
                               label="Điểm uy tín"
                               value={profile.trustScore}
                               icon={ShieldCheck}
-                              accent="emerald"
+                              accent="red"
                             />
+
                             <StatCard
-                              label="Thu nhập"
-                              value={
-                                <span className="text-[20px]">
-                                  {formatMoney(profile.earnings)}
-                                  <span className="ml-1 text-sm font-normal text-slate-500">
-                                    đ
-                                  </span>
-                                </span>
-                              }
-                              icon={Wallet}
-                              accent="blue"
-                            />
-                            <StatCard
-                              label="Bỏ qua"
+                              label="Đơn đã bỏ qua"
                               value={profile.skipCount}
                               icon={AlertCircle}
-                              accent="amber"
-                            />
-                            <StatCard
-                              label="Hàng chờ"
-                              value={profile.queueLength}
-                              icon={Activity}
-                              accent="teal"
+                              accent="blue"
                             />
                           </div>
                         </div>
@@ -687,55 +584,28 @@ export default function CollectorDetailModal({
 
                         <div>
                           <SectionHeader
-                            title="Trạng thái hoạt động"
-                            icon={TrendingUp}
+                            title="Mốc thời gian"
+                            icon={CalendarClock}
                           />
                           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                             <InfoRow
-                              icon={Clock}
-                              label="Trạng thái hiện tại"
-                              value={formatCollectorStatus(profile.status)}
-                            />
-                            <div className="mx-3 h-px bg-slate-200" />
-                            <InfoRow
-                              icon={Activity}
-                              label="Hoạt động gần nhất"
-                              value={formatDateTime(profile.lastActivityAt)}
+                              icon={CalendarClock}
+                              label="Tạo hồ sơ"
+                              value={formatDateTime(profile.createdAt)}
                             />
                             <div className="mx-3 h-px bg-slate-200" />
                             <InfoRow
                               icon={CalendarClock}
-                              label="Phân công gần nhất"
-                              value={formatDateTime(profile.lastAssignedAt)}
+                              label="Cập nhật hồ sơ"
+                              value={formatDateTime(profile.updatedAt)}
                             />
-                            <div className="mx-3 h-px bg-slate-200" />
+                            {/* <div className="mx-3 h-px bg-slate-200" />
                             <InfoRow
                               icon={CalendarClock}
-                              label="Online gần nhất"
-                              value={formatDateTime(profile.lastOnlineAt)}
-                            />
+                              label="Cập nhật trạng thái"
+                              value={formatDateTime(profile.statusUpdatedAt)}
+                            /> */}
                           </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <SectionHeader
-                          title="Mốc thời gian"
-                          icon={CalendarClock}
-                        />
-                        <div className="grid gap-3 md:grid-cols-3">
-                          <TimelineCard
-                            label="Tạo hồ sơ"
-                            value={formatDateTime(profile.createdAt)}
-                          />
-                          <TimelineCard
-                            label="Cập nhật hồ sơ"
-                            value={formatDateTime(profile.updatedAt)}
-                          />
-                          <TimelineCard
-                            label="Cập nhật trạng thái"
-                            value={formatDateTime(profile.statusUpdatedAt)}
-                          />
                         </div>
                       </div>
 
@@ -805,7 +675,6 @@ export default function CollectorDetailModal({
                 )}
               </div>
 
-              {/* Footer fixed */}
               <div className="shrink-0 border-t border-slate-200 bg-white px-6 py-4 sm:px-8">
                 <div className="flex items-center justify-end gap-3">
                   <button

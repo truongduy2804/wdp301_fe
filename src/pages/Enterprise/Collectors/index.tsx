@@ -86,7 +86,7 @@ type StatusFilter = CollectorStatus | "";
 
 const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "", label: "Tất cả" },
-  { value: "ONLINE_AVAILABLE", label: "Sẵn sàng" },
+  { value: "ONLINE_AVAILABLE", label: "Hoạt động" },
   // { value: "ONLINE_BUSY", label: "Đang bận" },
   { value: "OFFLINE", label: "Ngoại tuyến" },
 ];

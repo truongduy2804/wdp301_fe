@@ -21,8 +21,15 @@ export type CollectorSummary = {
   avatar?: string | null;
 };
 
+export type WasteItem = {
+  wasteType: string;
+  weightKg: number;
+};
+
 export type EnterpriseReport = {
   id: number;
+  reportId?: number | null;
+
   citizenId?: number | null;
   currentEnterpriseId?: number | null;
 
@@ -40,18 +47,22 @@ export type EnterpriseReport = {
 
   createdAt?: string | null;
   updatedAt?: string | null;
+  assignedAt?: string | null;
+  completedAt?: string | null;
 
   cancelReason?: string | null;
   deletedAt?: string | null;
 
   attemptId?: number | null;
 
-  citizen?: CitizenSummary | null;
-};
+  wasteItems?: WasteItem[];
+  actualWasteItems?: WasteItem[];
+  actualWeight?: number | null;
+  accuracyBucket?: string | null;
+  images?: string[];
 
-export type WasteItem = {
-  wasteType: string;
-  weightKg: number;
+  citizen?: CitizenSummary | null;
+  collector?: CollectorSummary | null;
 };
 
 export type ReportDetail = {
@@ -70,9 +81,13 @@ export type ReportDetail = {
   createdAt: string;
 
   wasteItems: WasteItem[];
+  actualWasteItems?: WasteItem[];
+  actualWeight?: number | null;
+  accuracyBucket?: string | null;
   images: string[];
 
   citizen: CitizenSummary;
+  collector?: CollectorSummary | null;
 };
 
 export type WaitingReportDetail = {
@@ -93,12 +108,21 @@ export type AcceptedEnterpriseReport = {
   address: string;
   latitude?: number | null;
   longitude?: number | null;
+
+  provinceCode?: string | null;
+  districtCode?: string | null;
+  wardCode?: string | null;
+
   description?: string | null;
 
   assignedAt?: string | null;
   completedAt?: string | null;
 
   wasteItems: WasteItem[];
+  actualWasteItems?: WasteItem[];
+  actualWeight?: number | null;
+  accuracyBucket?: string | null;
+
   images: string[];
 
   citizen: CitizenSummary;
