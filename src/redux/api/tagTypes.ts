@@ -18,6 +18,7 @@ export const tagTypes = [
   "EnterprisePayment",
   "EnterprisePlans",
   "AcceptedReports",
+  "EnterpriseDashboard",
 ] as const;
 
 //  Xuất kiểu để TypeScript autocomplete & kiểm tra chính xác

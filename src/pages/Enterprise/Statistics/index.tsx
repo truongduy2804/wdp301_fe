@@ -6,15 +6,19 @@ import {
   Download,
   Filter,
   Leaf,
-  MapPinned,
+  RefreshCw,
   TrendingUp,
+  Truck,
   Users,
+  ClipboardList,
+  ShieldCheck,
 } from "lucide-react";
 import dayjs, { type Dayjs } from "dayjs";
 import { useNavigate } from "react-router-dom";
 import endPoint from "@/router/endPoint";
 import { useGetEnterpriseSubscriptionQuery } from "@/redux/api/enterprise/subscription";
 import { useEnterpriseRenewSoonToast } from "@/hooks/useEnterpriseRenewToast";
+import { usePendingPaymentToast } from "@/hooks/usePendingPaymentToast";
 
 import {
   ResponsiveContainer,
@@ -33,6 +37,19 @@ import {
 } from "recharts";
 
 import {
+  useGetEnterpriseDashboardSummaryQuery,
+  useGetEnterpriseDashboardRankingQuery,
+  useGetEnterpriseDashboardStatsQuery,
+} from "@/redux/api/enterprise/dashboard";
+
+import type {
+  DashboardOrder,
+  DashboardRankingItem,
+  DashboardRankingSortBy,
+  DashboardStatsInterval,
+} from "@/redux/api/enterprise/dashboard/type";
+
+import {
   cx,
   formatNumber,
   Card,
@@ -40,187 +57,137 @@ import {
   Dropdown,
   DateRangePill,
 } from "../../../components/ui/page/componentUI";
-import { usePendingPaymentToast } from "@/hooks/usePendingPaymentToast";
 
 /* ===================== Types ===================== */
 type DatePreset = "7d" | "30d" | "90d" | "custom";
-type WasteType = "Plastic" | "Paper" | "Metal" | "Organic" | "Other";
-type Zone = "District 1" | "District 3" | "District 7" | "Thu Duc";
 
-type DailyPoint = {
-  date: string;
-  requests: number;
-  collectedKg: number;
-  completed: number;
-};
+type WasteKey = "ORGANIC" | "RECYCLABLE" | "HAZARDOUS";
 
-type ZonePoint = {
-  zone: Zone;
-  requests: number;
-  completed: number;
-  collectedKg: number;
-};
-
-type WastePoint = {
-  type: WasteType;
-  valueKg: number;
-};
-
-type CollectorRow = {
-  id: string;
+type WasteTotalRow = {
+  key: WasteKey;
   name: string;
-  zone: Zone;
-  completedJobs: number;
-  onTimeRate: number;
-  avgMinutes: number;
+  value: number;
 };
 
-/* ===================== Mock Data ===================== */
-const DAILY_7D: DailyPoint[] = [
-  { date: "01/12", requests: 86, collectedKg: 920, completed: 78 },
-  { date: "02/12", requests: 92, collectedKg: 980, completed: 84 },
-  { date: "03/12", requests: 110, collectedKg: 1210, completed: 98 },
-  { date: "04/12", requests: 104, collectedKg: 1150, completed: 93 },
-  { date: "05/12", requests: 120, collectedKg: 1330, completed: 109 },
-  { date: "06/12", requests: 98, collectedKg: 1010, completed: 90 },
-  { date: "07/12", requests: 132, collectedKg: 1490, completed: 121 },
-];
+type TrendRow = {
+  label: string;
+  ORGANIC: number;
+  RECYCLABLE: number;
+  HAZARDOUS: number;
+  total: number;
+};
 
-const DAILY_30D: DailyPoint[] = Array.from({ length: 30 }).map((_, i) => {
-  const d = i + 1;
-  const base = 90 + (i % 7) * 8;
-  return {
-    date: `${String(d).padStart(2, "0")}/12`,
-    requests: base + (i % 3) * 5,
-    collectedKg: 900 + base * 8 + (i % 5) * 30,
-    completed: Math.round(base * 0.9 + (i % 4) * 3),
-  };
-});
+/* ===================== Constants ===================== */
+const CHART = {
+  organic: "#10b981",
+  recyclable: "#0ea5e9",
+  hazardous: "#f59e0b",
+  pie: ["#10b981", "#0ea5e9", "#f59e0b"],
+};
 
-const DAILY_90D: DailyPoint[] = Array.from({ length: 12 }).map((_, i) => {
-  const month = i + 1;
-  const requests = 2400 + i * 120 + (i % 2) * 80;
-  const completed = Math.round(requests * (0.88 + (i % 3) * 0.02));
-  return {
-    date: `M${month}`,
-    requests,
-    completed,
-    collectedKg: 21000 + i * 1400 + (i % 2) * 900,
-  };
-});
+const WASTE_LABEL: Record<WasteKey, string> = {
+  ORGANIC: "Hữu cơ",
+  RECYCLABLE: "Tái chế",
+  HAZARDOUS: "Nguy hại",
+};
 
-const ZONES: ZonePoint[] = [
-  { zone: "District 1", requests: 980, completed: 910, collectedKg: 10450 },
-  { zone: "District 3", requests: 860, completed: 785, collectedKg: 9050 },
-  { zone: "District 7", requests: 1120, completed: 1042, collectedKg: 12120 },
-  { zone: "Thu Duc", requests: 1340, completed: 1220, collectedKg: 14280 },
-];
+const SORT_BY_LABEL: Record<DashboardRankingSortBy, string> = {
+  weight: "Khối lượng",
+  tasks: "Số nhiệm vụ",
+  trust: "Độ tin cậy",
+};
 
-const WASTE: WastePoint[] = [
-  { type: "Plastic", valueKg: 6800 },
-  { type: "Paper", valueKg: 5200 },
-  { type: "Metal", valueKg: 2100 },
-  { type: "Organic", valueKg: 3900 },
-  { type: "Other", valueKg: 1500 },
-];
-
-const COLLECTORS: CollectorRow[] = [
-  {
-    id: "C-001",
-    name: "Nguyễn Văn A",
-    zone: "Thu Duc",
-    completedJobs: 312,
-    onTimeRate: 94,
-    avgMinutes: 28,
-  },
-  {
-    id: "C-002",
-    name: "Trần Thị B",
-    zone: "District 7",
-    completedJobs: 288,
-    onTimeRate: 92,
-    avgMinutes: 31,
-  },
-  {
-    id: "C-003",
-    name: "Lê Văn C",
-    zone: "District 1",
-    completedJobs: 265,
-    onTimeRate: 90,
-    avgMinutes: 33,
-  },
-  {
-    id: "C-004",
-    name: "Phạm Thị D",
-    zone: "District 3",
-    completedJobs: 241,
-    onTimeRate: 89,
-    avgMinutes: 35,
-  },
-  {
-    id: "C-005",
-    name: "Võ Văn E",
-    zone: "Thu Duc",
-    completedJobs: 228,
-    onTimeRate: 87,
-    avgMinutes: 37,
-  },
-];
+const INTERVAL_LABEL: Record<DashboardStatsInterval, string> = {
+  day: "Ngày",
+  week: "Tuần",
+  month: "Tháng",
+};
 
 /* ===================== Utils ===================== */
-function exportCollectorsCSV(rows: CollectorRow[]) {
+function buildRangeFromPreset(
+  preset: DatePreset,
+): [Dayjs | null, Dayjs | null] {
+  const today = dayjs();
+  if (preset === "7d") return [today.subtract(6, "day"), today];
+  if (preset === "30d") return [today.subtract(29, "day"), today];
+  if (preset === "90d") return [today.subtract(11, "month"), today];
+  return [today.subtract(6, "day"), today];
+}
+
+function exportRankingCSV(rows: DashboardRankingItem[]) {
   const header = [
     "id",
-    "name",
-    "zone",
-    "completedJobs",
-    "onTimeRate",
-    "avgMinutes",
+    "fullName",
+    "employeeCode",
+    "trustScore",
+    "completedTasks",
+    "totalWeight",
+    "avatar",
   ];
+
   const lines = [
     header.join(","),
     ...rows.map((r) =>
       [
         r.id,
-        `"${r.name}"`,
-        `"${r.zone}"`,
-        r.completedJobs,
-        r.onTimeRate,
-        r.avgMinutes,
+        `"${r.fullName ?? ""}"`,
+        `"${r.employeeCode ?? ""}"`,
+        r.trustScore ?? 0,
+        r.completedTasks ?? 0,
+        r.totalWeight ?? 0,
+        `"${r.avatar ?? ""}"`,
       ].join(","),
     ),
   ];
+
   const blob = new Blob([lines.join("\n")], {
     type: "text/csv;charset=utf-8;",
   });
+
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "enterprise-collectors.csv";
+  a.download = "enterprise-dashboard-ranking.csv";
   a.click();
   URL.revokeObjectURL(url);
 }
 
-/* ===================== Theme ===================== */
-const CHART = {
-  lineA: "#10b981", // emerald
-  lineB: "#0ea5e9", // sky
-  bar: ["#10b981", "#22c55e", "#14b8a6", "#0ea5e9"],
-  pie: ["#10b981", "#22c55e", "#14b8a6", "#0ea5e9", "#a855f7"],
-};
+function getCollectorStatus(trustScore: number) {
+  if (trustScore >= 100) {
+    return {
+      label: "Xuất sắc",
+      className: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    };
+  }
+
+  if (trustScore >= 80) {
+    return {
+      label: "Ổn định",
+      className: "bg-sky-50 text-sky-800 border-sky-200",
+    };
+  }
+
+  return {
+    label: "Cần cải thiện",
+    className: "bg-amber-50 text-amber-800 border-amber-200",
+  };
+}
+
+function getAvatarFallback(name: string) {
+  return (name || "?").trim().charAt(0).toUpperCase();
+}
 
 /* ===================== Page ===================== */
 export default function EnterpriseStatsPage() {
   const navigate = useNavigate();
 
-  // gọi để lấy endDate / trạng thái (nhẹ)
-  const { data } = useGetEnterpriseSubscriptionQuery();
+  // subscription/toast logic giữ nguyên
+  const { data: subscriptionData } = useGetEnterpriseSubscriptionQuery();
 
-  const payload = data?.data;
+  const payload = subscriptionData?.data;
   const sub = payload?.subscription;
   const pendingPayment = payload?.pendingPayment ?? null;
 
-  // toast nhắc nhở trên trang chính
   usePendingPaymentToast({
     pendingPayment,
     onResumePayment: () => {
@@ -240,74 +207,145 @@ export default function EnterpriseStatsPage() {
     },
   });
 
+  /* ===================== Filters ===================== */
   const [preset, setPreset] = useState<DatePreset>("7d");
-  const [zone, setZone] = useState<Zone | "ALL">("ALL");
-  const [wasteType, setWasteType] = useState<WasteType | "ALL">("ALL");
-
-  const [range, setRange] = useState<[Dayjs | null, Dayjs | null]>([
-    null,
-    null,
-  ]);
-
-  const daily = useMemo(() => {
-    if (preset === "7d") return DAILY_7D;
-    if (preset === "30d") return DAILY_30D;
-    if (preset === "90d") return DAILY_90D;
-    return DAILY_30D; // custom demo
-  }, [preset]);
-
-  const kpi = useMemo(() => {
-    const totalRequests = daily.reduce((s, x) => s + x.requests, 0);
-    const totalCompleted = daily.reduce((s, x) => s + x.completed, 0);
-    const totalKg = daily.reduce((s, x) => s + x.collectedKg, 0);
-    const completionRate = totalRequests
-      ? Math.round((totalCompleted / totalRequests) * 100)
-      : 0;
-    const co2SavedKg = Math.round(totalKg * 0.42);
-    const avgResponseMin = Math.max(18, Math.round(34 - completionRate * 0.1));
-
-    return {
-      totalRequests,
-      totalCompleted,
-      totalKg,
-      completionRate,
-      co2SavedKg,
-      avgResponseMin,
-    };
-  }, [daily]);
-
-  const zoneData = useMemo(
-    () => (zone === "ALL" ? ZONES : ZONES.filter((z) => z.zone === zone)),
-    [zone],
+  const [range, setRange] = useState<[Dayjs | null, Dayjs | null]>(
+    buildRangeFromPreset("7d"),
   );
+  const [interval, setInterval] = useState<DashboardStatsInterval>("day");
+  const [sortBy, setSortBy] = useState<DashboardRankingSortBy>("weight");
+  const [order, setOrder] = useState<DashboardOrder>("desc");
 
-  const wasteData = useMemo(
-    () =>
-      wasteType === "ALL" ? WASTE : WASTE.filter((w) => w.type === wasteType),
-    [wasteType],
-  );
-
-  const collectors = useMemo(() => {
-    const byZone =
-      zone === "ALL" ? COLLECTORS : COLLECTORS.filter((c) => c.zone === zone);
-    return [...byZone].sort((a, b) => b.completedJobs - a.completedJobs);
-  }, [zone]);
-
-  // preset -> sync range
   useEffect(() => {
-    const today = dayjs();
-    if (preset === "7d") setRange([today.subtract(6, "day"), today]);
-    if (preset === "30d") setRange([today.subtract(29, "day"), today]);
-    if (preset === "90d") setRange([today.subtract(11, "month"), today]);
-    // custom: giữ range user chọn
+    if (preset === "custom") return;
+    setRange(buildRangeFromPreset(preset));
   }, [preset]);
+
+  const queryReady = Boolean(range[0] && range[1]);
+
+  const dateParams = useMemo(
+    () =>
+      queryReady
+        ? {
+            startDate: range[0]!.format("YYYY-MM-DD"),
+            endDate: range[1]!.format("YYYY-MM-DD"),
+          }
+        : undefined,
+    [queryReady, range],
+  );
+
+  /* ===================== API ===================== */
+  const {
+    data: summary,
+    isLoading: isSummaryLoading,
+    isFetching: isSummaryFetching,
+    error: summaryError,
+    refetch: refetchSummary,
+  } = useGetEnterpriseDashboardSummaryQuery(dateParams, {
+    skip: !queryReady,
+  });
+
+  const {
+    data: ranking = [],
+    isLoading: isRankingLoading,
+    isFetching: isRankingFetching,
+    error: rankingError,
+    refetch: refetchRanking,
+  } = useGetEnterpriseDashboardRankingQuery(
+    dateParams
+      ? {
+          ...dateParams,
+          sortBy,
+          order,
+        }
+      : undefined,
+    {
+      skip: !queryReady,
+    },
+  );
+
+  const {
+    data: stats = [],
+    isLoading: isStatsLoading,
+    isFetching: isStatsFetching,
+    error: statsError,
+    refetch: refetchStats,
+  } = useGetEnterpriseDashboardStatsQuery(
+    dateParams
+      ? {
+          ...dateParams,
+          interval,
+        }
+      : undefined,
+    {
+      skip: !queryReady,
+    },
+  );
+
+  const isLoading = isSummaryLoading || isRankingLoading || isStatsLoading;
+
+  const isFetching = isSummaryFetching || isRankingFetching || isStatsFetching;
+
+  const hasError = Boolean(summaryError || rankingError || statsError);
+
+  const handleRetryAll = () => {
+    refetchSummary();
+    refetchRanking();
+    refetchStats();
+  };
+
+  /* ===================== Derived Data ===================== */
+  const trendData = useMemo<TrendRow[]>(
+    () =>
+      (stats ?? []).map((item) => ({
+        label: item.label,
+        ORGANIC: Number(item.ORGANIC ?? 0),
+        RECYCLABLE: Number(item.RECYCLABLE ?? 0),
+        HAZARDOUS: Number(item.HAZARDOUS ?? 0),
+        total:
+          Number(item.ORGANIC ?? 0) +
+          Number(item.RECYCLABLE ?? 0) +
+          Number(item.HAZARDOUS ?? 0),
+      })),
+    [stats],
+  );
+
+  const wasteTotals = useMemo<WasteTotalRow[]>(() => {
+    const organic = trendData.reduce((sum, item) => sum + item.ORGANIC, 0);
+    const recyclable = trendData.reduce(
+      (sum, item) => sum + item.RECYCLABLE,
+      0,
+    );
+    const hazardous = trendData.reduce((sum, item) => sum + item.HAZARDOUS, 0);
+
+    return [
+      { key: "ORGANIC", name: WASTE_LABEL.ORGANIC, value: organic },
+      { key: "RECYCLABLE", name: WASTE_LABEL.RECYCLABLE, value: recyclable },
+      { key: "HAZARDOUS", name: WASTE_LABEL.HAZARDOUS, value: hazardous },
+    ];
+  }, [trendData]);
+
+  const totalStatsWeight = useMemo(
+    () => wasteTotals.reduce((sum, item) => sum + item.value, 0),
+    [wasteTotals],
+  );
 
   const topBarSubtitle = useMemo(() => {
     const [a, b] = range;
-    if (!a || !b)
-      return "Chọn bộ lọc để xem số liệu chi tiết theo khu vực và loại rác.";
+    if (!a || !b) {
+      return "Chọn khoảng ngày để xem số liệu thống kê.";
+    }
+
     return `Dữ liệu từ ${a.format("DD/MM/YYYY")} đến ${b.format("DD/MM/YYYY")}`;
   }, [range]);
+
+  const summaryPeriodLabel = useMemo(() => {
+    if (!summary?.period?.startDate || !summary?.period?.endDate) return null;
+
+    return `${dayjs(summary.period.startDate).format("DD/MM/YYYY")} - ${dayjs(
+      summary.period.endDate,
+    ).format("DD/MM/YYYY")}`;
+  }, [summary]);
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-100">
@@ -315,22 +353,21 @@ export default function EnterpriseStatsPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 pt-6">
         <Card className="p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            {/* Title */}
             <div className="min-w-0">
               <div className="flex items-center gap-3">
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-2.5">
                   <BarChart3 className="h-5 w-5 text-emerald-700" />
                 </div>
+
                 <div className="min-w-0">
                   <h1 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-                    Thống kê doanh nghiệp
+                    Thống kê
                   </h1>
                   <p className="text-sm text-slate-600">{topBarSubtitle}</p>
                 </div>
               </div>
             </div>
 
-            {/* Filters */}
             <div className="flex flex-wrap items-center gap-2">
               <Dropdown<DatePreset>
                 label="Thời gian"
@@ -340,12 +377,11 @@ export default function EnterpriseStatsPage() {
                 options={[
                   { value: "7d", label: "7 ngày" },
                   { value: "30d", label: "30 ngày" },
-                  { value: "90d", label: "12 tháng (gộp)" },
+                  { value: "90d", label: "12 tháng" },
                   { value: "custom", label: "Tuỳ chọn" },
                 ]}
               />
 
-              {/* Date range pill (wrap cho giống layout cũ) */}
               <div
                 className={cx(
                   "inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm",
@@ -369,43 +405,51 @@ export default function EnterpriseStatsPage() {
                 />
               </div>
 
-              <Dropdown<Zone | "ALL">
-                label="Khu vực"
-                value={zone}
-                onChange={setZone}
-                icon={MapPinned}
+              <Dropdown<DashboardStatsInterval>
+                label="Nhóm thời gian"
+                value={interval}
+                onChange={setInterval}
+                icon={Filter}
                 options={[
-                  { value: "ALL", label: "Tất cả" },
-                  { value: "District 1", label: "Quận 1" },
-                  { value: "District 3", label: "Quận 3" },
-                  { value: "District 7", label: "Quận 7" },
-                  { value: "Thu Duc", label: "Thủ Đức" },
+                  { value: "day", label: "Theo ngày" },
+                  { value: "week", label: "Theo tuần" },
+                  { value: "month", label: "Theo tháng" },
                 ]}
               />
 
-              <Dropdown<WasteType | "ALL">
-                label="Loại rác"
-                value={wasteType}
-                onChange={setWasteType}
+              <Dropdown<DashboardRankingSortBy>
+                label="Xếp hạng theo"
+                value={sortBy}
+                onChange={setSortBy}
+                icon={TrendingUp}
+                options={[
+                  { value: "weight", label: "Khối lượng" },
+                  { value: "tasks", label: "Số nhiệm vụ" },
+                  { value: "trust", label: "Độ tin cậy" },
+                ]}
+              />
+
+              <Dropdown<DashboardOrder>
+                label="Thứ tự"
+                value={order}
+                onChange={setOrder}
                 icon={Filter}
                 options={[
-                  { value: "ALL", label: "Tất cả" },
-                  { value: "Plastic", label: "Nhựa" },
-                  { value: "Paper", label: "Giấy" },
-                  { value: "Metal", label: "Kim loại" },
-                  { value: "Organic", label: "Hữu cơ" },
-                  { value: "Other", label: "Khác" },
+                  { value: "desc", label: "Giảm dần" },
+                  { value: "asc", label: "Tăng dần" },
                 ]}
               />
 
               <button
-                onClick={() => exportCollectorsCSV(collectors)}
+                onClick={() => exportRankingCSV(ranking)}
                 className={cx(
                   "inline-flex items-center gap-2 rounded-xl border border-emerald-300 bg-white px-3 py-2",
                   "text-sm font-semibold text-emerald-800 shadow-sm",
                   "hover:bg-emerald-50 hover:border-emerald-400 transition-colors",
+                  "disabled:opacity-60 disabled:cursor-not-allowed",
                 )}
                 type="button"
+                disabled={!ranking.length}
               >
                 <Download className="h-4 w-4" />
                 Xuất CSV
@@ -417,78 +461,120 @@ export default function EnterpriseStatsPage() {
 
       {/* Content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 space-y-6">
+        {/* Error */}
+        {hasError ? (
+          <Card className="p-4 border border-red-200 bg-red-50">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-bold text-red-800">
+                  Không tải được dữ liệu dashboard
+                </p>
+                <p className="text-sm text-red-700">
+                  Vui lòng kiểm tra token, quyền truy cập hoặc thử tải lại.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleRetryAll}
+                className="inline-flex items-center gap-2 rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Tải lại
+              </button>
+            </div>
+          </Card>
+        ) : null}
+
         {/* KPI */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
           <StatCard
-            title="Yêu cầu"
-            value={formatNumber(kpi.totalRequests)}
-            sub="Tổng số yêu cầu"
-            icon={TrendingUp}
-            trend={{ label: "+6.2%", positive: true }}
-          />
-          <StatCard
-            title="Hoàn tất"
-            value={formatNumber(kpi.totalCompleted)}
-            sub={`Tỷ lệ: ${kpi.completionRate}%`}
-            icon={BarChart3}
-            trend={{ label: "+2.1%", positive: true }}
-          />
-          <StatCard
             title="Khối lượng"
-            value={`${formatNumber(kpi.totalKg)} kg`}
-            sub="Thu gom"
+            value={
+              isLoading
+                ? "..."
+                : `${formatNumber(summary?.totalWeight ?? 0)} kg`
+            }
+            sub="Tổng khối lượng thu gom"
             icon={Leaf}
-            trend={{ label: "+4.8%", positive: true }}
           />
+
           <StatCard
-            title="CO₂ tiết kiệm"
-            value={`${formatNumber(kpi.co2SavedKg)} kg`}
-            sub="Ước tính"
-            icon={Leaf}
-            trend={{ label: "+3.5%", positive: true }}
+            title="Báo cáo hoàn tất"
+            value={
+              isLoading
+                ? "..."
+                : formatNumber(summary?.totalCompletedReports ?? 0)
+            }
+            sub="Tổng report đã hoàn tất"
+            icon={ClipboardList}
           />
+
           <StatCard
-            title="Collector"
-            value={formatNumber(collectors.length)}
-            sub="Đang hoạt động"
+            title="Nhân viên hoạt động"
+            value={
+              isLoading ? "..." : formatNumber(summary?.activeCollectors ?? 0)
+            }
+            sub="Số nhân viên đang hoạt động"
             icon={Users}
-            trend={{ label: "-1.0%", positive: false }}
           />
+
           <StatCard
-            title="Phản hồi TB"
-            value={`${kpi.avgResponseMin} phút`}
-            sub="Từ tạo yêu cầu"
+            title="Nhiệm vụ hôm nay"
+            value={
+              isLoading ? "..." : formatNumber(summary?.todayTasks?.total ?? 0)
+            }
+            sub={`Chờ xử lý: ${formatNumber(summary?.todayTasks?.pending ?? 0)}`}
+            icon={Truck}
+          />
+
+          <StatCard
+            title="Đang thu gom"
+            value={
+              isLoading
+                ? "..."
+                : formatNumber(summary?.todayTasks?.collecting ?? 0)
+            }
+            sub="Công việc đang được xử lý"
             icon={TrendingUp}
-            trend={{ label: "-0.8%", positive: true }}
+          />
+
+          <StatCard
+            title="Hoàn tất hôm nay"
+            value={
+              isLoading
+                ? "..."
+                : formatNumber(summary?.todayTasks?.completed ?? 0)
+            }
+            sub="Công việc hoàn tất trong ngày"
+            icon={ShieldCheck}
           />
         </div>
 
         {/* Charts */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          {/* Line chart */}
           <Card className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-bold text-slate-900">
-                  Xu hướng theo thời gian
+                  Xu hướng rác thải theo thời gian
                 </p>
-                <p className="text-xs text-slate-600">Yêu cầu / Hoàn tất</p>
+                <p className="text-xs text-slate-600">
+                  Theo {INTERVAL_LABEL[interval].toLowerCase()}
+                </p>
               </div>
+
               <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                {preset === "7d"
-                  ? "7 ngày"
-                  : preset === "30d"
-                    ? "30 ngày"
-                    : preset === "90d"
-                      ? "12 tháng"
-                      : "Tuỳ chọn"}
+                {INTERVAL_LABEL[interval]}
               </span>
             </div>
 
             <div className="mt-4 h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={daily}>
+                <LineChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <ReTooltip
                     contentStyle={{
@@ -499,17 +585,25 @@ export default function EnterpriseStatsPage() {
                   <Legend />
                   <Line
                     type="monotone"
-                    dataKey="requests"
-                    name="Yêu cầu"
-                    stroke={CHART.lineA}
+                    dataKey="ORGANIC"
+                    name="Hữu cơ"
+                    stroke={CHART.organic}
                     strokeWidth={3}
                     dot={false}
                   />
                   <Line
                     type="monotone"
-                    dataKey="completed"
-                    name="Hoàn tất"
-                    stroke={CHART.lineB}
+                    dataKey="RECYCLABLE"
+                    name="Tái chế"
+                    stroke={CHART.recyclable}
+                    strokeWidth={3}
+                    dot={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="HAZARDOUS"
+                    name="Nguy hại"
+                    stroke={CHART.hazardous}
                     strokeWidth={3}
                     dot={false}
                   />
@@ -518,24 +612,28 @@ export default function EnterpriseStatsPage() {
             </div>
           </Card>
 
+          {/* Bar chart */}
           <Card className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-bold text-slate-900">Theo khu vực</p>
+                <p className="text-sm font-bold text-slate-900">
+                  Tổng khối lượng theo nhóm rác
+                </p>
                 <p className="text-xs text-slate-600">
-                  Khối lượng thu gom (kg)
+                  Cộng dồn trong khoảng đã chọn
                 </p>
               </div>
+
               <span className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-full px-2 py-0.5">
-                {zone === "ALL" ? "All zones" : zone}
+                {formatNumber(totalStatsWeight)} kg
               </span>
             </div>
 
             <div className="mt-4 h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={zoneData}>
+                <BarChart data={wasteTotals}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="zone" tick={{ fontSize: 11 }} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
                   <ReTooltip
                     contentStyle={{
@@ -543,11 +641,15 @@ export default function EnterpriseStatsPage() {
                       border: "1px solid #e2e8f0",
                     }}
                   />
-                  <Bar dataKey="collectedKg" radius={[12, 12, 0, 0]}>
-                    {zoneData.map((_, idx) => (
+                  <Bar
+                    dataKey="value"
+                    name="Khối lượng"
+                    radius={[12, 12, 0, 0]}
+                  >
+                    {wasteTotals.map((_, idx) => (
                       <Cell
                         key={idx}
-                        fill={CHART.bar[idx % CHART.bar.length]}
+                        fill={CHART.pie[idx % CHART.pie.length]}
                       />
                     ))}
                   </Bar>
@@ -556,6 +658,7 @@ export default function EnterpriseStatsPage() {
             </div>
           </Card>
 
+          {/* Pie chart */}
           <Card className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -566,8 +669,9 @@ export default function EnterpriseStatsPage() {
                   Tỷ trọng theo khối lượng
                 </p>
               </div>
+
               <span className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-full px-2 py-0.5">
-                {wasteType === "ALL" ? "All types" : wasteType}
+                {INTERVAL_LABEL[interval]}
               </span>
             </div>
 
@@ -575,14 +679,14 @@ export default function EnterpriseStatsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={wasteData}
-                    dataKey="valueKg"
-                    nameKey="type"
+                    data={wasteTotals}
+                    dataKey="value"
+                    nameKey="name"
                     innerRadius={55}
                     outerRadius={85}
                     paddingAngle={2}
                   >
-                    {wasteData.map((_, idx) => (
+                    {wasteTotals.map((_, idx) => (
                       <Cell
                         key={idx}
                         fill={CHART.pie[idx % CHART.pie.length]}
@@ -602,17 +706,21 @@ export default function EnterpriseStatsPage() {
           </Card>
         </div>
 
-        {/* Table */}
+        {/* Ranking table */}
         <Card className="overflow-hidden" hover={false}>
           <div className="p-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-bold text-slate-900">Top Collectors</p>
+              <p className="text-sm font-bold text-slate-900">
+                Bảng xếp hạng collector
+              </p>
               <p className="text-xs text-slate-600">
-                Xếp hạng theo số job hoàn tất (kỳ hiện tại)
+                Sắp xếp theo {SORT_BY_LABEL[sortBy].toLowerCase()} (
+                {order === "desc" ? "giảm dần" : "tăng dần"})
               </p>
             </div>
+
             <div className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1 w-fit">
-              {zone === "ALL" ? "Tất cả khu vực" : `Khu vực: ${zone}`}
+              {ranking.length} collector
             </div>
           </div>
 
@@ -620,84 +728,116 @@ export default function EnterpriseStatsPage() {
             <table className="min-w-full">
               <thead className="bg-slate-50 border-y border-slate-200">
                 <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                  <th className="px-4 py-3">Collector</th>
-                  <th className="px-4 py-3">Khu vực</th>
+                  <th className="px-4 py-3">Nhân viên</th>
+                  <th className="px-4 py-3">Mã Nhân viên</th>
                   <th className="px-4 py-3">Hoàn tất</th>
-                  <th className="px-4 py-3">Đúng giờ</th>
-                  <th className="px-4 py-3">Thời gian TB</th>
+                  <th className="px-4 py-3">Khối lượng</th>
+                  <th className="px-4 py-3">Điểm uy tín</th>
                   <th className="px-4 py-3">Trạng thái</th>
                 </tr>
               </thead>
+
               <tbody>
-                {collectors.map((c) => {
-                  const good = c.onTimeRate >= 90;
-                  return (
-                    <tr
-                      key={c.id}
-                      className="border-b border-slate-100 hover:bg-emerald-50/30 transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-slate-900">
-                          {c.name}
-                        </div>
-                        <div className="text-xs text-slate-500">{c.id}</div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
-                        {c.zone}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-slate-900">
-                        {formatNumber(c.completedJobs)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 w-24 rounded-full bg-slate-100 overflow-hidden">
-                            <div
-                              className={cx(
-                                "h-full",
-                                good ? "bg-emerald-500" : "bg-amber-500",
-                              )}
-                              style={{
-                                width: `${Math.min(100, Math.max(0, c.onTimeRate))}%`,
-                              }}
-                            />
+                {ranking.length ? (
+                  ranking.map((collector) => {
+                    const status = getCollectorStatus(collector.trustScore);
+
+                    return (
+                      <tr
+                        key={collector.id}
+                        className="border-b border-slate-100 hover:bg-emerald-50/30 transition-colors"
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            {collector.avatar ? (
+                              <img
+                                src={collector.avatar}
+                                alt={collector.fullName}
+                                className="h-10 w-10 rounded-full object-cover border border-slate-200"
+                              />
+                            ) : (
+                              <div className="h-10 w-10 rounded-full border border-slate-200 bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-bold">
+                                {getAvatarFallback(collector.fullName)}
+                              </div>
+                            )}
+
+                            <div>
+                              <div className="font-semibold text-slate-900">
+                                {collector.fullName}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                ID: {collector.id}
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-sm font-semibold text-slate-900">
-                            {c.onTimeRate}%
+                        </td>
+
+                        <td className="px-4 py-3 text-sm text-slate-700">
+                          {collector.employeeCode}
+                        </td>
+
+                        <td className="px-4 py-3 text-sm font-semibold text-slate-900">
+                          {formatNumber(collector.completedTasks)}
+                        </td>
+
+                        <td className="px-4 py-3 text-sm font-semibold text-slate-900">
+                          {formatNumber(collector.totalWeight)} kg
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-24 rounded-full bg-slate-100 overflow-hidden">
+                              <div
+                                className={cx(
+                                  "h-full",
+                                  collector.trustScore >= 100
+                                    ? "bg-emerald-500"
+                                    : collector.trustScore >= 80
+                                      ? "bg-sky-500"
+                                      : "bg-amber-500",
+                                )}
+                                style={{
+                                  width: `${Math.min(
+                                    100,
+                                    Math.max(0, collector.trustScore),
+                                  )}%`,
+                                }}
+                              />
+                            </div>
+
+                            <span className="text-sm font-semibold text-slate-900">
+                              {collector.trustScore}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-3">
+                          <span
+                            className={cx(
+                              "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border",
+                              status.className,
+                            )}
+                          >
+                            {status.label}
                           </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
-                        {c.avgMinutes} phút
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={cx(
-                            "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border",
-                            good
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                              : "bg-amber-50 text-amber-800 border-amber-200",
-                          )}
-                        >
-                          {good ? "Ổn định" : "Cần cải thiện"}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-4 py-10 text-center text-sm text-slate-500"
+                    >
+                      {isLoading || isFetching
+                        ? "Đang tải bảng xếp hạng..."
+                        : "Không có dữ liệu collector trong khoảng thời gian đã chọn."}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
-          </div>
-
-          <div className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-slate-600">
-            <span>
-              Tip: dùng bộ lọc{" "}
-              <span className="font-semibold text-slate-900">Khu vực</span> để
-              xem hiệu suất theo từng địa bàn.
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span>On-time ≥ 90%</span>
-            </span>
           </div>
         </Card>
       </div>
