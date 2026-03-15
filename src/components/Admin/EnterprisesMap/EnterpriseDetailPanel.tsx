@@ -10,6 +10,10 @@ import {
   MapPin,
   Calendar,
   Trash2,
+  Users,
+  Wifi,
+  WifiOff,
+  FileText,
 } from "lucide-react";
 import type { EnterpriseDetailMap } from "@/api/admin/enterprise-map";
 import { fetchEnterpriseDetailMap } from "@/api/admin/enterprise-map";
@@ -254,6 +258,60 @@ const EnterpriseDetailPanel: React.FC<EnterpriseDetailPanelProps> = ({
                           </div>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* Activity Stats */}
+                  {enterprise.stats && (
+                    <div className="space-y-4 pt-2">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-[2px]">
+                        Thống kê hoạt động
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-emerald-50/50 border border-emerald-100 p-4 rounded-xl">
+                          <div className="flex items-center gap-2 mb-2 text-emerald-600">
+                            <Users className="w-4 h-4" />
+                            <p className="text-[11px] font-bold uppercase tracking-wider">
+                              Nhân viên
+                            </p>
+                          </div>
+                          <p className="text-2xl font-bold text-slate-900">
+                            {enterprise.stats.totalCollectors || enterprise.collectorCount || 0}
+                          </p>
+                        </div>
+
+                        <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-xl">
+                          <div className="flex items-center gap-2 mb-2 text-blue-600">
+                            <FileText className="w-4 h-4" />
+                            <p className="text-[11px] font-bold uppercase tracking-wider">
+                              Báo cáo
+                            </p>
+                          </div>
+                          <p className="text-2xl font-bold text-slate-900">
+                            {enterprise.stats.totalReports || 0}
+                          </p>
+                        </div>
+
+                        <div className="bg-white border border-slate-100 p-3 rounded-xl flex items-center gap-3 shadow-sm">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                            <Wifi className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase">Tài xế trong ca làm</p>
+                            <p className="text-sm font-bold text-emerald-700">{enterprise.stats.onlineCollectors || 0}</p>
+                          </div>
+                        </div>
+
+                        <div className="bg-white border border-slate-100 p-3 rounded-xl flex items-center gap-3 shadow-sm">
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
+                            <WifiOff className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase">Tài xế ngoài ca làm</p>
+                            <p className="text-sm font-bold text-slate-600">{enterprise.stats.offlineCollectors || 0}</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
