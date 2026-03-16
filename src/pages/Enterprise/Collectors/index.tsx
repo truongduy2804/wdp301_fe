@@ -222,7 +222,10 @@ export default function EnterpriseCollectorsPage() {
       : typeof meta.totalItems === "number" && meta.totalItems > 0
         ? Math.ceil(meta.totalItems / limit)
         : null;
-
+  const shouldShowPagination =
+    computedTotalPages == null
+      ? items.length === limit
+      : computedTotalPages > 1;
   const canPrev = page > 1;
   const canNext =
     typeof meta.hasNextPage === "boolean"
@@ -338,41 +341,43 @@ export default function EnterpriseCollectorsPage() {
                 onDelete={onAskDelete}
               />
 
-              <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-4 py-3">
-                <div className="text-sm text-slate-600">
-                  Trang{" "}
-                  <span className="font-semibold text-slate-900">{page}</span>
-                  {computedTotalPages ? (
-                    <>
-                      {" "}
-                      /{" "}
-                      <span className="font-semibold">
-                        {computedTotalPages}
-                      </span>
-                    </>
-                  ) : null}
-                </div>
+              {shouldShowPagination && (
+                <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-4 py-3">
+                  <div className="text-sm text-slate-600">
+                    Trang{" "}
+                    <span className="font-semibold text-slate-900">{page}</span>
+                    {computedTotalPages ? (
+                      <>
+                        {" "}
+                        /{" "}
+                        <span className="font-semibold">
+                          {computedTotalPages}
+                        </span>
+                      </>
+                    ) : null}
+                  </div>
 
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    disabled={!canPrev}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="!rounded-xl !px-3 !py-1.5"
-                  >
-                    Trước
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      disabled={!canPrev}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      className="!rounded-xl !px-3 !py-1.5"
+                    >
+                      Trước
+                    </Button>
 
-                  <Button
-                    variant="outline"
-                    disabled={!canNext}
-                    onClick={() => setPage((p) => p + 1)}
-                    className="!rounded-xl !px-3 !py-1.5"
-                  >
-                    Sau
-                  </Button>
+                    <Button
+                      variant="outline"
+                      disabled={!canNext}
+                      onClick={() => setPage((p) => p + 1)}
+                      className="!rounded-xl !px-3 !py-1.5"
+                    >
+                      Sau
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </Card>

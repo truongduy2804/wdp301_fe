@@ -711,7 +711,7 @@ export default function EnterpriseStatsPage() {
           <div className="p-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-bold text-slate-900">
-                Bảng xếp hạng collector
+                Bảng xếp hạng nhân viên
               </p>
               <p className="text-xs text-slate-600">
                 Sắp xếp theo {SORT_BY_LABEL[sortBy].toLowerCase()} (
@@ -720,14 +720,14 @@ export default function EnterpriseStatsPage() {
             </div>
 
             <div className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1 w-fit">
-              {ranking.length} collector
+              {ranking.length} nhân viên
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-slate-50 border-y border-slate-200">
-                <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
+                <tr className="text-left text-xs font-semibold uppercase  text-slate-700">
                   <th className="px-4 py-3">Nhân viên</th>
                   <th className="px-4 py-3">Mã Nhân viên</th>
                   <th className="px-4 py-3">Hoàn tất</th>
@@ -829,7 +829,7 @@ export default function EnterpriseStatsPage() {
                     >
                       {isLoading || isFetching
                         ? "Đang tải bảng xếp hạng..."
-                        : "Không có dữ liệu collector trong khoảng thời gian đã chọn."}
+                        : "Không có dữ liệu nhân viên trong khoảng thời gian đã chọn."}
                     </td>
                   </tr>
                 )}

@@ -5,7 +5,7 @@ import type { ColumnsType } from "antd/es/table";
 import { Eye, Phone, User2 } from "lucide-react";
 
 import type { EnterpriseReport } from "@/redux/api/enterprise/reports/types";
-import TagPill from "../components/tagPill";
+import TagPill from "./tagPill";
 
 type Props = {
   data: EnterpriseReport[];
