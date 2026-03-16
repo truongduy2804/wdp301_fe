@@ -765,9 +765,6 @@ export default function EnterpriseStatsPage() {
                               <div className="font-semibold text-slate-900">
                                 {collector.fullName}
                               </div>
-                              <div className="text-xs text-slate-500">
-                                ID: {collector.id}
-                              </div>
                             </div>
                           </div>
                         </td>

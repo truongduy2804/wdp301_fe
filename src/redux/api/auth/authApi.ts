@@ -27,6 +27,8 @@ function normalizeLogin(
         fullname: resp.data.user.fullName,
         email: resp.data.user.email,
         role: resp.data.user.role,
+        avatar: resp.data.user.avatar,
+        status: resp.data.user.status,
         permissions: resp.data.user.permissions ?? [],
       },
     },

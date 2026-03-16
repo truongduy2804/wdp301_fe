@@ -1,11 +1,14 @@
-// src/utils/authStorage.ts
 import { jwtDecode } from "jwt-decode";
+
+export type UserStatus = "ACTIVE" | "INACTIVE";
 
 export type PersistedProfile = {
   id: number;
   fullname: string;
   email: string;
   role: string;
+  avatar?: string;
+  status?: UserStatus;
   permissions?: string[];
 } | null;
 
@@ -16,7 +19,7 @@ const REFRESH_TOKEN_KEY = "auth_refresh_token";
 const ALLOW_PERSIST =
   (import.meta.env.VITE_ALLOW_PERSIST_ACCESS_TOKEN ?? "true") === "true";
 
-const MAX_TTL_MIN = Number(import.meta.env.VITE_PERSIST_TOKEN_MAX_MIN ?? 1440); // 24h
+const MAX_TTL_MIN = Number(import.meta.env.VITE_PERSIST_TOKEN_MAX_MIN ?? 1440);
 
 export function decodeExp(token: string): number | null {
   try {
@@ -32,12 +35,18 @@ export function readProfile(): { user: PersistedProfile; remember: boolean } {
   try {
     const raw =
       sessionStorage.getItem(PROFILE_KEY) ?? localStorage.getItem(PROFILE_KEY);
+
     if (!raw) return { user: null, remember: false };
+
     const parsed = JSON.parse(raw) as {
       user: PersistedProfile;
       remember?: boolean;
     };
-    return { user: parsed.user ?? null, remember: !!parsed.remember };
+
+    return {
+      user: parsed.user ?? null,
+      remember: !!parsed.remember,
+    };
   } catch {
     return { user: null, remember: false };
   }
@@ -45,6 +54,7 @@ export function readProfile(): { user: PersistedProfile; remember: boolean } {
 
 export function writeProfile(user: PersistedProfile, remember: boolean) {
   const raw = JSON.stringify({ user, remember });
+
   try {
     if (remember) {
       localStorage.setItem(PROFILE_KEY, raw);
@@ -70,6 +80,7 @@ export function persistTokens(
   remember: boolean,
 ) {
   if (!ALLOW_PERSIST) return;
+
   try {
     const store = remember ? localStorage : sessionStorage;
     const other = remember ? sessionStorage : localStorage;
@@ -80,7 +91,6 @@ export function persistTokens(
     if (refreshToken) store.setItem(REFRESH_TOKEN_KEY, refreshToken);
     else store.removeItem(REFRESH_TOKEN_KEY);
 
-    // xoá ở kho còn lại
     other.removeItem(ACCESS_TOKEN_KEY);
     other.removeItem(REFRESH_TOKEN_KEY);
   } catch {}
@@ -88,22 +98,25 @@ export function persistTokens(
 
 export function readAccessToken(): string | null {
   if (!ALLOW_PERSIST) return null;
+
   try {
     const raw =
       sessionStorage.getItem(ACCESS_TOKEN_KEY) ??
       localStorage.getItem(ACCESS_TOKEN_KEY);
+
     if (!raw) return null;
 
-    // check exp/TTL
     const exp = decodeExp(raw);
     if (exp) {
       const msLeft = exp * 1000 - Date.now();
       const minsLeft = msLeft / 60000;
+
       if (minsLeft <= 0 || minsLeft > MAX_TTL_MIN) {
         clearTokens();
         return null;
       }
     }
+
     return raw;
   } catch {
     return null;
@@ -112,6 +125,7 @@ export function readAccessToken(): string | null {
 
 export function readRefreshToken(): string | null {
   if (!ALLOW_PERSIST) return null;
+
   try {
     return (
       sessionStorage.getItem(REFRESH_TOKEN_KEY) ??

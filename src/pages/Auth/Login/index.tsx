@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/Form_Input";
 
 import { useLoginMutation } from "@/redux/api/auth/authApi";
-import { setLoggedIn } from "@/redux/feature/authSlice";
+import { useLazyGetAccountProfileQuery } from "@/redux/api/account/profileApi";
+import { setLoggedIn, setUserProfile } from "@/redux/feature/authSlice";
 import { useAppDispatch } from "@/redux/store/hooks";
 
 interface LoginProps {
@@ -36,7 +37,6 @@ const validateEmailOnly = (value: string) => {
 };
 
 function getApiErrorMessage(err: any): string {
-  // unwrap() sẽ throw FetchBaseQueryError / SerializedError
   return (
     err?.data?.message || err?.error || err?.message || "Đăng nhập thất bại"
   );
@@ -47,6 +47,7 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
   const dispatch = useAppDispatch();
 
   const [loginApi, { isLoading }] = useLoginMutation();
+  const [getAccountProfile] = useLazyGetAccountProfileQuery();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -81,8 +82,7 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
         password,
       }).unwrap();
 
-      // res.data đã được transformResponse normalize thành:
-      // { accessToken, refreshToken, expiresIn, user: { id, fullname, email, role, permissions } }
+      // 1) Lưu token + user cơ bản từ API login
       dispatch(
         setLoggedIn({
           accessToken: res.data.accessToken,
@@ -92,10 +92,35 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
         }),
       );
 
+      let finalRole = (res.data.user.role || "").toUpperCase();
+
+      // 2) Gọi profile để lấy dữ liệu đầy đủ hơn: avatar, status...
+      try {
+        const profile = await getAccountProfile().unwrap();
+
+        dispatch(
+          setUserProfile({
+            user: {
+              id: profile.id,
+              fullname: profile.fullName,
+              email: profile.email,
+              role: profile.role,
+              avatar: profile.avatar ?? undefined,
+              status: profile.status,
+              permissions: res.data.user.permissions ?? [],
+            },
+            remember,
+          }),
+        );
+
+        finalRole = (profile.role || finalRole).toUpperCase();
+      } catch (profileErr) {
+        console.error("Lấy profile sau login thất bại:", profileErr);
+      }
+
       toast.success("Đăng nhập thành công!", { autoClose: 1400 });
 
-      const role = (res.data.user.role || "").toUpperCase();
-      const target = role.includes("ADMIN")
+      const target = finalRole.includes("ADMIN")
         ? endPoint.ADMIN
         : endPoint.ENTERPRISE;
 

@@ -115,6 +115,12 @@ const UserMenu: React.FC<UserMenuProps> = ({
   // user lấy từ redux (không mock)
   const fullname = authUser?.fullname ?? "";
   const email = authUser?.email ?? "";
+  const avatar = authUser?.avatar ?? "";
+
+  const status = authUser?.status ?? "";
+  const isActive = status === "ACTIVE";
+
+  console.log("status:", status);
 
   const [open, setOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -216,13 +222,20 @@ const UserMenu: React.FC<UserMenuProps> = ({
         <div className="relative flex items-center gap-2">
           <div className="relative">
             <AvatarUserImage
+              src={avatar}
               name={fullname || email || "User"}
               size={36}
               ringClassName="ring-2 ring-white"
             />
 
             {!isLoggingOut && (
-              <span className="absolute -bottom-0.5 right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
+              <span
+                className={[
+                  "absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white z-10",
+                  isActive ? "bg-emerald-500" : "bg-slate-400",
+                ].join(" ")}
+                title={isActive ? "Đang hoạt động" : "Không hoạt động"}
+              />
             )}
             {isLoggingOut && (
               <span className="pointer-events-none absolute inset-[-3px] rounded-full border-2 border-transparent border-t-sky-500 animate-spin" />
