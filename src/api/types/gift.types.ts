@@ -10,12 +10,17 @@ import type { ApiResponse } from './common.types';
 // Gift Types
 // ============================================================================
 
+/** Gift category from backend enum GiftType */
+export type GiftType = 'FOOD' | 'SHOPPING' | 'OTHER';
+
 /** Gift item in the system */
 export interface Gift {
   /** Unique gift ID */
   id: number;
   /** Gift name */
   name: string;
+  /** Gift category */
+  type: GiftType;
   /** Gift description */
   description?: string;
   /** Required loyalty points to redeem */
@@ -36,6 +41,8 @@ export interface Gift {
 export interface CreateGiftDto {
   /** Gift name */
   name: string;
+  /** Gift category */
+  type: GiftType;
   /** Gift description */
   description?: string;
   /** Required loyalty points to redeem */
@@ -50,6 +57,8 @@ export interface CreateGiftDto {
 export interface UpdateGiftDto {
   /** Gift name */
   name?: string;
+  /** Gift category */
+  type?: GiftType;
   /** Gift description */
   description?: string;
   /** Required loyalty points */

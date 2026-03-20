@@ -8,3 +8,5 @@
 export * from './common.types';
 export * from './admin.types';
 export * from './gift.types'
+export * from './complaint.types'
+export * from './violation.types'

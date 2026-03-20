@@ -1,11 +1,13 @@
 // filepath: src/pages/Admin/Gifts/index.tsx
 
 import React, { useState, useEffect, useMemo } from "react";
+import { toast } from "react-toastify";
 import {
   Gift as GiftIcon,
   Plus,
   Search,
   Edit2,
+  Trash2,
   Power,
   Package,
   Coins,
@@ -21,28 +23,51 @@ import {
   Modal,
   EmptyState,
 } from "@/components/ui/page/componentUI";
+import ConfirmModal from "@/pages/Enterprise/components/confirmModal";
+import Pagination from "@/components/Pagination";
 import {
   fetchGifts,
   createGift,
   updateGift,
   toggleGiftActive,
+  deleteGift,
 } from "@/api/admin/gift";
-import type { Gift, CreateGiftDto, UpdateGiftDto } from "@/api/types/gift.types";
+import type {
+  Gift,
+  GiftType,
+  CreateGiftDto,
+  UpdateGiftDto,
+} from "@/api/types/gift.types";
+
+const GIFT_TYPE_OPTIONS: Array<{ value: GiftType; label: string }> = [
+  { value: "FOOD", label: "Ăn uống" },
+  { value: "SHOPPING", label: "Mua sắm" },
+  { value: "OTHER", label: "Khác" },
+];
+
+function getGiftTypeLabel(type: GiftType): string {
+  return GIFT_TYPE_OPTIONS.find((option) => option.value === type)?.label || type;
+}
 
 // ============================================================================
 // Main Component
 // ============================================================================
 
 export default function AdminGifts() {
+  const PAGE_SIZE = 9;
+
   // State
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingGift, setEditingGift] = useState<Gift | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Gift | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load gifts on mount
   useEffect(() => {
@@ -75,6 +100,23 @@ export default function AdminGifts() {
     );
   }, [gifts, searchQuery]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredGifts.length / PAGE_SIZE));
+
+  const paginatedGifts = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredGifts.slice(start, start + PAGE_SIZE);
+  }, [filteredGifts, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   // Handlers
   const handleCreate = () => {
     setEditingGift(null);
@@ -92,9 +134,32 @@ export default function AdminGifts() {
       setGifts((prev) =>
         prev.map((g) => (g.id === giftId ? updated : g))
       );
+      toast.success(
+        updated.isActive ? "Đã mở quà tặng" : "Đã khóa quà tặng",
+        { autoClose: 1400 }
+      );
     } catch (err) {
       console.error("Failed to toggle gift:", err);
-      alert("Không thể thay đổi trạng thái quà tặng");
+      toast.error("Không thể thay đổi trạng thái quà tặng");
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await deleteGift(deleteTarget.id);
+      setGifts((prev) => prev.filter((g) => g.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      toast.success("Xóa quà tặng thành công", { autoClose: 1400 });
+    } catch (err) {
+      console.error("Failed to delete gift:", err);
+      toast.error("Không thể xóa quà tặng");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -189,16 +254,27 @@ export default function AdminGifts() {
               }
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredGifts.map((gift) => (
-                <GiftCard
-                  key={gift.id}
-                  gift={gift}
-                  onEdit={handleEdit}
-                  onToggleActive={handleToggleActive}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {paginatedGifts.map((gift) => (
+                  <GiftCard
+                    key={gift.id}
+                    gift={gift}
+                    onEdit={handleEdit}
+                    onToggleActive={handleToggleActive}
+                    onDelete={setDeleteTarget}
+                  />
+                ))}
+              </div>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={PAGE_SIZE}
+                totalItems={filteredGifts.length}
+                onPageChange={setCurrentPage}
+              />
+            </>
           )}
         </Card>
       </div>
@@ -211,6 +287,26 @@ export default function AdminGifts() {
           onSuccess={handleSaveSuccess}
         />
       )}
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title={<div className="w-full text-center text-xl font-semibold">Xác nhận xóa quà tặng</div>}
+        content={
+          <div className="w-full py-2 text-center text-lg font-normal text-slate-900 leading-7">
+            Bạn có chắc muốn xóa quà tặng {deleteTarget?.name}?
+          </div>
+        }
+        okText="Xóa"
+        cancelText="Hủy"
+        tone="rose"
+        loading={isDeleting}
+        onClose={() => {
+          if (!isDeleting) {
+            setDeleteTarget(null);
+          }
+        }}
+        onOk={handleConfirmDelete}
+      />
     </div>
   );
 }
@@ -223,9 +319,10 @@ interface GiftCardProps {
   gift: Gift;
   onEdit: (gift: Gift) => void;
   onToggleActive: (giftId: number) => void;
+  onDelete: (gift: Gift) => void;
 }
 
-function GiftCard({ gift, onEdit, onToggleActive }: GiftCardProps) {
+function GiftCard({ gift, onEdit, onToggleActive, onDelete }: GiftCardProps) {
   const [isToggling, setIsToggling] = useState(false);
 
   const handleToggle = async () => {
@@ -281,6 +378,9 @@ function GiftCard({ gift, onEdit, onToggleActive }: GiftCardProps) {
         "font-semibold text-slate-900 mb-1 pr-20 transition-opacity",
         !gift.isActive && "opacity-50"
       )}>{gift.name}</h3>
+      <div className="mb-2">
+        <Badge tone="slate">{getGiftTypeLabel(gift.type)}</Badge>
+      </div>
       {gift.description && (
         <p className={cx(
           "text-sm text-slate-600 mb-3 line-clamp-2 transition-opacity",
@@ -331,6 +431,13 @@ function GiftCard({ gift, onEdit, onToggleActive }: GiftCardProps) {
           )}
           {gift.isActive ? "Khóa" : "Mở"}
         </button>
+        <button
+          onClick={() => onDelete(gift)}
+          className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 hover:border-red-300 transition-all flex items-center justify-center"
+          aria-label={`Xóa quà tặng ${gift.name}`}
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );
@@ -351,6 +458,7 @@ function GiftFormModal({ gift, onClose, onSuccess }: GiftFormModalProps) {
 
   // Form state
   const [name, setName] = useState(gift?.name || "");
+  const [type, setType] = useState<GiftType>(gift?.type || "SHOPPING");
   const [description, setDescription] = useState(gift?.description || "");
   const [requiredPoints, setRequiredPoints] = useState(
     gift?.requiredPoints?.toString() || ""
@@ -418,6 +526,7 @@ function GiftFormModal({ gift, onClose, onSuccess }: GiftFormModalProps) {
         // Update existing gift
         const dto: UpdateGiftDto = {
           name: name.trim(),
+          type,
           description: description.trim() || undefined,
           requiredPoints: Number(requiredPoints),
           stock: Number(stock),
@@ -426,10 +535,12 @@ function GiftFormModal({ gift, onClose, onSuccess }: GiftFormModalProps) {
           dto.image = imageFile;
         }
         await updateGift(gift.id, dto);
+        toast.success("Cập nhật quà tặng thành công", { autoClose: 1400 });
       } else {
         // Create new gift
         const dto: CreateGiftDto = {
           name: name.trim(),
+          type,
           description: description.trim() || undefined,
           requiredPoints: Number(requiredPoints),
           stock: Number(stock),
@@ -438,6 +549,7 @@ function GiftFormModal({ gift, onClose, onSuccess }: GiftFormModalProps) {
           dto.image = imageFile;
         }
         await createGift(dto);
+        toast.success("Tạo quà tặng thành công", { autoClose: 1400 });
       }
 
       onSuccess();
@@ -474,6 +586,24 @@ function GiftFormModal({ gift, onClose, onSuccess }: GiftFormModalProps) {
               placeholder="Voucher VinMart 50k"
               className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
             />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Loại quà tặng <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as GiftType)}
+              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none"
+            >
+              {GIFT_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Description */}

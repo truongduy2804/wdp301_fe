@@ -18,7 +18,7 @@ export function adminMenu(root: string, locale: Locale = "vi"): MenuItem[] {
 
   const RAWS: RawItem[] = [
     [t.dashboard, LayoutDashboard, ""],
-    [t.userManagement, Users, `/${endPoint.ADMIN_CHILD.ACCOUNTS}`],
+    [t.violations, Users, `/${endPoint.ADMIN_CHILD.VIOLATIONS}`],
     [
       t.complaintsDisputes,
       MessageSquareWarning,

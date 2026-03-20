@@ -112,6 +112,7 @@ export async function createGift(dto: CreateGiftDto): Promise<Gift> {
   // Create FormData for multipart upload
   const formData = new FormData();
   formData.append("name", dto.name);
+  formData.append("type", dto.type);
   formData.append("requiredPoints", dto.requiredPoints.toString());
   formData.append("stock", dto.stock.toString());
   
@@ -160,6 +161,9 @@ export async function updateGift(
   if (dto.name !== undefined) {
     formData.append("name", dto.name);
   }
+  if (dto.type !== undefined) {
+    formData.append("type", dto.type);
+  }
   if (dto.description !== undefined) {
     formData.append("description", dto.description);
   }
@@ -194,6 +198,26 @@ export async function updateGift(
 
   const response = await safeJson<GiftResponse>(res);
   return response.data;
+}
+
+/**
+ * Soft delete a gift
+ * DELETE /api/v1/admin/gifts/:id
+ */
+export async function deleteGift(giftId: number): Promise<void> {
+  const url = buildApiUrl(`${ADMIN_GIFTS_PATH}/${giftId}`);
+
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(
+      `deleteGift failed: ${res.status} ${res.statusText} - ${errText}`
+    );
+  }
 }
 
 /**

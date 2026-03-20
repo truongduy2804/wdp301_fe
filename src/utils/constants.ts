@@ -268,7 +268,7 @@ export const STORAGE_KEYS = {
 
 export const ADMIN_ROUTES = {
   OVERVIEW: '/admin',
-  ACCOUNTS: '/admin/accounts',
+  VIOLATIONS: '/admin/violations',
   ENTERPRISES: '/admin/enterprises',
   COMPLAINTS: '/admin/complaints',
   STATISTICS: '/admin/statistics',

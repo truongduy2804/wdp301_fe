@@ -10,9 +10,9 @@ import PortalLayout from "@/layout/Dashboard/PortalLayout";
 import AuthLayout from "@/pages/Auth/Layout";
 
 // Admin Pages
-import AdminOverviewPage from "@/pages/admin/AdminOverviewPage";
+import AdminOverviewPage from "@/pages/Admin/AdminOverviewPage";
 import AdminStatistics from "@/pages/Admin/Statistics";
-import AdminAccounts from "@/pages/Admin/Accounts";
+import AdminViolations from "@/pages/Admin/Violations";
 import AdminSystemMonitor from "@/pages/Admin/SystemMonitor";
 import AdminComplaints from "@/pages/Admin/Complaints";
 import AdminEnterprisesMap from "@/pages/Admin/EnterprisesMap";
@@ -71,7 +71,7 @@ export const portalRoutes: PortalRoute[] = [
     children: [
       { index: true, element: <AdminOverviewPage /> },
       { path: endPoint.ADMIN_CHILD.MONITOR, element: <AdminSystemMonitor /> },
-      { path: endPoint.ADMIN_CHILD.ACCOUNTS, element: <AdminAccounts /> },
+      { path: endPoint.ADMIN_CHILD.VIOLATIONS, element: <AdminViolations /> },
       { path: endPoint.ADMIN_CHILD.COMPLAINTS, element: <AdminComplaints /> },
       {
         path: endPoint.ADMIN_CHILD.ENTERPRISE_MAP,

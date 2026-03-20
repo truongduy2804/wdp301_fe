@@ -3,7 +3,7 @@ export const menuAdmin = {
   vi: {
     items: {
       dashboard: "Tổng quan",
-      userManagement: "Tài khoản & phân quyền",
+      violations: "Vi phạm báo cáo",
       systemMonitoring: "Giám sát hệ thống",
       complaintsDisputes: "Khiếu nại / Tranh chấp",
       enterpriseMap: "Bản đồ doanh nghiệp",
@@ -14,7 +14,7 @@ export const menuAdmin = {
   en: {
     items: {
       dashboard: "Overview",
-      userManagement: "Accounts & Permissions",
+      violations: "Report Violations",
       systemMonitoring: "System Monitoring",
       complaintsDisputes: "Complaints / Disputes",
       enterpriseMap: "Enterprise Map",
