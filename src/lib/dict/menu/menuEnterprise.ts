@@ -6,6 +6,7 @@ export const menuEnterprise = {
       pendingRequests: "Đơn chờ phản hồi",
       acceptedRequests: "Đơn đang xử lý",
       requestHistory: "Lịch sử đơn đã hoàn thành",
+      cancelledRequests: "Đơn đã hủy",
       collectors: "Quản lý nhân sự thu gom",
       rewardRules: "Quy tắc điểm thưởng",
       settings: "Thông tin doanh nghiệp",
@@ -14,10 +15,12 @@ export const menuEnterprise = {
   en: {
     items: {
       dashboard: "Dashboard",
-      pendingRequests: "pending Requests",
-      acceptedRequests: "accepted Requests",
+      pendingRequests: "Pending Requests",
+      acceptedRequests: "Orders In Progress",
       requestHistory: "Completed History",
+      cancelledRequests: "Cancelled Orders",
       collectors: "Collector Management",
+      rewardRules: "Reward Rules",
       settings: "Enterprise Settings",
     },
   },

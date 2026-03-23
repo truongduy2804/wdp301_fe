@@ -21,6 +21,7 @@ import EnterpriseDashboard from "@/pages/Enterprise/Statistics";
 import EnterpriseRequestPending from "@/pages/Enterprise/PendingRequests";
 import EnterpriseRequestAccepted from "@/pages/Enterprise/AcceptedRequests";
 import EnterpriseRequestHistory from "@/pages/Enterprise/RequestHistory";
+import EnterpriseCancelledRequests from "@/pages/Enterprise/CancelledRequests";
 import EnterpriseCollectors from "@/pages/Enterprise/Collectors";
 import EnterpriseRewardRules from "@/pages/Enterprise/RewardRules";
 import EnterpriseSettings from "@/pages/Enterprise/Settings";
@@ -97,6 +98,10 @@ export const portalRoutes: PortalRoute[] = [
       {
         path: endPoint.ENTERPRISE_CHILD.REQUEST_HISTORY,
         element: <EnterpriseRequestHistory />,
+      },
+      {
+        path: endPoint.ENTERPRISE_CHILD.CANCELLED_REQUESTS,
+        element: <EnterpriseCancelledRequests />,
       },
       {
         path: endPoint.ENTERPRISE_CHILD.REWARD_RULES,

@@ -18,6 +18,7 @@ export const tagTypes = [
   "EnterprisePayment",
   "EnterprisePlans",
   "AcceptedReports",
+  "CancelledReports",
   "EnterpriseDashboard",
 ] as const;
 

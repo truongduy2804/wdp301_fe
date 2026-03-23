@@ -6,6 +6,7 @@ import {
   BarChart3,
   Settings,
   History,
+  XCircle,
 } from "lucide-react";
 import { makeMenu, type RawItem } from "./utils";
 import type { MenuItem } from "./type";
@@ -36,6 +37,11 @@ export function enterpriseMenu(
       t.requestHistory,
       CheckCircle2,
       `/${endPoint.ENTERPRISE_CHILD.REQUEST_HISTORY}`,
+    ],
+    [
+      t.cancelledRequests,
+      XCircle,
+      `/${endPoint.ENTERPRISE_CHILD.CANCELLED_REQUESTS}`,
     ],
     [t.settings, Settings, `/${endPoint.ENTERPRISE_CHILD.SETTINGS}`],
   ];

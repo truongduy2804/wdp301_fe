@@ -26,6 +26,7 @@ const endPoint = {
     PENDING_REQUESTS: "pending-requests",
     ACCEPTED_REQUESTS: "accepted-requests",
     REQUEST_HISTORY: "request-history",
+    CANCELLED_REQUESTS: "cancelled-requests",
     COLLECTORS: "collectors",
     REWARD_RULES: "reward-rules",
     SETTINGS: "settings",

@@ -40,7 +40,7 @@ const REPORT_STATUS: Record<string, { label: string; cls: string }> = {
 
   CANCELLED: {
     label: "Đã huỷ",
-    cls: "bg-slate-100 text-slate-700 border-slate-200",
+    cls: "bg-rose-50 text-rose-700 border-rose-200",
   },
 
   WAITING: {

@@ -1,22 +1,31 @@
-import React, { useMemo } from "react";
-import dayjs from "dayjs";
+﻿import React, { useMemo } from "react";
 import { Table, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { Eye, MapPin, Phone, User2 } from "lucide-react";
+import { Eye, FileText, MapPin, User2 } from "lucide-react";
 
-import type { EnterpriseReport } from "@/redux/api/enterprise/reports/types";
-import TagPill from "./tagPill";
+import type { CancelledEnterpriseReport } from "@/redux/api/enterprise/reports/types";
+
+import {
+  getCancellationActorClasses,
+  getCancellationActorLabel,
+} from "./cancelledReportUtils";
 
 type Props = {
-  data: EnterpriseReport[];
+  data: CancelledEnterpriseReport[];
   onView: (id: number) => void;
-  onPrefetchDetail?: (id: number) => void;
 };
 
-function formatInlineDateTime(iso?: string | null) {
-  if (!iso) return "—";
-  const d = dayjs(iso);
-  return `${d.format("HH:mm")} • ${d.format("DD/MM/YYYY")}`;
+function MetaPill({ label, className }: { label: string; className: string }) {
+  return (
+    <span
+      className={[
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold",
+        className,
+      ].join(" ")}
+    >
+      {label}
+    </span>
+  );
 }
 
 function shortenText(value?: string | null, max = 52) {
@@ -28,17 +37,14 @@ function shortenText(value?: string | null, max = 52) {
 function ViewButton({
   id,
   onView,
-  onPrefetchDetail,
   fullWidth = false,
 }: {
   id: number;
   onView: (id: number) => void;
-  onPrefetchDetail?: (id: number) => void;
   fullWidth?: boolean;
 }) {
   return (
     <button
-      onMouseEnter={() => onPrefetchDetail?.(id)}
       onClick={() => onView(id)}
       type="button"
       className={[
@@ -55,12 +61,8 @@ function ViewButton({
   );
 }
 
-export default function ReportsHistoryTable({
-  data,
-  onView,
-  onPrefetchDetail,
-}: Props) {
-  const columns: ColumnsType<EnterpriseReport> = useMemo(() => {
+export default function CancelledReportsTable({ data, onView }: Props) {
+  const columns: ColumnsType<CancelledEnterpriseReport> = useMemo(() => {
     return [
       {
         title: <div className="text-center font-semibold">Mã đơn</div>,
@@ -75,12 +77,12 @@ export default function ReportsHistoryTable({
         ),
       },
       {
-        title: <div className="text-center font-semibold">Họ tên</div>,
-        key: "fullName",
+        title: <div className="text-center font-semibold">Người tạo đơn</div>,
+        key: "citizen",
         align: "center",
         width: 180,
-        render: (_: unknown, r: EnterpriseReport) => {
-          const name = (r as any)?.citizen?.fullName ?? "—";
+        render: (_: unknown, report: CancelledEnterpriseReport) => {
+          const name = report.citizen?.fullName ?? "—";
           return (
             <div className="inline-flex min-w-0 w-full items-center justify-center gap-2">
               <User2 className="h-4 w-4 shrink-0 text-slate-500" />
@@ -94,41 +96,17 @@ export default function ReportsHistoryTable({
         },
       },
       {
-        title: <div className="text-center font-semibold">SĐT</div>,
-        key: "phone",
-        align: "center",
-        width: 146,
-        render: (_: unknown, r: EnterpriseReport) => {
-          const phone = (r as any)?.citizen?.phone ?? "—";
-          return (
-            <div className="inline-flex items-center justify-center gap-2">
-              <Phone className="h-4 w-4 text-slate-500" />
-              {phone !== "—" ? (
-                <a
-                  className="font-semibold text-slate-700 hover:underline tabular-nums"
-                  href={`tel:${phone}`}
-                >
-                  {phone}
-                </a>
-              ) : (
-                <span className="text-slate-500">—</span>
-              )}
-            </div>
-          );
-        },
-      },
-      {
         title: <div className="text-center font-semibold">Địa chỉ</div>,
         dataIndex: "address",
         key: "address",
         align: "left",
-        width: 240,
+        width: 228,
         ellipsis: { showTitle: false },
         render: (value?: string | null) => {
           const display = value?.trim() || "—";
           return (
             <Tooltip destroyOnHidden title={display}>
-              <span className="block w-full min-w-0 truncate text-slate-700">
+              <span className="block min-w-0 truncate text-slate-700">
                 {display}
               </span>
             </Tooltip>
@@ -136,56 +114,70 @@ export default function ReportsHistoryTable({
         },
       },
       {
-        title: <div className="text-center font-semibold">Thời gian duyệt</div>,
-        key: "time",
-        align: "center",
-        width: 168,
-        render: (_: unknown, r: EnterpriseReport) => {
-          const iso = (r as any)?.sentAt ?? (r as any)?.createdAt ?? null;
+        title: <div className="text-center font-semibold">Mô tả</div>,
+        dataIndex: "description",
+        key: "description",
+        align: "left",
+        width: 188,
+        ellipsis: { showTitle: false },
+        render: (value?: string | null) => {
+          const display = value?.trim() || "—";
           return (
-            <span className="text-slate-700 tabular-nums">
-              {formatInlineDateTime(iso)}
-            </span>
+            <Tooltip destroyOnHidden title={display}>
+              <span className="block min-w-0 truncate text-slate-700">
+                {shortenText(display, 48)}
+              </span>
+            </Tooltip>
           );
         },
+      },
+      {
+        title: <div className="text-center font-semibold">Đơn hủy bởi</div>,
+        key: "cancelMeta",
+        align: "center",
+        width: 154,
+        render: (_: unknown, report: CancelledEnterpriseReport) => (
+          <div className="flex items-center justify-center">
+            <MetaPill
+              label={getCancellationActorLabel(report.cancelBy)}
+              className={getCancellationActorClasses(report.cancelBy)}
+            />
+          </div>
+        ),
       },
       {
         title: <div className="text-center font-semibold">Trạng thái</div>,
         key: "status",
         align: "center",
-        width: 132,
-        render: (_: unknown, r: EnterpriseReport) => {
-          const status = String((r as any)?.status ?? "PENDING").toUpperCase();
-          return (
-            <div className="flex justify-center">
-              <TagPill kind="reportStatus" value={status} />
-            </div>
-          );
-        },
+        width: 118,
+        render: () => (
+          <div className="flex justify-center">
+            <MetaPill
+              label="Đã hủy"
+              className="border-rose-200 bg-gradient-to-r from-rose-50 to-orange-50 text-rose-700 shadow-sm"
+            />
+          </div>
+        ),
       },
       {
         title: <div className="text-center font-semibold">Thao tác</div>,
         key: "actions",
         align: "center",
         width: 112,
-        render: (_: unknown, r: EnterpriseReport) => (
+        render: (_: unknown, report: CancelledEnterpriseReport) => (
           <div className="inline-flex items-center justify-center">
-            <ViewButton
-              id={r.id}
-              onView={onView}
-              onPrefetchDetail={onPrefetchDetail}
-            />
+            <ViewButton id={report.id} onView={onView} />
           </div>
         ),
       },
     ];
-  }, [onView, onPrefetchDetail]);
+  }, [onView]);
 
   return (
     <div className="w-full">
       <div className="hidden lg:block">
         <Table
-          rowKey={(r) => r.id}
+          rowKey={(report) => report.id}
           columns={columns}
           dataSource={data}
           pagination={false}
@@ -204,14 +196,9 @@ export default function ReportsHistoryTable({
 
       <div className="space-y-3 lg:hidden">
         {data.map((report) => {
-          const name = (report as any)?.citizen?.fullName ?? "—";
-          const phone = (report as any)?.citizen?.phone ?? "—";
-          const status = String(
-            (report as any)?.status ?? "PENDING",
-          ).toUpperCase();
-          const iso =
-            (report as any)?.sentAt ?? (report as any)?.createdAt ?? null;
+          const name = report.citizen?.fullName ?? "—";
           const address = report.address?.trim() || "—";
+          const description = report.description?.trim() || "—";
 
           return (
             <div
@@ -227,36 +214,22 @@ export default function ReportsHistoryTable({
                     #{report.id}
                   </div>
                 </div>
-                <TagPill kind="reportStatus" value={status} />
+                <MetaPill
+                  label="Đã hủy"
+                  className="border-rose-200 bg-gradient-to-r from-rose-50 to-orange-50 text-rose-700 shadow-sm"
+                />
               </div>
 
               <div className="mt-4 space-y-3 text-sm">
                 <div className="flex items-start gap-2 text-slate-700">
                   <User2 className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                   <div className="min-w-0">
-                    <div className="text-xs text-slate-400">Họ tên</div>
+                    <div className="text-xs text-slate-400">Người tạo đơn</div>
                     <Tooltip destroyOnHidden title={name}>
                       <div className="truncate font-semibold text-slate-800">
                         {name}
                       </div>
                     </Tooltip>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2 text-slate-700">
-                  <Phone className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                  <div className="min-w-0">
-                    <div className="text-xs text-slate-400">Số điện thoại</div>
-                    {phone !== "—" ? (
-                      <a
-                        className="font-semibold text-slate-700 hover:underline tabular-nums"
-                        href={`tel:${phone}`}
-                      >
-                        {phone}
-                      </a>
-                    ) : (
-                      <div className="text-slate-500">—</div>
-                    )}
                   </div>
                 </div>
 
@@ -272,21 +245,31 @@ export default function ReportsHistoryTable({
                   </div>
                 </div>
 
+                <div className="flex items-start gap-2 text-slate-700">
+                  <FileText className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                  <div className="min-w-0">
+                    <div className="text-xs text-slate-400">Mô tả</div>
+                    <Tooltip destroyOnHidden title={description}>
+                      <div className="break-words text-slate-700">
+                        {shortenText(description, 96)}
+                      </div>
+                    </Tooltip>
+                  </div>
+                </div>
+
                 <div>
-                  <div className="text-xs text-slate-400">Thời gian duyệt</div>
-                  <div className="mt-1 text-slate-700 tabular-nums">
-                    {formatInlineDateTime(iso)}
+                  <div className="text-xs text-slate-400">Đơn hủy bởi</div>
+                  <div className="mt-1">
+                    <MetaPill
+                      label={getCancellationActorLabel(report.cancelBy)}
+                      className={getCancellationActorClasses(report.cancelBy)}
+                    />
                   </div>
                 </div>
               </div>
 
               <div className="mt-4">
-                <ViewButton
-                  id={report.id}
-                  onView={onView}
-                  onPrefetchDetail={onPrefetchDetail}
-                  fullWidth
-                />
+                <ViewButton id={report.id} onView={onView} fullWidth />
               </div>
             </div>
           );
