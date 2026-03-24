@@ -49,9 +49,11 @@ const endPoint = {
   // ===== Admin (relative children) =====
   ADMIN_CHILD: {
     MONITOR: "monitor",
-    ACCOUNTS: "accounts",
+    VIOLATIONS: "violations",
     COMPLAINTS: "complaints",
     ENTERPRISE_MAP: "enterprise-map",
+    GIFTS: "gifts",
+    REDEMPTIONS: "redemptions",
   },
 } as const;
 
