@@ -226,33 +226,74 @@ export default function AdminViolations() {
                   {filteredViolators.map((item) => (
                     <tr
                       key={item.userId}
-                      className="border-b border-slate-100 hover:bg-emerald-50/30 transition-colors"
+                      className="border-b border-slate-100 hover:bg-emerald-50/40 transition-colors group"
                     >
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-slate-900">{item.fullName}</div>
-                        <div className="text-xs text-slate-500">ID: {item.userId}</div>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-slate-200 border border-slate-200 overflow-hidden flex-shrink-0 shadow-sm">
+                            {item.avatar ? (
+                              <img src={item.avatar} className="h-full w-full object-cover" alt={item.fullName} />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center bg-emerald-100 text-emerald-700 font-bold text-sm">
+                                {item.fullName.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-slate-900 truncate tracking-tight">{item.fullName}</div>
+                            <div className="text-[11px] font-medium text-slate-500 flex items-center gap-1">
+                              <span className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200">ID: {item.userId}</span>
+                            </div>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">{item.email}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-slate-700">
-                        {item.violationCount} lần
+                      <td className="px-4 py-4">
+                        <div className="text-sm font-medium text-slate-600">{item.email}</div>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => loadDetails(item.userId)}>
-                            <Eye className="h-4 w-4" />
-                            Xem
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className={cx(
+                            "h-2 w-2 rounded-full",
+                            item.violationCount >= 5 ? "bg-rose-500 animate-pulse" :
+                              item.violationCount >= 3 ? "bg-orange-500" : "bg-emerald-500"
+                          )} />
+                          <span className="text-sm font-bold text-slate-800">
+                            {item.violationCount} lần
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className={cx(
+                          "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                          item.status === "BANNED"
+                            ? "bg-rose-50 border-rose-200 text-rose-700"
+                            : "bg-emerald-50 border-emerald-200 text-emerald-700"
+                        )}>
+                          {item.status === "BANNED" ? "Bị khóa" : "Hoạt động"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="outline"
+                            className="bg-white hover:bg-emerald-50 border-slate-200 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 shadow-sm py-1.5 px-3"
+                            onClick={() => loadDetails(item.userId)}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            Chi tiết
                           </Button>
                           <Button
                             variant={item.status === "BANNED" ? "outline" : "danger"}
+                            className="shadow-sm py-1.5 px-3"
                             onClick={() => handleToggleUser(item)}
                             disabled={isBanningUserId === item.userId}
                           >
                             {isBanningUserId === item.userId ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             ) : (
-                              <ShieldBan className="h-4 w-4" />
+                              <ShieldBan className="h-3.5 w-3.5" />
                             )}
-                            {item.status === "BANNED" ? "Mở khóa" : "Khóa user"}
+                            {item.status === "BANNED" ? "Mở khóa" : "Khóa ngay"}
                           </Button>
                         </div>
                       </td>
@@ -295,30 +336,75 @@ export default function AdminViolations() {
         ) : (
           <div className="space-y-3 max-h-[65vh] overflow-auto pr-1">
             {details.map((item) => (
-              <div key={item.id} className="rounded-xl border border-slate-200 p-3">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm font-semibold text-slate-900">Log #{item.id}</p>
-                  <p className="text-xs text-slate-500">
-                    {dayjs(item.timestamp).format("DD/MM/YYYY HH:mm")}
-                  </p>
+              <div key={item.id} className="rounded-xl border border-slate-200 p-4 bg-white shadow-sm">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 text-xs font-bold text-slate-600">
+                      LOG #{item.id}
+                    </span>
+                    <p className="text-xs text-slate-500">
+                      {dayjs(item.timestamp).format("DD/MM/YYYY HH:mm")}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="mt-2 grid grid-cols-1 gap-1 text-sm text-slate-700">
-                  <p>
-                    <span className="font-semibold">Lý do:</span>{" "}
-                    {item.collectorReason || "Không có"}
-                  </p>
-                  <p>
-                    <span className="font-semibold">Người báo:</span>{" "}
-                    {item.reporter.fullName} ({item.reporter.role})
-                  </p>
-                  <p>
-                    <span className="font-semibold">Người vi phạm:</span>{" "}
-                    {item.violator.fullName} ({item.violator.role})
-                  </p>
-                  <p>
-                    <span className="font-semibold">Report gốc:</span> #{item.originalReport.id} - {item.originalReport.address}
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left: Collector Findings */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-bold text-emerald-800 flex items-center gap-2">
+                      <ShieldBan className="h-4 w-4" /> Bằng chứng từ {item.reporter.role}
+                    </h4>
+                    <div className="text-sm space-y-2">
+                      <p><span className="text-slate-500">Người báo:</span> <span className="font-semibold">{item.reporter.fullName}</span> ({item.reporter.email})</p>
+                      <p><span className="text-slate-500">Lý do từ Collector:</span> <span className="font-semibold text-rose-600">{item.collectorReason || "Không có"}</span></p>
+
+                      {item.collectorEvidence && item.collectorEvidence.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs text-slate-500 mb-1">Ảnh bằng chứng:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {item.collectorEvidence.map((img, i) => (
+                              <img key={i} src={img} className="h-20 w-20 object-cover rounded-lg border border-slate-200 hover:scale-150 transition-transform cursor-pointer" alt="Evidence" />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right: Original Report Context */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                      <Eye className="h-4 w-4" /> Báo cáo gốc #{item.originalReport.id}
+                    </h4>
+                    <div className="text-sm space-y-2">
+                      <p><span className="text-slate-500">Địa chỉ:</span> <span className="font-medium">{item.originalReport.address}</span></p>
+                      <p><span className="text-slate-500">Người dân mô tả:</span> <span className="italic">"{item.originalReport.citizenDescription || "Trống"}"</span></p>
+
+                      {item.originalReport.estimatedWaste && (
+                        <div className="mt-1">
+                          <span className="text-slate-500 text-xs">Rác ước tính:</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {item.originalReport.estimatedWaste.map((w, i) => (
+                              <span key={i} className="px-2 py-0.5 bg-slate-100 text-[10px] rounded-full border border-slate-200">
+                                {w.type}: {w.weight}kg
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {item.originalReport.citizenImages && item.originalReport.citizenImages.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs text-slate-500 mb-1">Ảnh từ người dân:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {item.originalReport.citizenImages.map((img, i) => (
+                              <img key={i} src={img} className="h-16 w-16 object-cover rounded-lg border border-slate-200 opacity-80 hover:opacity-100" alt="Citizen" />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
