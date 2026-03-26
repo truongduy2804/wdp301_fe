@@ -10,11 +10,14 @@ import PortalLayout from "@/layout/Dashboard/PortalLayout";
 import AuthLayout from "@/pages/Auth/Layout";
 
 // Admin Pages
-import AdminDashboard from "@/pages/Admin/Statistics";
-import AdminAccounts from "@/pages/Admin/Accounts";
+import AdminOverviewPage from "@/pages/Admin/AdminOverviewPage";
+import AdminStatistics from "@/pages/Admin/Statistics";
+import AdminViolations from "@/pages/Admin/Violations";
 import AdminSystemMonitor from "@/pages/Admin/SystemMonitor";
 import AdminComplaints from "@/pages/Admin/Complaints";
 import AdminEnterprisesMap from "@/pages/Admin/EnterprisesMap";
+import AdminGifts from "@/pages/Admin/Gifts";
+import AdminRedemptions from "@/pages/Admin/Redemptions";
 
 // Enterprise Pages
 import EnterpriseDashboard from "@/pages/Enterprise/Statistics";
@@ -67,14 +70,16 @@ export const portalRoutes: PortalRoute[] = [
     path: endPoint.ADMIN,
     role: "ADMIN",
     children: [
-      { index: true, element: <AdminDashboard /> },
+      { index: true, element: <AdminOverviewPage /> },
       { path: endPoint.ADMIN_CHILD.MONITOR, element: <AdminSystemMonitor /> },
-      { path: endPoint.ADMIN_CHILD.ACCOUNTS, element: <AdminAccounts /> },
+      { path: endPoint.ADMIN_CHILD.VIOLATIONS, element: <AdminViolations /> },
       { path: endPoint.ADMIN_CHILD.COMPLAINTS, element: <AdminComplaints /> },
       {
         path: endPoint.ADMIN_CHILD.ENTERPRISE_MAP,
         element: <AdminEnterprisesMap />,
       },
+      { path: endPoint.ADMIN_CHILD.GIFTS, element: <AdminGifts /> },
+      { path: endPoint.ADMIN_CHILD.REDEMPTIONS, element: <AdminRedemptions /> },
     ],
   },
   {
