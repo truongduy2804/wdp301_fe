@@ -14,6 +14,7 @@ import {
   MapPin,
   MessageSquareWarning,
   Phone,
+  RefreshCw,
   Search,
   Truck,
   X,
@@ -254,8 +255,20 @@ export default function AdminComplaints() {
                 minWidth={230}
               />
 
-              <Button variant="outline" onClick={loadComplaints}>
-                Làm mới
+              <Button
+                variant="ghost"
+                onClick={loadComplaints}
+                disabled={loading}
+                className="!rounded-2xl !px-3 !py-2 !bg-white !border !border-slate-200 !text-slate-800 !font-medium hover:!border-emerald-300 hover:!bg-emerald-50/60 hover:!text-emerald-800 active:!bg-emerald-100/60 disabled:!opacity-70 disabled:!cursor-not-allowed transition-all duration-200 ease-out shadow-sm hover:shadow"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <RefreshCw
+                    className={`h-4 w-4 ${
+                      loading ? "animate-spin text-emerald-700" : "text-slate-600"
+                    }`}
+                  />
+                  {loading ? "Đang tải..." : "Tải lại"}
+                </span>
               </Button>
             </div>
           </div>

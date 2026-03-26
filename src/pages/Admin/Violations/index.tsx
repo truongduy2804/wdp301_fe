@@ -13,7 +13,6 @@ import {
   banViolationUser,
   fetchFakeReportViolationDetails,
   fetchFakeReportViolators,
-  unbanViolationUser,
 } from "@/api/admin/violation";
 import type {
   FakeReportViolationDetail,
@@ -58,8 +57,7 @@ export default function AdminViolations() {
     return violators.filter((item) => {
       return (
         item.fullName.toLowerCase().includes(q) ||
-        item.email.toLowerCase().includes(q) ||
-        String(item.userId).includes(q)
+        item.email.toLowerCase().includes(q)
       );
     });
   }, [query, violators]);
@@ -98,36 +96,31 @@ export default function AdminViolations() {
 
   async function handleToggleUser(item: FakeReportViolator) {
     const isBanned = item.status === "BANNED";
-    const actionLabel = isBanned ? "mở khóa" : "khóa";
-    const confirmed = window.confirm(`Bạn có chắc muốn ${actionLabel} tài khoản này?`);
+    if (isBanned) {
+      toast.info("Tài khoản này đã bị khóa");
+      return;
+    }
+
+    const confirmed = window.confirm("Bạn có chắc muốn khóa tài khoản này?");
     if (!confirmed) return;
 
     try {
       setIsBanningUserId(item.userId);
-      if (isBanned) {
-        await unbanViolationUser(item.userId);
-      } else {
-        await banViolationUser(item.userId);
-      }
+      await banViolationUser(item.userId);
       await loadViolators();
-      toast.success(
-        isBanned ? "Đã mở khóa tài khoản thành công" : "Đã khóa tài khoản thành công",
-        { autoClose: 1500 },
-      );
+      toast.success("Đã khóa tài khoản thành công", { autoClose: 1500 });
 
       // Cập nhật selectedViolator trong modal nếu đang mở
       if (selectedViolator?.userId === item.userId) {
         setSelectedViolator((prev) =>
-          prev ? { ...prev, status: isBanned ? "ACTIVE" : "BANNED" } : prev,
+          prev ? { ...prev, status: "BANNED" } : prev,
         );
       }
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : isBanned
-            ? "Mở khóa tài khoản thất bại"
-            : "Khóa tài khoản thất bại",
+          : "Khóa tài khoản thất bại",
       );
     } finally {
       setIsBanningUserId(null);
@@ -178,7 +171,7 @@ export default function AdminViolations() {
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Tìm theo tên, email hoặc userId"
+                  placeholder="Tìm theo tên hoặc email"
                   className="w-64 max-w-[55vw] bg-transparent outline-none text-sm font-semibold text-slate-900 placeholder:text-slate-400"
                 />
               </div>
@@ -255,9 +248,6 @@ export default function AdminViolations() {
                           </div>
                           <div className="min-w-0">
                             <div className="font-bold text-slate-900 truncate tracking-tight">{item.fullName}</div>
-                            <div className="text-[11px] font-medium text-slate-500 flex items-center gap-1">
-                              <span className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200">ID: {item.userId}</span>
-                            </div>
                           </div>
                         </div>
                       </td>
@@ -316,21 +306,21 @@ export default function AdminViolations() {
                             onClick={() => handleToggleUser(item)}
                             className={cx(
                               "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-1.5",
-                              "text-xs font-medium text-white",
+                              "text-xs font-medium text-white disabled:opacity-70 disabled:cursor-not-allowed",
                               "transition-all duration-200",
                               "hover:-translate-y-[1px] hover:shadow-sm",
-                              "disabled:opacity-60 disabled:cursor-not-allowed",
                               item.status === "BANNED"
-                                ? "bg-slate-500 hover:bg-slate-600"
+                                ? "bg-slate-400"
                                 : "bg-rose-600 hover:bg-rose-700"
                             )}
+                            title={item.status === "BANNED" ? "Tài khoản đã bị khóa" : "Khóa tài khoản"}
                           >
                             {isBanningUserId === item.userId ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             ) : (
                               <ShieldBan className="h-3.5 w-3.5" />
                             )}
-                            {item.status === "BANNED" ? "Mở khóa" : "Khóa ngay"}
+                            {item.status === "BANNED" ? "Đã khóa" : "Khóa tài khoản"}
                           </button>
                         </div>
                       </td>
@@ -362,6 +352,12 @@ export default function AdminViolations() {
         loading={detailState === "loading"}
         details={details}
         violator={selectedViolator}
+        onBanUser={() => {
+          if (selectedViolator) {
+            handleToggleUser(selectedViolator);
+          }
+        }}
+        isBanning={!!selectedViolator && isBanningUserId === selectedViolator.userId}
       />
     </div>
   );

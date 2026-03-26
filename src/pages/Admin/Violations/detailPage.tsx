@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
     AlertTriangle,
+    Loader2,
     Clock,
     Eye,
     FileText,
@@ -45,6 +46,8 @@ type Props = {
     loading: boolean;
     details: FakeReportViolationDetail[];
     violator: FakeReportViolator | null;
+    onBanUser?: () => void;
+    isBanning?: boolean;
 };
 
 export default function ViolationDetailModal({
@@ -53,6 +56,8 @@ export default function ViolationDetailModal({
     loading,
     details,
     violator,
+    onBanUser,
+    isBanning = false,
 }: Props) {
     useLockBodyScroll(open);
 
@@ -133,15 +138,14 @@ export default function ViolationDetailModal({
                                     </div>
                                 </div>
 
-                                <motion.button
-                                    whileHover={{ rotate: 90 }}
-                                    transition={{ type: "spring", stiffness: 500, damping: 18 }}
+                                <button
                                     className="group right-4 top-4 grid h-9 w-9 place-items-center rounded-md hover:bg-emerald-500"
                                     onClick={onClose}
                                     aria-label="Đóng"
+                                    type="button"
                                 >
                                     <X className="h-5 w-5 text-white group-hover:text-white" />
-                                </motion.button>
+                                </button>
                             </div>
                         </div>
 
@@ -207,7 +211,7 @@ export default function ViolationDetailModal({
                                                 </div>
                                             </div>
 
-                                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                                                 {/* Left: Collector Evidence */}
                                                 <SectionCard
                                                     title={`Bằng chứng từ ${item.reporter.role}`}
@@ -332,6 +336,31 @@ export default function ViolationDetailModal({
 
                         {/* FOOTER */}
                         <div className="border-t border-slate-200 bg-white px-5 py-3 flex items-center justify-end gap-2">
+                            {violator && (
+                                <button
+                                    onClick={onBanUser}
+                                    disabled={violator.status === "BANNED" || isBanning}
+                                    className={[
+                                        "rounded-xl border px-4 py-2 font-extrabold transition",
+                                        violator.status === "BANNED"
+                                            ? "border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
+                                            : "border-rose-200 bg-rose-600 text-white hover:bg-rose-700",
+                                        isBanning ? "opacity-70 cursor-not-allowed" : "",
+                                    ].join(" ")}
+                                    type="button"
+                                >
+                                    {isBanning ? (
+                                        <span className="inline-flex items-center gap-2">
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Đang khóa...
+                                        </span>
+                                    ) : violator.status === "BANNED" ? (
+                                        "Tài khoản đã bị khóa"
+                                    ) : (
+                                        "Khóa tài khoản"
+                                    )}
+                                </button>
+                            )}
                             <button
                                 onClick={onClose}
                                 className="
@@ -369,7 +398,6 @@ function SectionCard({
         <div
             className={[
                 "rounded-2xl border border-slate-200 bg-white shadow-sm",
-                "flex flex-col min-h-0",
                 className ?? "",
             ].join(" ")}
         >
@@ -384,7 +412,7 @@ function SectionCard({
                 </div>
                 {right ? <div className="shrink-0">{right}</div> : null}
             </div>
-            <div className="p-4 flex-1 min-h-0">{children}</div>
+            <div className="p-4">{children}</div>
         </div>
     );
 }

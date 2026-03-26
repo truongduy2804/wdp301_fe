@@ -26,7 +26,7 @@ import {
 } from "recharts";
 import { PageLoader, ErrorMessage } from "@/components/Admin/shared";
 import { TopEnterpriseTable } from "@/components/Admin/Overview/TopEnterpriseTable";
-import { Card, StatCard, formatNumber } from "@/components/ui/page/componentUI";
+import { Button, Card, StatCard, formatNumber } from "@/components/ui/page/componentUI";
 import { formatCurrency, formatWeight } from "@/utils/format";
 import { fetchAdminDashboardData, fetchAdminReportTrends } from "@/api/admin/dashboard";
 import type { AdminDashboardData } from "@/api/types/admin.types";
@@ -178,14 +178,21 @@ export default function AdminOverviewPage() {
               </div>
             </div>
 
-            <button
+            <Button
+              variant="ghost"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="!rounded-2xl !px-3 !py-2 !bg-white !border !border-slate-200 !text-slate-800 !font-medium hover:!border-emerald-300 hover:!bg-emerald-50/60 hover:!text-emerald-800 active:!bg-emerald-100/60 disabled:!opacity-70 disabled:!cursor-not-allowed transition-all duration-200 ease-out shadow-sm hover:shadow"
             >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-              {refreshing ? "Đang cập nhật" : "Làm mới"}
-            </button>
+              <span className="inline-flex items-center gap-2">
+                <RefreshCw
+                  className={`h-4 w-4 ${
+                    refreshing ? "animate-spin text-emerald-700" : "text-slate-600"
+                  }`}
+                />
+                {refreshing ? "Đang tải..." : "Tải lại"}
+              </span>
+            </Button>
           </div>
         </Card>
 
