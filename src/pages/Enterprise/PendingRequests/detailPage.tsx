@@ -470,13 +470,12 @@ export default function ReportDetailModal({
                             <div
                               className={`
               rounded-2xl border px-4 py-3
-              ${
-                leftMs == null
-                  ? "border-slate-200 bg-white"
-                  : expired
-                    ? "border-slate-200 bg-white"
-                    : "border-rose-200 bg-rose-50"
-              }
+              ${leftMs == null
+                                  ? "border-slate-200 bg-white"
+                                  : expired
+                                    ? "border-slate-200 bg-white"
+                                    : "border-rose-200 bg-rose-50"
+                                }
             `}
                             >
                               {isCountdownSyncing ? (

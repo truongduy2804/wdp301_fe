@@ -275,9 +275,8 @@ const InfoRow = React.memo(function InfoRow({
           {label}
         </div>
         <div
-          className={`truncate text-sm font-medium ${
-            accent ? "text-emerald-700" : "text-slate-800"
-          }`}
+          className={`truncate text-sm font-medium ${accent ? "text-emerald-700" : "text-slate-800"
+            }`}
         >
           {value}
         </div>
@@ -630,18 +629,16 @@ export default function CollectorDetailModal({
                                   duration: 0.18,
                                   ease: [0.22, 1, 0.36, 1],
                                 }}
-                                className={`flex flex-col items-center rounded-2xl border px-1 py-3 transition-colors duration-200 ${
-                                  active
+                                className={`flex flex-col items-center rounded-2xl border px-1 py-3 transition-colors duration-200 ${active
                                     ? "border-emerald-200 bg-emerald-50 hover:brightness-95"
                                     : "border-slate-200 bg-white text-slate-400"
-                                }`}
+                                  }`}
                               >
                                 <span
-                                  className={`text-[14px] font-bold uppercase tracking-wider ${
-                                    active
+                                  className={`text-[14px] font-bold uppercase tracking-wider ${active
                                       ? "text-emerald-800"
                                       : "text-slate-700"
-                                  }`}
+                                    }`}
                                 >
                                   {item.label}
                                 </span>
