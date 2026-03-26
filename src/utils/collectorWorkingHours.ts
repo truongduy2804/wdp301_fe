@@ -12,7 +12,7 @@ export type DayKey =
   | "Saturday"
   | "Sunday";
 
-export type ApiDayKey = Lowercase<DayKey>;
+export type ApiDayKey = DayKey;
 
 export type WorkingHourFormItem = CollectorWorkingDay & {
   active: boolean;
@@ -49,35 +49,35 @@ export const SHIFT_OPTIONS: {
   end: string;
   active: true;
 }[] = [
-  {
-    value: "FULL_DAY",
-    label: "08:00 - 17:00",
-    start: "08:00",
-    end: "17:00",
-    active: true,
-  },
-  {
-    value: "MORNING",
-    label: "08:00 - 12:00",
-    start: "08:00",
-    end: "12:00",
-    active: true,
-  },
-  {
-    value: "AFTERNOON",
-    label: "13:00 - 17:00",
-    start: "13:00",
-    end: "17:00",
-    active: true,
-  },
-  {
-    value: "EVENING",
-    label: "18:00 - 22:00",
-    start: "18:00",
-    end: "22:00",
-    active: true,
-  },
-];
+    {
+      value: "FULL_DAY",
+      label: "08:00 - 17:00",
+      start: "08:00",
+      end: "17:00",
+      active: true,
+    },
+    {
+      value: "MORNING",
+      label: "08:00 - 12:00",
+      start: "08:00",
+      end: "12:00",
+      active: true,
+    },
+    {
+      value: "AFTERNOON",
+      label: "13:00 - 17:00",
+      start: "13:00",
+      end: "17:00",
+      active: true,
+    },
+    {
+      value: "EVENING",
+      label: "18:00 - 22:00",
+      start: "18:00",
+      end: "22:00",
+      active: true,
+    },
+  ];
 
 export const SHIFT_MAP: Record<ShiftValue, WorkingHourFormItem> = {
   MORNING: { start: "08:00", end: "12:00", active: true },
@@ -87,30 +87,23 @@ export const SHIFT_MAP: Record<ShiftValue, WorkingHourFormItem> = {
 };
 
 const DAY_TO_API_KEY: Record<DayKey, ApiDayKey> = {
-  Monday: "monday",
-  Tuesday: "tuesday",
-  Wednesday: "wednesday",
-  Thursday: "thursday",
-  Friday: "friday",
-  Saturday: "saturday",
-  Sunday: "sunday",
+  Monday: "Monday",
+  Tuesday: "Tuesday",
+  Wednesday: "Wednesday",
+  Thursday: "Thursday",
+  Friday: "Friday",
+  Saturday: "Saturday",
+  Sunday: "Sunday",
 };
 
 const DAY_KEY_LOOKUP: Record<string, DayKey> = {
   Monday: "Monday",
-  monday: "Monday",
   Tuesday: "Tuesday",
-  tuesday: "Tuesday",
   Wednesday: "Wednesday",
-  wednesday: "Wednesday",
   Thursday: "Thursday",
-  thursday: "Thursday",
   Friday: "Friday",
-  friday: "Friday",
   Saturday: "Saturday",
-  saturday: "Saturday",
   Sunday: "Sunday",
-  sunday: "Sunday",
 };
 
 const DEFAULT_ACTIVE_SHIFT = SHIFT_MAP.FULL_DAY;
