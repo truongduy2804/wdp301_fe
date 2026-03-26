@@ -4,7 +4,7 @@ export const menuAdmin = {
     items: {
       dashboard: "Tổng quan",
       violations: "Vi phạm báo cáo",
-      systemMonitoring: "Giám sát hệ thống",
+      systemMonitoring: "Cấu hình hệ thống",
       complaintsDisputes: "Khiếu nại / Tranh chấp",
       enterpriseMap: "Bản đồ doanh nghiệp",
       giftManagement: "Quản lý quà tặng",
@@ -15,7 +15,7 @@ export const menuAdmin = {
     items: {
       dashboard: "Overview",
       violations: "Report Violations",
-      systemMonitoring: "System Monitoring",
+      systemMonitoring: "System Configuration",
       complaintsDisputes: "Complaints / Disputes",
       enterpriseMap: "Enterprise Map",
       giftManagement: "Gift Management",
