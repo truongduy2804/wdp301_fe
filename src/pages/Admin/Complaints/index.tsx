@@ -2,15 +2,23 @@
 import dayjs from "dayjs";
 import {
   CheckCircle2,
+  Clock3,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
+  FileText,
   Eye,
   Filter,
+  Images,
   Loader2,
+  MapPin,
   MessageSquareWarning,
+  Phone,
   Search,
+  Truck,
   X,
   XCircle,
+  User,
   ZoomIn,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -33,7 +41,6 @@ import {
   cx,
   Dropdown,
   EmptyState,
-  Modal,
 } from "@/components/ui/page/componentUI";
 
 function toneStatus(s: AdminComplaintStatus) {
@@ -129,12 +136,19 @@ export default function AdminComplaints() {
     });
   }, [q, status, list]);
 
-  const handleRespond = async (
-    complaintId: number,
-    nextStatus: AdminComplaintStatus,
-    message: string,
-  ) => {
-    if (!message.trim()) {
+  const selectedMapUrl = selected?.context.address
+    ? `https://www.google.com/maps?q=${encodeURIComponent(selected.context.address)}`
+    : null;
+  const contextImages = selected
+    ? [
+      ...(selected.context.images?.citizen ?? []),
+      ...(selected.context.images?.collector ?? []),
+    ]
+    : [];
+
+  const handleRespond = async (nextStatus: AdminComplaintStatus) => {
+    if (!selected) return;
+    if (!responseText.trim()) {
       toast.warning("Vui lòng nhập nội dung phản hồi");
       return;
     }
@@ -384,315 +398,316 @@ export default function AdminComplaints() {
           />
         </Card>
 
-        <Modal
-          open={!!selected}
-          title={selected ? `#${selected.id} · ${selected.typeLabel}` : "Chi tiết"}
-          sub={
-            selected
-              ? `Báo cáo #${selected.context.reportId} · ${dayjs(selected.createdAt).format("DD/MM/YYYY HH:mm")}`
-              : undefined
-          }
-          onClose={() => setSelected(null)}
-          footer={
-            selected ? (
-              <>
-                <Button variant="ghost" onClick={() => setSelected(null)}>
-                  Đóng
-                </Button>
-                {selected.status === "OPEN" && (
-                  <>
-                    <Button
-                      variant="danger"
-                      disabled={isResponding}
-                      onClick={() => handleRespond(selected.id, "REJECTED", responseText)}
-                    >
-                      {isResponding ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <XCircle className="h-4 w-4" />
-                      )}
-                      Từ chối
-                    </Button>
-                    <Button
-                      disabled={isResponding}
-                      onClick={() => {
-                        handleRespond(selected.id, "PROCESSED", responseText);
-                      }}
-                    >
-                      {isResponding ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <CheckCircle2 className="h-4 w-4" />
-                      )}
-                      Chấp nhận
-                    </Button>
-                  </>
-                )}
-              </>
-            ) : null
-          }
-          widthClass="max-w-3xl"
-        >
-          {selected ? (
-            <div className="space-y-5 max-h-[58vh] overflow-y-auto pr-2 custom-scrollbar pb-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge tone={toneStatus(selected.status) as any}>
-                  Trạng thái: {statusLabel(selected.status)}
-                </Badge>
-                <Badge tone="slate">Loại: {selected.typeLabel}</Badge>
-              </div>
+        {selected && (
+          <div
+            className="fixed inset-0 z-[1400] bg-black/50 backdrop-blur-[2px]"
+            onClick={() => setSelected(null)}
+          >
+            <div className="min-h-screen px-4 py-6 sm:px-6 sm:py-8 flex items-start justify-center">
+              <div
+                className="w-full max-w-5xl max-h-[94vh] rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="border-b bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-600 px-5 py-4 sm:px-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="m-0 text-lg sm:text-xl font-extrabold text-white">
+                          Chi tiết khiếu nại {selected.id ? `#${selected.id}` : ""}
+                        </h2>
+                        <span className="inline-flex items-center rounded-full border border-white/30 bg-white px-2.5 py-1 text-xs font-bold text-emerald-700">
+                          {statusLabel(selected.status)}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2 text-sm text-emerald-50">
+                        <span className="truncate">{selected.context.address || "Không có địa chỉ"}</span>
+                        {selectedMapUrl && (
+                          <a
+                            href={selectedMapUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            Maps
+                          </a>
+                        )}
+                      </div>
+                    </div>
 
-              {/* Citizen & Collector Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Citizen Card */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Người dân báo cáo</div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-slate-100 overflow-hidden border border-slate-200 flex-shrink-0">
-                      {selected.citizen.avatar ? (
-                        <img src={selected.citizen.avatar} alt="avatar" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-slate-400 font-bold text-lg">
-                          {selected.citizen.fullName.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-base font-bold text-slate-900">{selected.citizen.fullName}</div>
-                      <div className="text-base text-slate-500 font-medium">{selected.citizen.phone || "Không có"}</div>
-                    </div>
+                    <button
+                      type="button"
+                      className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 hover:bg-white/20"
+                      onClick={() => setSelected(null)}
+                      aria-label="Đóng"
+                    >
+                      <X className="h-5 w-5 text-white" />
+                    </button>
                   </div>
-                  {selected.citizen.trustStats && (
-                    <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
-                      <div>
-                        <div className="text-xs text-slate-400 font-bold uppercase">Tổng khiếu nại</div>
-                        <div className="text-base font-bold text-slate-700">{selected.citizen.trustStats.totalComplaints} lần</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-400 font-bold uppercase">Báo cáo giả</div>
-                        <div className="text-base font-bold text-rose-500">{selected.citizen.trustStats.totalFakeReports} lần</div>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                {/* Collector Card */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Tài xế bị khiếu nại</div>
-                  {selected.collector ? (
-                    <>
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-6 bg-slate-50 space-y-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    <DetailSectionCard
+                      className="lg:col-span-8"
+                      title="Tóm tắt"
+                      icon={<Clock3 className="h-4 w-4 text-emerald-700" />}
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <DetailInfoRow
+                          icon={<Clock3 className="h-4 w-4" />}
+                          label="Tạo lúc"
+                          value={dayjs(selected.createdAt).format("HH:mm · DD/MM/YYYY")}
+                        />
+                        <DetailInfoRow
+                          icon={<CheckCircle2 className="h-4 w-4" />}
+                          label="Phản hồi lúc"
+                          value={selected.resolvedAt ? dayjs(selected.resolvedAt).format("HH:mm · DD/MM/YYYY") : "Chưa xử lý"}
+                        />
+                        <DetailInfoRow
+                          icon={<FileText className="h-4 w-4" />}
+                          label="Báo cáo liên quan"
+                          value={`#${selected.context.reportId}`}
+                        />
+                      </div>
+                    </DetailSectionCard>
+
+                    <DetailSectionCard
+                      className="lg:col-span-4"
+                      title="Người tạo đơn"
+                      icon={<User className="h-4 w-4 text-indigo-700" />}
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-slate-100 overflow-hidden border border-slate-200 flex-shrink-0">
-                          {selected.collector.avatar ? (
-                            <img src={selected.collector.avatar} alt="avatar" className="h-full w-full object-cover" />
+                        <div className="h-12 w-12 rounded-full overflow-hidden border border-slate-200 bg-slate-100 shrink-0">
+                          {selected.citizen.avatar ? (
+                            <img src={selected.citizen.avatar} alt="citizen-avatar" className="h-full w-full object-cover" />
                           ) : (
-                            <div className="h-full w-full flex items-center justify-center text-slate-400 font-bold text-lg">
-                              {selected.collector.fullName.charAt(0)}
+                            <div className="h-full w-full grid place-items-center text-slate-400 font-bold text-lg">
+                              {selected.citizen.fullName.charAt(0)}
                             </div>
                           )}
                         </div>
-                        <div>
-                          <div className="text-base font-bold text-slate-900">{selected.collector.fullName}</div>
-                          <div className="text-base text-slate-600 font-mono bg-slate-50 px-2 py-0.5 rounded border border-slate-100 inline-block mt-0.5">
-                            {selected.collector.employeeCode}
+                        <div className="min-w-0">
+                          <div className="text-xl font-bold text-slate-900 truncate">{selected.citizen.fullName}</div>
+                          <div className="mt-1 inline-flex items-center gap-1.5 text-sm text-slate-600">
+                            <Phone className="h-4 w-4" />
+                            {selected.citizen.phone || "Không có"}
                           </div>
                         </div>
                       </div>
-                      <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
-                        <div>
-                          <div className="text-xs text-slate-400 font-bold uppercase">Điểm tin cậy</div>
-                          <div className="text-base font-bold text-emerald-600">{selected.collector.trustScore} điểm</div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-slate-400 font-bold uppercase">Bỏ qua công việc</div>
-                          <div className="text-base font-bold text-orange-500">{selected.collector.skipCount} lần</div>
-                        </div>
+                    </DetailSectionCard>
+                  </div>
+
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <DetailSectionCard title="Thông tin đơn" icon={<MapPin className="h-4 w-4 text-emerald-700" />}>
+                      <div className="space-y-3">
+                        <DetailInfoRow
+                          icon={<MapPin className="h-4 w-4" />}
+                          label="Địa chỉ"
+                          value={<span className="leading-relaxed break-words">{selected.context.address || "Không có"}</span>}
+                        />
+                        <DetailInfoRow
+                          icon={<FileText className="h-4 w-4" />}
+                          label="Nội dung khiếu nại"
+                          value={<span className="leading-relaxed break-words">{selected.content || "—"}</span>}
+                        />
                       </div>
-                    </>
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-slate-400 italic text-sm py-4">
-                      Thông tin tài xế không khả dụng
+                    </DetailSectionCard>
+
+                    <DetailSectionCard title="Thông tin tài xế được gán" icon={<Truck className="h-4 w-4 text-indigo-700" />}>
+                      {selected.collector ? (
+                        <div className="space-y-3">
+                          <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4">
+                            <div className="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-700">Đơn đã được gán cho tài xế</div>
+                            <div className="flex items-center gap-3">
+                              <div className="h-12 w-12 rounded-full overflow-hidden border border-slate-200 bg-white shrink-0">
+                                {selected.collector.avatar ? (
+                                  <img src={selected.collector.avatar} alt="collector-avatar" className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="h-full w-full grid place-items-center text-slate-400 font-bold text-lg">
+                                    {selected.collector.fullName.charAt(0)}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-xl font-bold text-slate-900 truncate">{selected.collector.fullName}</div>
+                                <div className="mt-1 inline-flex items-center gap-1.5 text-sm text-slate-700">
+                                  <Phone className="h-4 w-4" />
+                                  {selected.collector.employeeCode}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <DetailInfoRow
+                            icon={<User className="h-4 w-4" />}
+                            label="Mã nhân viên"
+                            value={selected.collector.employeeCode || "Không có"}
+                          />
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                          Chưa có tài xế liên quan.
+                        </div>
+                      )}
+                    </DetailSectionCard>
+                  </div>
+
+                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                    <DetailSectionCard title="Danh sách rác khai báo" icon={<FileText className="h-4 w-4 text-emerald-700" />}>
+                      {selected.context.weightAction ? (
+                        <div className="space-y-2">
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 flex items-center justify-between">
+                            <span className="text-sm font-semibold text-slate-700">Khối lượng ước tính</span>
+                            <span className="text-sm font-bold text-emerald-700">{selected.context.weightAction.estimated} kg</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-slate-500">—</div>
+                      )}
+                    </DetailSectionCard>
+
+                    <DetailSectionCard title="Danh sách rác thực tế" icon={<FileText className="h-4 w-4 text-indigo-700" />}>
+                      {selected.context.weightAction ? (
+                        <div className="space-y-2">
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 flex items-center justify-between">
+                            <span className="text-sm font-semibold text-slate-700">Khối lượng thực tế</span>
+                            <span className="text-sm font-bold text-emerald-700">{selected.context.weightAction.actual} kg</span>
+                          </div>
+                          <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 flex items-center justify-between">
+                            <span className="text-sm font-semibold text-rose-700">Chênh lệch</span>
+                            <span className="text-sm font-bold text-rose-700">+{selected.context.weightAction.diff} kg</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-slate-500">—</div>
+                      )}
+                    </DetailSectionCard>
+
+                    <DetailSectionCard title="Hình ảnh" icon={<Images className="h-4 w-4 text-indigo-700" />}>
+                      {contextImages.length ? (
+                        <div className="grid grid-cols-2 gap-3 overflow-auto custom-scrollbar pr-1 max-h-72">
+                          {contextImages.map((url, i) => (
+                            <button
+                              key={`${url}-${i}`}
+                              onClick={() => openLightbox(contextImages, i)}
+                              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                            >
+                              <img
+                                src={url}
+                                alt={`context-${selected.id}-${i}`}
+                                loading="lazy"
+                                decoding="async"
+                                className="w-full h-[150px] object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                              />
+                              <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-slate-500">—</div>
+                      )}
+                    </DetailSectionCard>
+                  </div>
+
+                  <DetailSectionCard title={`Ảnh bằng chứng khiếu nại (${selected.evidenceImages?.length || 0})`} icon={<Images className="h-4 w-4 text-emerald-700" />}>
+                    {selected.evidenceImages?.length ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {selected.evidenceImages.map((imageUrl, idx) => (
+                          <button
+                            key={`${selected.id}-${idx}`}
+                            onClick={() => openLightbox(selected.evidenceImages ?? [], idx)}
+                            className="group relative block overflow-hidden rounded-xl border border-slate-200 bg-slate-50 hover:border-emerald-300 transition-all"
+                          >
+                            <img
+                              src={imageUrl}
+                              alt={`evidence-${idx + 1}`}
+                              className="h-52 w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors flex items-center justify-center">
+                              <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500 text-center italic">
+                        Không có ảnh bằng chứng khiếu nại
+                      </div>
+                    )}
+                  </DetailSectionCard>
+
+                  <DetailSectionCard title="Nội dung phản hồi của Admin" icon={<MessageSquareWarning className="h-4 w-4 text-emerald-700" />}>
+                    <div className="space-y-3">
+                      {selected.status === "OPEN" && (
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setResponseText("Báo cáo của bạn đã bị đánh dấu sự cố, vui lòng vô phần Lịch sử khiếu nại để theo dõi thêm")}
+                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-tight bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100 transition-colors"
+                          >
+                            Sử dụng mẫu hệ thống
+                          </button>
+                        </div>
+                      )}
+                      <textarea
+                        value={responseText}
+                        onChange={(e) => setResponseText(e.target.value)}
+                        placeholder={
+                          selected.status === "OPEN"
+                            ? "Nhập nội dung phản hồi cho người khiếu nại..."
+                            : "Khiếu nại đã được xử lý, chỉ xem nội dung phản hồi."
+                        }
+                        rows={4}
+                        disabled={selected.status !== "OPEN"}
+                        className={cx(
+                          "w-full rounded-xl border border-slate-200 px-3 py-2.5 text-base text-slate-800 outline-none transition-shadow",
+                          selected.status === "OPEN"
+                            ? "bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                            : "bg-slate-50 text-slate-600 cursor-not-allowed",
+                        )}
+                      />
                     </div>
+                  </DetailSectionCard>
+                </div>
+
+                <div className="border-t border-slate-200 bg-white px-5 py-3 flex items-center justify-end gap-2">
+                  <Button variant="ghost" onClick={() => setSelected(null)}>
+                    Đóng
+                  </Button>
+                  {selected.status === "OPEN" && (
+                    <>
+                      <Button
+                        variant="danger"
+                        disabled={isResponding}
+                        onClick={() => handleRespond("REJECTED")}
+                      >
+                        {isResponding ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <XCircle className="h-4 w-4" />
+                        )}
+                        Từ chối
+                      </Button>
+                      <Button
+                        disabled={isResponding}
+                        onClick={() => {
+                          handleRespond("PROCESSED");
+                        }}
+                      >
+                        {isResponding ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="h-4 w-4" />
+                        )}
+                        Chấp nhận
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>
-
-              {/* Complaint Content */}
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Nội dung khiếu nại</div>
-                <div className="text-base font-medium text-slate-800 leading-relaxed bg-white border border-slate-200 rounded-xl p-3">
-                  {selected.content}
-                </div>
-              </div>
-
-              {/* Report Context Card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Tổng quan báo cáo rác (Mã báo cáo #{selected.context.reportId})</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div>
-                      <div className="text-xs text-slate-400 font-bold uppercase">Địa chỉ</div>
-                      <div className="text-sm text-slate-700 font-medium">{selected.context.address || "Không có"}</div>
-                    </div>
-                    <div className="flex gap-4">
-                      <div>
-                        <div className="text-xs text-slate-400 font-bold uppercase">Trạng thái báo cáo rác</div>
-                        <Badge tone="emerald">
-                          {selected.context.reportStatus === "COMPLETED" ? "Đã hoàn thành" : selected.context.reportStatus}
-                        </Badge>
-                      </div>
-                    </div>
-                    {selected.context.weightAction && (
-                      <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                        <div className="text-xs text-slate-500 font-bold uppercase mb-2">Thông tin khối lượng</div>
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div>
-                            <div className="text-xs text-slate-400 lowercase italic">Ước tính</div>
-                            <div className="text-base font-bold text-slate-600">{selected.context.weightAction.estimated}kg</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-slate-400 lowercase italic">Thực tế</div>
-                            <div className="text-base font-bold text-slate-900">{selected.context.weightAction.actual}kg</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-slate-400 lowercase italic">Chênh lệch</div>
-                            <div className="text-base font-bold text-rose-500">+{selected.context.weightAction.diff}kg</div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    {selected.context.timing && (
-                      <div>
-                        <div className="text-xs text-slate-400 font-bold uppercase mb-2">Thời gian xử lý</div>
-                        <div className="space-y-1.5">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-slate-500">Hạn chót:</span>
-                            <span className="font-semibold">{dayjs(selected.context.timing.deadline).format("DD/MM HH:mm")}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-slate-500">Hoàn thành:</span>
-                            <span className="font-semibold">{dayjs(selected.context.timing.completedAt).format("DD/MM HH:mm")}</span>
-                          </div>
-                          <div className="flex justify-between text-sm items-center">
-                            <span className="text-slate-500">Trạng thái:</span>
-                            <Badge tone={selected.context.timing.isLate ? "rose" : "emerald"}>
-                              {selected.context.timing.isLate ? "Trễ hạn" : "Đúng hạn"}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Report Images Comparison */}
-                {selected.context.images && (
-                  <div className="mt-4 pt-4 border-t border-slate-100">
-                    <div className="text-xs text-slate-400 font-bold uppercase mb-3">Hình ảnh minh chứng tại Báo cáo</div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-xs text-slate-500 mb-1.5 italic font-semibold">
-                          Ảnh từ Người dân ({selected.context.images.citizen?.length || 0})
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          {selected.context.images.citizen?.map((img, i) => (
-                            <button
-                              key={i}
-                              onClick={() => openLightbox(selected.context.images!.citizen ?? [], i)}
-                              className="group relative h-48 w-full rounded-xl overflow-hidden border border-slate-200 hover:border-emerald-300 transition-all"
-                            >
-                              <img src={img} alt="nguoi-dan-bao-cao" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </div>
-                            </button>
-                          ))}
-                          {!selected.context.images.citizen?.length && <div className="col-span-2 text-xs text-slate-400 py-2">Không có ảnh</div>}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-500 mb-1.5 italic font-semibold">
-                          Ảnh từ Tài xế ({selected.context.images.collector?.length || 0})
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          {selected.context.images.collector?.map((img, i) => (
-                            <button
-                              key={i}
-                              onClick={() => openLightbox(selected.context.images!.collector ?? [], i)}
-                              className="group relative h-48 w-full rounded-xl overflow-hidden border border-slate-200 hover:border-emerald-300 transition-all"
-                            >
-                              <img src={img} alt="collector-report" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </div>
-                            </button>
-                          ))}
-                          {!selected.context.images.collector?.length && <div className="col-span-2 text-xs text-slate-400 py-2">Không có ảnh</div>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Evidence Images for Complaint */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
-                  Ảnh bằng chứng khiếu nại ({selected.evidenceImages?.length || 0})
-                </div>
-
-                {selected.evidenceImages?.length ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {selected.evidenceImages.map((imageUrl, idx) => (
-                      <button
-                        key={`${selected.id}-${idx}`}
-                        onClick={() => openLightbox(selected.evidenceImages ?? [], idx)}
-                        className="group relative block overflow-hidden rounded-xl border border-slate-200 bg-slate-50 hover:border-emerald-300 transition-all"
-                      >
-                        <img
-                          src={imageUrl}
-                          alt={`evidence-${idx + 1}`}
-                          className="h-64 w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors flex items-center justify-center">
-                          <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500 text-center italic">
-                    Không có ảnh bằng chứng khiếu nại
-                  </div>
-                )}
-              </div>
-
-              {/* Admin Response section */}
-              <div className="flex items-center justify-between">
-                <label className="block text-base font-bold text-slate-700">
-                  Nội dung phản hồi của Admin
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setResponseText("Báo cáo của bạn đã bị đánh dấu sự cố, vui lòng vô phần Lịch sử khiếu nại để theo dõi thêm")}
-                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-tight bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100 transition-colors"
-                >
-                  Sử dụng mẫu hệ thống
-                </button>
-              </div>
-              <textarea
-                value={responseText}
-                onChange={(e) => setResponseText(e.target.value)}
-                placeholder="Nhập nội dung phản hồi cho người khiếu nại..."
-                rows={4}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-shadow"
-              />
             </div>
-          ) : null}
-        </Modal>
+          </div>
+        )}
       </div>
 
       {/* Lightbox */}
@@ -759,6 +774,52 @@ export default function AdminComplaints() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function DetailSectionCard({
+  title,
+  icon,
+  className,
+  children,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={cx("rounded-2xl border border-slate-200 bg-white shadow-sm", className)}>
+      <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+        {icon ? (
+          <span className="grid h-8 w-8 place-items-center rounded-xl border border-slate-200 bg-slate-50">
+            {icon}
+          </span>
+        ) : null}
+        <div className="font-extrabold text-slate-900 truncate">{title}</div>
+      </div>
+      <div className="p-4">{children}</div>
+    </div>
+  );
+}
+
+function DetailInfoRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+      <div className="flex items-center gap-2 text-xs font-extrabold text-slate-500">
+        <span className="text-slate-500">{icon}</span>
+        {label}
+      </div>
+      <div className="mt-1 text-sm font-extrabold text-slate-900">{value}</div>
     </div>
   );
 }
