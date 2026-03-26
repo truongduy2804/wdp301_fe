@@ -19,6 +19,7 @@ import {
   EmptyState,
   Dropdown,
 } from "@/components/ui/page/componentUI";
+import Pagination from "@/components/Pagination";
 import { fetchRedemptions } from "@/api/admin/gift";
 import type { Redemption } from "@/api/types/gift.types";
 
@@ -27,12 +28,15 @@ import type { Redemption } from "@/api/types/gift.types";
 // ============================================================================
 
 export default function AdminRedemptions() {
+  const PAGE_SIZE = 10;
+
   // State
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState<"all" | "7d" | "30d" | "90d">("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Load redemptions on mount
   useEffect(() => {
@@ -82,6 +86,23 @@ export default function AdminRedemptions() {
 
     return result;
   }, [redemptions, searchQuery, dateFilter]);
+
+  const totalItems = filteredRedemptions.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const paginatedRedemptions = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredRedemptions.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredRedemptions, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, dateFilter]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   // Stats
   const stats = useMemo(() => {
@@ -244,12 +265,22 @@ export default function AdminRedemptions() {
               </div>
 
               {/* Table Rows */}
-              {filteredRedemptions.map((redemption) => (
+              {paginatedRedemptions.map((redemption) => (
                 <RedemptionRow key={redemption.id} redemption={redemption} />
               ))}
             </div>
           )}
         </Card>
+
+        {filteredRedemptions.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={PAGE_SIZE}
+            totalItems={totalItems}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
     </div>
   );
