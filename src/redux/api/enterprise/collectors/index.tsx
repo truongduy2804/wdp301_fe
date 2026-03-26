@@ -1,4 +1,8 @@
 import { baseApi } from "@/redux/api/baseApi";
+import {
+  normalizeCollectorWorkingHours,
+  toApiWorkingHoursPayload,
+} from "@/utils/collectorWorkingHours";
 import type {
   ApiResponse,
   Collector,
@@ -7,6 +11,7 @@ import type {
   CreateCollectorBody,
   GetCollectorsParams,
   UpdateCollectorBody,
+  UpdateCollectorWorkingHoursBody,
 } from "./types";
 
 const TAG = "Collectors" as const;
@@ -48,6 +53,9 @@ function normalizeCollector(raw: any): Collector {
           availability: normalizeStatus(rawStatus?.availability),
         }
       : undefined;
+  const workingHours =
+    normalizeCollectorWorkingHours(raw?.workingHours) ??
+    normalizeCollectorWorkingHours(raw?.working_hours);
 
   return {
     ...raw,
@@ -63,6 +71,7 @@ function normalizeCollector(raw: any): Collector {
     avatar: raw?.avatar ?? user?.avatar ?? null,
     status: normalizeStatus(rawStatus),
     statusInfo,
+    workingHours,
     statusUpdatedAt: raw?.statusUpdatedAt ?? statusInfo?.updatedAt,
     user: raw?.user ?? undefined,
   };
@@ -472,6 +481,78 @@ export const collectorsApi = baseApi.injectEndpoints({
       },
     }),
 
+    updateCollectorWorkingHours: build.mutation<
+      ApiResponse<any>,
+      { id: number; body: UpdateCollectorWorkingHoursBody }
+    >({
+      query: ({ id, body }) => ({
+        url: `enterprise/collectors/${id}/working-hours`,
+        method: "PATCH",
+        body: {
+          workingHours: toApiWorkingHoursPayload(body.workingHours),
+        },
+      }),
+      invalidatesTags: (_res, _err, arg) => [
+        { type: TAG, id: arg.id },
+        { type: TAG, id: "LIST" },
+      ],
+      async onQueryStarted(arg, { dispatch, getState, queryFulfilled }) {
+        try {
+          const { data: res } = await queryFulfilled;
+          const nextWorkingHours =
+            normalizeCollectorWorkingHours(res?.data?.workingHours) ??
+            normalizeCollectorWorkingHours(res?.data?.working_hours) ??
+            arg.body.workingHours;
+
+          const state = getState();
+
+          dispatch(
+            collectorsApi.util.updateQueryData(
+              "getCollectorById",
+              arg.id,
+              (draftDetail: any) => {
+                if (draftDetail?.data) {
+                  draftDetail.data = {
+                    ...draftDetail.data,
+                    workingHours: nextWorkingHours,
+                  };
+                }
+              },
+            ),
+          );
+
+          const targets = collectorsApi.util.selectInvalidatedBy(state, [
+            { type: TAG, id: arg.id },
+          ]);
+
+          for (const t of targets) {
+            if (t.endpointName !== "getCollectors") continue;
+
+            dispatch(
+              collectorsApi.util.updateQueryData(
+                "getCollectors",
+                t.originalArgs as any,
+                (draft: any) => {
+                  const bag = getListBag(draft);
+                  if (!bag) return;
+
+                  const idx = bag.arr.findIndex((x) => x.id === arg.id);
+                  if (idx < 0) return;
+
+                  bag.arr[idx] = {
+                    ...bag.arr[idx],
+                    workingHours: nextWorkingHours,
+                  };
+                },
+              ),
+            );
+          }
+        } catch {
+          // ignore
+        }
+      },
+    }),
+
     deleteCollector: build.mutation<ApiResponse<unknown>, number>({
       query: (id) => ({
         url: `enterprise/collectors/${id}`,
@@ -532,5 +613,6 @@ export const {
   useLazyGetCollectorByIdQuery,
   useCreateCollectorMutation,
   useUpdateCollectorMutation,
+  useUpdateCollectorWorkingHoursMutation,
   useDeleteCollectorMutation,
 } = collectorsApi;
