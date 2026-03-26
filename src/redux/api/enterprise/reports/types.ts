@@ -72,6 +72,8 @@ export type EnterpriseReport = {
   accuracyBucket?: string | null;
   images?: string[];
 
+  distanceKm?: number | null;
+
   citizen?: CitizenSummary | null;
   collector?: CollectorSummary | null;
 };
@@ -135,6 +137,8 @@ export type AcceptedEnterpriseReport = {
   accuracyBucket?: string | null;
 
   images: string[];
+
+  distanceKm?: number | null;
 
   citizen: CitizenSummary;
   collector?: CollectorSummary | null;
