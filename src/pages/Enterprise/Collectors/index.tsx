@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { Users, RefreshCw } from "lucide-react";
+import { RefreshCw, Users } from "lucide-react";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
 import {
@@ -16,9 +16,11 @@ import {
 import {
   useCreateCollectorMutation,
   useDeleteCollectorMutation,
+  useGetCollectorByIdQuery,
   useGetCollectorsQuery,
   useLazyGetCollectorByIdQuery,
   useUpdateCollectorMutation,
+  useUpdateCollectorWorkingHoursMutation,
 } from "@/redux/api/enterprise/collectors";
 
 import type {
@@ -29,22 +31,21 @@ import type {
   GetCollectorsParams,
 } from "@/redux/api/enterprise/collectors/types";
 
-import CollectorsTable from "./collectorsTable";
-import CollectorDetailModal from "./collectorDetailModal";
 import CollectorCreateModal from "./collectorCreateModal";
+import CollectorDetailModal from "./collectorDetailModal";
 import CollectorEditModal from "./collectorEditModal";
 import ConfirmDeleteModal from "./confirmDeleteModal";
+import CollectorsTable from "./collectorsTable";
 
-/* ================= Helpers ================= */
 function useDebounced<T>(value: T, delay = 350) {
-  const [v, setV] = useState(value);
+  const [debounced, setDebounced] = useState(value);
 
   useEffect(() => {
-    const id = window.setTimeout(() => setV(value), delay);
+    const id = window.setTimeout(() => setDebounced(value), delay);
     return () => window.clearTimeout(id);
   }, [value, delay]);
 
-  return v;
+  return debounced;
 }
 
 type ListMeta = {
@@ -87,7 +88,6 @@ type StatusFilter = CollectorStatus | "";
 const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "", label: "Tất cả" },
   { value: "ONLINE_AVAILABLE", label: "Hoạt động" },
-  // { value: "ONLINE_BUSY", label: "Đang bận" },
   { value: "OFFLINE", label: "Ngoại tuyến" },
 ];
 
@@ -96,8 +96,13 @@ type UpsertValues = {
   fullName: string;
   phone: string;
   avatar?: File | Blob | null;
-  workingHours?: CollectorWorkingHours;
+  workingHours: CollectorWorkingHours;
 };
+
+function getErrorMessage(error: unknown, fallback = "Thao tác thất bại") {
+  const err = error as any;
+  return err?.data?.message ?? err?.error ?? err?.message ?? fallback;
+}
 
 export default function EnterpriseCollectorsPage() {
   const [status, setStatus] = useState<StatusFilter>("");
@@ -139,6 +144,8 @@ export default function EnterpriseCollectorsPage() {
     useCreateCollectorMutation();
   const [updateCollector, { isLoading: updating }] =
     useUpdateCollectorMutation();
+  const [updateCollectorWorkingHours, { isLoading: updatingWorkingHours }] =
+    useUpdateCollectorWorkingHoursMutation();
   const [deleteCollector, { isLoading: deleting }] =
     useDeleteCollectorMutation();
 
@@ -152,6 +159,27 @@ export default function EnterpriseCollectorsPage() {
 
   const [upsertOpen, setUpsertOpen] = useState(false);
   const [editing, setEditing] = useState<Collector | null>(null);
+  const editingId = editing?.id ?? null;
+
+  const {
+    data: editDetailRes,
+    isLoading: isLoadingEditDetail,
+    isFetching: isFetchingEditDetail,
+    error: editDetailError,
+  } = useGetCollectorByIdQuery(editingId ?? 0, {
+    skip: !upsertOpen || !editingId,
+  });
+
+  const editingDetail = editDetailRes?.data ?? null;
+  const loadingEditDetail =
+    Boolean(editingId) &&
+    upsertOpen &&
+    !editingDetail &&
+    (isLoadingEditDetail || isFetchingEditDetail);
+  const editLoadError =
+    Boolean(editingId) && !editingDetail && editDetailError
+      ? getErrorMessage(editDetailError, "Không thể tải thông tin nhân sự")
+      : undefined;
 
   const onCreateOpen = () => {
     setEditing(null);
@@ -170,13 +198,13 @@ export default function EnterpriseCollectorsPage() {
           email: values.email ?? "",
           fullName: values.fullName,
           phone: values.phone,
-          workingHours: values.workingHours as CollectorWorkingHours,
+          workingHours: values.workingHours,
         };
 
         await createCollector(payload).unwrap();
         toast.success("Đã tạo nhân sự thu gom", { autoClose: 1400 });
       } else {
-        await updateCollector({
+        const updateInfoPromise = updateCollector({
           id: editing.id,
           body: {
             fullName: values.fullName,
@@ -185,13 +213,51 @@ export default function EnterpriseCollectorsPage() {
           },
         }).unwrap();
 
-        toast.success("Đã cập nhật nhân sự thu gom", { autoClose: 1400 });
+        const updateSchedulePromise = updateCollectorWorkingHours({
+          id: editing.id,
+          body: {
+            workingHours: values.workingHours,
+          },
+        }).unwrap();
+
+        const [infoResult, scheduleResult] = await Promise.allSettled([
+          updateInfoPromise,
+          updateSchedulePromise,
+        ]);
+
+        if (
+          infoResult.status === "fulfilled" &&
+          scheduleResult.status === "fulfilled"
+        ) {
+          toast.success("Đã cập nhật nhân sự thu gom", { autoClose: 1400 });
+        } else if (
+          infoResult.status === "rejected" &&
+          scheduleResult.status === "rejected"
+        ) {
+          throw infoResult.reason;
+        } else if (infoResult.status === "rejected") {
+          toast.warn(
+            `Đã cập nhật lịch làm việc nhưng thông tin nhân sự thất bại: ${getErrorMessage(
+              infoResult.reason,
+              "Cập nhật thông tin thất bại",
+            )}`,
+          );
+          return;
+        } else if (scheduleResult.status === "rejected") {
+          toast.warn(
+            `Đã cập nhật thông tin nhưng lịch làm việc thất bại: ${getErrorMessage(
+              scheduleResult.reason,
+              "Cập nhật lịch làm việc thất bại",
+            )}`,
+          );
+          return;
+        }
       }
 
       setUpsertOpen(false);
       setEditing(null);
-    } catch (e: any) {
-      toast.error(e?.data?.message ?? "Thao tác thất bại");
+    } catch (submitError) {
+      toast.error(getErrorMessage(submitError));
     }
   };
 
@@ -211,8 +277,8 @@ export default function EnterpriseCollectorsPage() {
       toast.success("Đã xoá nhân sự thu gom", { autoClose: 1400 });
       setDeleteOpen(false);
       setDeleteTarget(null);
-    } catch (e: any) {
-      toast.error(e?.data?.message ?? "Xoá thất bại");
+    } catch (deleteError) {
+      toast.error(getErrorMessage(deleteError, "Xoá thất bại"));
     }
   };
 
@@ -233,6 +299,7 @@ export default function EnterpriseCollectorsPage() {
       : computedTotalPages != null
         ? page < computedTotalPages
         : items.length === limit;
+  const busy = creating || updating || updatingWorkingHours || deleting;
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-100">
@@ -268,12 +335,12 @@ export default function EnterpriseCollectorsPage() {
                   />
                 </div>
 
-                <div className="w-full sm:min-w-0 sm:w-auto">
+                <div className="w-full sm:w-auto sm:min-w-0">
                   <Dropdown<StatusFilter>
                     label="Trạng thái"
                     value={status}
                     options={STATUS_FILTER_OPTIONS}
-                    onChange={(v) => setStatus(v)}
+                    onChange={(value) => setStatus(value)}
                     minWidth={140}
                   />
                 </div>
@@ -302,7 +369,7 @@ export default function EnterpriseCollectorsPage() {
 
                 <Button
                   onClick={onCreateOpen}
-                  disabled={creating || updating || deleting}
+                  disabled={busy}
                   className="w-full !rounded-2xl !bg-emerald-600 !px-3 !py-2 !font-medium !text-white shadow-sm transition-all duration-200 ease-out hover:!bg-emerald-700 hover:shadow active:!bg-emerald-800 disabled:!opacity-70 sm:w-auto"
                 >
                   + Tạo nhân sự
@@ -335,7 +402,7 @@ export default function EnterpriseCollectorsPage() {
             <>
               <CollectorsTable
                 data={items}
-                busy={creating || updating || deleting}
+                busy={busy}
                 onView={onView}
                 onEdit={onEditOpen}
                 onDelete={onAskDelete}
@@ -361,7 +428,7 @@ export default function EnterpriseCollectorsPage() {
                     <Button
                       variant="outline"
                       disabled={!canPrev}
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                       className="!rounded-xl !px-3 !py-1.5"
                     >
                       Trước
@@ -370,7 +437,7 @@ export default function EnterpriseCollectorsPage() {
                     <Button
                       variant="outline"
                       disabled={!canNext}
-                      onClick={() => setPage((p) => p + 1)}
+                      onClick={() => setPage((prev) => prev + 1)}
                       className="!rounded-xl !px-3 !py-1.5"
                     >
                       Sau
@@ -393,10 +460,13 @@ export default function EnterpriseCollectorsPage() {
       {editing ? (
         <CollectorEditModal
           open={upsertOpen}
-          initial={editing}
-          submitting={creating || updating}
+          collectorId={editingId}
+          initial={editingDetail}
+          loadingInitial={loadingEditDetail}
+          loadError={editLoadError}
+          submitting={creating || updating || updatingWorkingHours}
           onClose={() => {
-            if (creating || updating) return;
+            if (busy) return;
             setUpsertOpen(false);
             setEditing(null);
           }}
@@ -405,9 +475,9 @@ export default function EnterpriseCollectorsPage() {
       ) : (
         <CollectorCreateModal
           open={upsertOpen}
-          submitting={creating || updating}
+          submitting={creating || updating || updatingWorkingHours}
           onClose={() => {
-            if (creating || updating) return;
+            if (creating || updating || updatingWorkingHours) return;
             setUpsertOpen(false);
           }}
           onSubmit={onSubmitUpsert}

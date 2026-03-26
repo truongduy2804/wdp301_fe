@@ -10,7 +10,18 @@ import {
   ZoomIn,
 } from "lucide-react";
 
-import type { Collector } from "@/redux/api/enterprise/collectors/types";
+import LoadingSpinner from "@/components/ui/loadingSpinner";
+import type {
+  Collector,
+  CollectorWorkingHours,
+} from "@/redux/api/enterprise/collectors/types";
+import WorkingHoursEditor from "./WorkingHoursEditor";
+import {
+  createEmptyWorkingHours,
+  normalizeWorkingHoursForSubmit,
+  toFormWorkingHours,
+  type WorkingHoursFormValue,
+} from "@/utils/collectorWorkingHours";
 
 type CollectorLike = Collector & {
   user?: {
@@ -29,11 +40,15 @@ type FormValues = {
   fullName: string;
   phone: string;
   avatar?: File | null;
+  workingHours: CollectorWorkingHours;
 };
 
 type Props = {
   open: boolean;
+  collectorId?: number | null;
   initial?: CollectorLike | null;
+  loadingInitial?: boolean;
+  loadError?: string;
   submitting?: boolean;
   onClose: () => void;
   onSubmit: (values: FormValues) => Promise<void> | void;
@@ -74,15 +89,17 @@ function FormField({
   required,
   children,
   error,
+  className,
 }: {
   label: string;
   icon: any;
   required?: boolean;
   children: React.ReactNode;
   error?: string;
+  className?: string;
 }) {
   return (
-    <div className="space-y-2">
+    <div className={["space-y-2", className].filter(Boolean).join(" ")}>
       <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
         <div className="flex h-5 w-5 items-center justify-center rounded bg-emerald-100">
           <Icon className="h-3 w-3 text-emerald-700" />
@@ -104,15 +121,18 @@ function FormField({
 }
 
 const inputBase =
-  "w-full h-11 rounded-xl border bg-white pl-10 pr-3 text-sm outline-none transition";
+  "h-11 w-full rounded-xl border bg-white pl-10 pr-3 text-sm outline-none transition";
 const inputOk =
-  "border-slate-300 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 ";
+  "border-slate-300 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400";
 const inputErr =
-  "border-slate-300 focus-within:border-red-400 focus-within:ring-1 focus-within:ring-red-400 ";
+  "border-slate-300 focus-within:border-red-400 focus-within:ring-1 focus-within:ring-red-400";
 
 export default function CollectorEditModal({
   open,
+  collectorId,
   initial,
+  loadingInitial,
+  loadError,
   submitting,
   onClose,
   onSubmit,
@@ -121,6 +141,7 @@ export default function CollectorEditModal({
 
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const hydratedCollectorIdRef = useRef<number | null>(null);
   const reduceMotion = useReducedMotion();
 
   const initialEmail = initial?.user?.email ?? initial?.email ?? "";
@@ -133,6 +154,9 @@ export default function CollectorEditModal({
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [workingHours, setWorkingHours] = useState<WorkingHoursFormValue>(() =>
+    createEmptyWorkingHours(),
+  );
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarName, setAvatarName] = useState("");
   const [avatarPreview, setAvatarPreview] = useState("");
@@ -142,19 +166,44 @@ export default function CollectorEditModal({
     fullName?: string;
     phone?: string;
     avatar?: string;
+    workingHours?: string;
   }>({});
 
   useEffect(() => {
-    if (!open) return;
-    setFullName(initialFullName);
-    setPhone(initialPhone);
+    if (open) return;
+
+    hydratedCollectorIdRef.current = null;
+    setFullName("");
+    setPhone("");
+    setWorkingHours(createEmptyWorkingHours());
     setAvatarFile(null);
     setAvatarName("");
     setAvatarPreview("");
     setZoomOpen(false);
     setErrors({});
     if (fileRef.current) fileRef.current.value = "";
-  }, [open, initialFullName, initialPhone]);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !collectorId) return;
+
+    setAvatarFile(null);
+    setAvatarName("");
+    setAvatarPreview("");
+    setZoomOpen(false);
+    setErrors({});
+    if (fileRef.current) fileRef.current.value = "";
+  }, [collectorId, open]);
+
+  useEffect(() => {
+    if (!open || !collectorId || !initial) return;
+    if (hydratedCollectorIdRef.current === collectorId) return;
+
+    hydratedCollectorIdRef.current = collectorId;
+    setFullName(initialFullName);
+    setPhone(initialPhone);
+    setWorkingHours(toFormWorkingHours(initial.workingHours, createEmptyWorkingHours()));
+  }, [collectorId, initial, initialFullName, initialPhone, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -170,6 +219,7 @@ export default function CollectorEditModal({
       setAvatarPreview("");
       return;
     }
+
     const url = URL.createObjectURL(avatarFile);
     setAvatarPreview(url);
     return () => URL.revokeObjectURL(url);
@@ -210,34 +260,48 @@ export default function CollectorEditModal({
   );
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     const okTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
-    if (!okTypes.includes(f.type)) {
-      setErrors((p) => ({ ...p, avatar: "Chỉ hỗ trợ png/jpg/jpeg/webp" }));
+    if (!okTypes.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        avatar: "Chỉ hỗ trợ png/jpg/jpeg/webp",
+      }));
       e.target.value = "";
       return;
     }
 
-    if (f.size > 5 * 1024 * 1024) {
-      setErrors((p) => ({ ...p, avatar: "Ảnh quá lớn (tối đa 5MB)" }));
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({
+        ...prev,
+        avatar: "Ảnh quá lớn (tối đa 5MB)",
+      }));
       e.target.value = "";
       return;
     }
 
-    setErrors((p) => ({ ...p, avatar: undefined }));
-    setAvatarFile(f);
-    setAvatarName(f.name);
+    setErrors((prev) => ({ ...prev, avatar: undefined }));
+    setAvatarFile(file);
+    setAvatarName(file.name);
   };
 
   const validate = () => {
     const next: typeof errors = {};
+
     if (!fullName.trim()) next.fullName = "Vui lòng nhập họ và tên";
+
     if (!phone.trim()) next.phone = "Vui lòng nhập số điện thoại";
     else if (!isValidPhone(phone.trim())) {
       next.phone = "Sai định dạng số điện thoại";
     }
+
+    const hasActive = Object.values(workingHours).some((item) => item.active);
+    if (!hasActive) {
+      next.workingHours = "Cần chọn ít nhất 1 ngày làm việc";
+    }
+
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -250,11 +314,14 @@ export default function CollectorEditModal({
   };
 
   const handleSubmit = async () => {
+    if (loadingInitial || !collectorId || !initial) return;
     if (!validate()) return;
+
     await onSubmit({
       fullName: fullName.trim(),
       phone: phone.trim(),
       avatar: avatarFile || undefined,
+      workingHours: normalizeWorkingHoursForSubmit(workingHours),
     });
   };
 
@@ -274,7 +341,7 @@ export default function CollectorEditModal({
         >
           <motion.div
             variants={variants.panel}
-            className="fixed left-1/2 top-1/2 flex max-h-[calc(100vh-3rem)] w-[calc(100vw-1.5rem)] max-w-[520px] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl  shadow-2xl"
+            className="fixed left-1/2 top-1/2 flex max-h-[calc(100vh-3rem)] w-[calc(100vw-1.5rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative bg-emerald-600 px-6 py-6">
@@ -296,141 +363,200 @@ export default function CollectorEditModal({
                     Cập nhật nhân sự thu gom
                   </h2>
                   <p className="text-sm text-emerald-50">
-                    Thay đổi họ tên, số điện thoại và ảnh đại diện
+                    Chỉnh sửa thông tin cơ bản và lịch làm việc hiện tại
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto custom-scrollbar bg-white px-6 py-6">
-              <div className="space-y-5">
-                <FormField label="Email" icon={Mail}>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      value={initialEmail}
-                      disabled
-                      className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-sm text-slate-500"
-                    />
+            <div className="min-h-0 flex-1 overflow-y-auto custom-scrollbar bg-slate-100 px-6 py-6">
+              {loadingInitial && !initial ? (
+                <div className="flex min-h-72 flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center shadow-sm">
+                  <LoadingSpinner color="blue" size="10" />
+                  <p className="text-sm font-medium text-slate-600">
+                    Đang tải thông tin nhân sự...
+                  </p>
+                </div>
+              ) : loadError && !initial ? (
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{loadError}</span>
                   </div>
-                </FormField>
-
-                <FormField
-                  label="Họ và tên"
-                  icon={User}
-                  required
-                  error={errors.fullName}
-                >
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      value={fullName}
-                      onChange={(e) => {
-                        setFullName(e.target.value);
-                        if (errors.fullName) {
-                          setErrors((p) => ({ ...p, fullName: undefined }));
-                        }
-                      }}
-                      className={[
-                        inputBase,
-                        errors.fullName ? inputErr : inputOk,
-                      ].join(" ")}
-                    />
-                  </div>
-                </FormField>
-
-                <FormField
-                  label="Số điện thoại"
-                  icon={Phone}
-                  required
-                  error={errors.phone}
-                >
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      value={phone}
-                      onChange={(e) => {
-                        setPhone(e.target.value);
-                        if (errors.phone) {
-                          setErrors((p) => ({ ...p, phone: undefined }));
-                        }
-                      }}
-                      className={[
-                        inputBase,
-                        errors.phone ? inputErr : inputOk,
-                      ].join(" ")}
-                    />
-                  </div>
-                </FormField>
-
-                <FormField label="Avatar" icon={Camera} error={errors.avatar}>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => fileRef.current?.click()}
-                        disabled={submitting}
-                        className="rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50"
-                      >
-                        {avatarFile
-                          ? "Đổi ảnh khác"
-                          : existingAvatarUrl
-                            ? "Thay ảnh"
-                            : "Chọn ảnh"}
-                      </button>
-
-                      <input
-                        ref={fileRef}
-                        type="file"
-                        accept="image/png,image/jpeg,image/jpg,image/webp"
-                        className="hidden"
-                        onChange={handleFile}
-                      />
-
-                      <div className="truncate text-sm text-slate-600">
-                        {avatarFile
-                          ? `Đã chọn: ${avatarName}`
-                          : existingAvatarUrl
-                            ? "Đang dùng ảnh hiện tại"
-                            : "Chưa chọn ảnh"}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="mb-4 flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100">
+                        <User className="h-4 w-4 text-emerald-700" />
                       </div>
-
-                      {avatarFile ? (
-                        <button
-                          type="button"
-                          onClick={clearSelectedAvatar}
-                          className="ml-auto rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-100"
-                        >
-                          Bỏ chọn
-                        </button>
-                      ) : null}
+                      <h3 className="text-base font-semibold text-slate-900">
+                        Thông tin cập nhật
+                      </h3>
                     </div>
 
-                    {displayAvatar ? (
-                      <div className="rounded-2xl border border-slate-200 bg-white p-3">
-                        <button
-                          type="button"
-                          onClick={() => setZoomOpen(true)}
-                          className="group relative w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 transition hover:border-emerald-300"
-                        >
-                          <img
-                            src={displayAvatar}
-                            alt="avatar preview"
-                            className="h-40 w-full object-cover"
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <FormField
+                        label="Email"
+                        icon={Mail}
+                        className="md:col-span-2"
+                      >
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                          <input
+                            value={initialEmail}
+                            disabled
+                            className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-sm text-slate-500"
                           />
-                          <div className="absolute inset-0 bg-black/0 transition group-hover:bg-black/20" />
-                          <div className="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 opacity-0 transition group-hover:opacity-100">
-                            <span className="inline-flex items-center gap-1">
-                              <ZoomIn className="h-4 w-4" />
-                              Xem lớn
-                            </span>
+                        </div>
+                      </FormField>
+
+                      <FormField
+                        label="Họ và tên"
+                        icon={User}
+                        required
+                        error={errors.fullName}
+                      >
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                          <input
+                            value={fullName}
+                            onChange={(e) => {
+                              setFullName(e.target.value);
+                              if (errors.fullName) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  fullName: undefined,
+                                }));
+                              }
+                            }}
+                            className={[
+                              inputBase,
+                              errors.fullName ? inputErr : inputOk,
+                            ].join(" ")}
+                          />
+                        </div>
+                      </FormField>
+
+                      <FormField
+                        label="Số điện thoại"
+                        icon={Phone}
+                        required
+                        error={errors.phone}
+                      >
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                          <input
+                            value={phone}
+                            onChange={(e) => {
+                              setPhone(e.target.value);
+                              if (errors.phone) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  phone: undefined,
+                                }));
+                              }
+                            }}
+                            className={[
+                              inputBase,
+                              errors.phone ? inputErr : inputOk,
+                            ].join(" ")}
+                          />
+                        </div>
+                      </FormField>
+
+                      <FormField
+                        label="Avatar"
+                        icon={Camera}
+                        error={errors.avatar}
+                        className="md:col-span-2"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => fileRef.current?.click()}
+                              disabled={submitting || loadingInitial}
+                              className="rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50"
+                            >
+                              {avatarFile
+                                ? "Đổi ảnh khác"
+                                : existingAvatarUrl
+                                  ? "Thay ảnh"
+                                  : "Chọn ảnh"}
+                            </button>
+
+                            <input
+                              ref={fileRef}
+                              type="file"
+                              accept="image/png,image/jpeg,image/jpg,image/webp"
+                              className="hidden"
+                              onChange={handleFile}
+                            />
+
+                            <div className="min-w-0 flex-1 truncate text-sm text-slate-600">
+                              {avatarFile
+                                ? `Đã chọn: ${avatarName}`
+                                : existingAvatarUrl
+                                  ? "Đang dùng ảnh hiện tại"
+                                  : "Chưa chọn ảnh"}
+                            </div>
+
+                            {avatarFile ? (
+                              <button
+                                type="button"
+                                onClick={clearSelectedAvatar}
+                                className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-100"
+                              >
+                                Bỏ chọn
+                              </button>
+                            ) : null}
                           </div>
-                        </button>
-                      </div>
-                    ) : null}
+
+                          {displayAvatar ? (
+                            <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                              <button
+                                type="button"
+                                onClick={() => setZoomOpen(true)}
+                                className="group relative w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 transition hover:border-emerald-300"
+                              >
+                                <img
+                                  src={displayAvatar}
+                                  alt="avatar preview"
+                                  className="h-40 w-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/0 transition group-hover:bg-black/20" />
+                                <div className="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 opacity-0 transition group-hover:opacity-100">
+                                  <span className="inline-flex items-center gap-1">
+                                    <ZoomIn className="h-4 w-4" />
+                                    Xem lớn
+                                  </span>
+                                </div>
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </FormField>
+                    </div>
                   </div>
-                </FormField>
-              </div>
+
+                  <WorkingHoursEditor
+                    value={workingHours}
+                    disabled={submitting || loadingInitial || !initial}
+                    error={errors.workingHours}
+                    onChange={(next) => {
+                      setWorkingHours(next);
+                      if (errors.workingHours) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          workingHours: undefined,
+                        }));
+                      }
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4">
@@ -444,11 +570,15 @@ export default function CollectorEditModal({
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={submitting}
+                disabled={submitting || loadingInitial || !initial}
                 className="rounded-xl bg-emerald-600 px-6 py-2 font-semibold text-white transition hover:bg-emerald-700"
                 type="button"
               >
-                {submitting ? "Đang lưu..." : "Lưu thay đổi"}
+                {loadingInitial
+                  ? "Đang tải dữ liệu..."
+                  : submitting
+                    ? "Đang cập nhật..."
+                    : "Cập nhật"}
               </button>
             </div>
           </motion.div>
