@@ -147,18 +147,21 @@ export default function AdminComplaints() {
     ]
     : [];
 
-  const handleRespond = async (nextStatus: AdminComplaintStatus) => {
-    if (!selected) return;
-    if (!responseText.trim()) {
+  const handleRespond = async (
+    targetId: number,
+    nextStatus: AdminComplaintStatus,
+    message: string,
+  ) => {
+    if (!message?.trim()) {
       toast.warning("Vui lòng nhập nội dung phản hồi");
       return;
     }
 
     try {
       setIsResponding(true);
-      const updated = await respondAdminComplaint(selected.id, {
+      const updated = await respondAdminComplaint(targetId, {
         status: nextStatus,
-        response: responseText.trim(),
+        response: message.trim(),
       });
 
       setList((prev) =>
@@ -174,6 +177,7 @@ export default function AdminComplaints() {
         ),
       );
 
+      // Nếu đang mở modal cho chính complaint này thì cập nhật state selected
       setSelected((prev) =>
         prev && prev.id === updated.id
           ? {
@@ -187,7 +191,8 @@ export default function AdminComplaints() {
 
       toast.success("Phản hồi khiếu nại thành công", { autoClose: 1500 });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Phản hồi khiếu nại thất bại";
+      const msg =
+        err instanceof Error ? err.message : "Phản hồi khiếu nại thất bại";
       toast.error(msg);
     } finally {
       setIsResponding(false);
@@ -362,20 +367,30 @@ export default function AdminComplaints() {
                               <Button
                                 variant="outline"
                                 className="h-8 w-8 !p-0 border-rose-200 text-rose-600 hover:bg-rose-50"
+                                disabled={isResponding}
                                 onClick={() => {
-                                  setSelected(r);
+                                  handleRespond(
+                                    r.id,
+                                    "REJECTED",
+                                    "Yêu cầu khiếu nại của bạn không được chấp nhận sau khi kiểm tra",
+                                  );
                                 }}
-                                title="Từ chối"
+                                title="Từ chối nhanh"
                               >
                                 <XCircle className="h-3.5 w-3.5" />
                               </Button>
                               <Button
                                 variant="outline"
                                 className="h-8 w-8 !p-0 border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                                disabled={isResponding}
                                 onClick={() => {
-                                  setSelected(r);
+                                  handleRespond(
+                                    r.id,
+                                    "PROCESSED",
+                                    "Báo cáo của bạn đã được chấp nhận và xử lý",
+                                  );
                                 }}
-                                title="Chấp nhận"
+                                title="Chấp nhận nhanh"
                               >
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                               </Button>
@@ -680,7 +695,7 @@ export default function AdminComplaints() {
                       <Button
                         variant="danger"
                         disabled={isResponding}
-                        onClick={() => handleRespond("REJECTED")}
+                        onClick={() => handleRespond(selected.id, "REJECTED", responseText)}
                       >
                         {isResponding ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -692,7 +707,7 @@ export default function AdminComplaints() {
                       <Button
                         disabled={isResponding}
                         onClick={() => {
-                          handleRespond("PROCESSED");
+                          handleRespond(selected.id, "PROCESSED", responseText);
                         }}
                       >
                         {isResponding ? (
