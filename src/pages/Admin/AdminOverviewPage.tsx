@@ -8,7 +8,6 @@ import {
   Filter,
   FileText,
   RefreshCw,
-  ShieldAlert,
   UserCheck,
   Users,
 } from "lucide-react";
@@ -151,10 +150,8 @@ export default function AdminOverviewPage() {
     labelDate: item.date.slice(5),
   }));
 
-  const filteredStatusBreakdown = data.reportStatusBreakdown.breakdown.filter(
-    (item) => item.status !== "ENTERPRISE_RESERVED",
-  );
-  const filteredStatusTotal = filteredStatusBreakdown.reduce((sum, item) => sum + item.count, 0);
+  const statusBreakdown = data.reportStatusBreakdown.breakdown;
+  const statusTotal = statusBreakdown.reduce((sum, item) => sum + item.count, 0);
 
   const pieColors = ["#10b981", "#0ea5e9", "#f59e0b", "#ef4444", "#6366f1", "#8b5cf6"];
 
@@ -256,7 +253,7 @@ export default function AdminOverviewPage() {
                   Xu hướng báo cáo {trendRange === 7 ? "1 tuần" : trendRange === 30 ? "1 tháng" : "1 năm"}
                 </h2>
                 <p className="text-sm text-slate-600">
-                  Theo dõi tổng số, hoàn thành và đơn bị hủy
+                  Theo dõi tổng số, hoàn thành và đơn bị hủy 
                 </p>
               </div>
               <div className="inline-flex w-full items-center rounded-xl border border-slate-200 bg-white p-1 sm:w-auto">
@@ -330,21 +327,21 @@ export default function AdminOverviewPage() {
           <Card className="p-4 sm:p-5">
             <div className="mb-4">
               <h2 className="text-base font-bold text-slate-900">Trạng thái báo cáo</h2>
-              <p className="text-sm text-slate-600">Phân bố theo từng trạng thái xử lý</p>
+              <p className="text-sm text-slate-600">Phân bố theo từng trạng thái xử lý (toàn bộ dữ liệu)</p>
             </div>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={filteredStatusBreakdown}
+                    data={statusBreakdown}
                     dataKey="count"
                     nameKey="status"
                     cx="50%"
                     cy="50%"
                     outerRadius={90}
-                    label={({ percent = 0 }) => `${(percent * 100).toFixed(0)}%`}
+                    label={({ payload }) => `${payload?.percentage ?? 0}%`}
                   >
-                    {filteredStatusBreakdown.map((_, index) => (
+                    {statusBreakdown.map((_, index) => (
                       <Cell key={`status-${index}`} fill={pieColors[index % pieColors.length]} />
                     ))}
                   </Pie>
@@ -353,7 +350,7 @@ export default function AdminOverviewPage() {
               </ResponsiveContainer>
             </div>
             <p className="text-sm font-semibold text-slate-700">
-              Tổng hiển thị: {formatNumber(filteredStatusTotal)} báo cáo
+              Tổng hiển thị: {formatNumber(statusTotal)} báo cáo
             </p>
           </Card>
         </div>
