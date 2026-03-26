@@ -1,36 +1,40 @@
 // src/pages/Admin/Complaints.tsx
-import React, { useMemo, useState, useEffect } from "react";
-import { toast } from "react-toastify";
+import dayjs from "dayjs";
 import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Filter,
+  Loader2,
   MessageSquareWarning,
   Search,
-  Filter,
-  Eye,
-  CheckCircle2,
+  X,
   XCircle,
-  Loader2,
+  ZoomIn,
 } from "lucide-react";
-import dayjs from "dayjs";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 
-import {
-  cx,
-  Card,
-  CardHeader,
-  Button,
-  Badge,
-  Modal,
-  EmptyState,
-  Dropdown,
-} from "@/components/ui/page/componentUI";
 import {
   fetchAdminComplaints,
   respondAdminComplaint,
 } from "@/api/admin/complaint";
-import Pagination from "@/components/Pagination";
 import type {
   AdminComplaint,
   AdminComplaintStatus,
 } from "@/api/types/complaint.types";
+import Pagination from "@/components/Pagination";
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  cx,
+  Dropdown,
+  EmptyState,
+  Modal,
+} from "@/components/ui/page/componentUI";
 
 function toneStatus(s: AdminComplaintStatus) {
   if (s === "OPEN") return "blue";
@@ -61,6 +65,17 @@ export default function AdminComplaints() {
   const [selected, setSelected] = useState<AdminComplaint | null>(null);
   const [responseText, setResponseText] = useState("");
   const [isResponding, setIsResponding] = useState(false);
+
+  // Lightbox state
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  function openLightbox(images: string[], startIdx = 0) {
+    setLightboxImages(images);
+    setLightboxIdx(startIdx);
+    setLightboxOpen(true);
+  }
 
   const loadComplaints = async () => {
     try {
@@ -256,7 +271,7 @@ export default function AdminComplaints() {
                 <thead className="bg-slate-50 border-y border-slate-200">
                   <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
                     <th className="px-4 py-3">ID</th>
-                    <th className="px-4 py-3">Nội dung</th>
+                    <th className="px-4 py-3">Loại khiếu nại</th>
                     <th className="px-4 py-3">Trạng thái</th>
                     <th className="px-4 py-3">Người dân</th>
                     <th className="px-4 py-3">Tài xế</th>
@@ -416,7 +431,7 @@ export default function AdminComplaints() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Citizen Card */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Người dân báo cáo</div>
+                  <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Người dân báo cáo</div>
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-12 rounded-full bg-slate-100 overflow-hidden border border-slate-200 flex-shrink-0">
                       {selected.citizen.avatar ? (
@@ -428,19 +443,19 @@ export default function AdminComplaints() {
                       )}
                     </div>
                     <div>
-                      <div className="font-bold text-slate-900">{selected.citizen.fullName}</div>
-                      <div className="text-sm text-slate-500 font-medium">{selected.citizen.phone || "Không có"}</div>
+                      <div className="text-base font-bold text-slate-900">{selected.citizen.fullName}</div>
+                      <div className="text-base text-slate-500 font-medium">{selected.citizen.phone || "Không có"}</div>
                     </div>
                   </div>
                   {selected.citizen.trustStats && (
                     <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
                       <div>
-                        <div className="text-[10px] text-slate-400 font-bold uppercase">Tổng khiếu nại</div>
-                        <div className="text-sm font-bold text-slate-700">{selected.citizen.trustStats.totalComplaints} lần</div>
+                        <div className="text-xs text-slate-400 font-bold uppercase">Tổng khiếu nại</div>
+                        <div className="text-base font-bold text-slate-700">{selected.citizen.trustStats.totalComplaints} lần</div>
                       </div>
                       <div>
-                        <div className="text-[10px] text-slate-400 font-bold uppercase">Báo cáo giả</div>
-                        <div className="text-sm font-bold text-rose-500">{selected.citizen.trustStats.totalFakeReports} lần</div>
+                        <div className="text-xs text-slate-400 font-bold uppercase">Báo cáo giả</div>
+                        <div className="text-base font-bold text-rose-500">{selected.citizen.trustStats.totalFakeReports} lần</div>
                       </div>
                     </div>
                   )}
@@ -448,7 +463,7 @@ export default function AdminComplaints() {
 
                 {/* Collector Card */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Tài xế bị khiếu nại</div>
+                  <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Tài xế bị khiếu nại</div>
                   {selected.collector ? (
                     <>
                       <div className="flex items-center gap-3">
@@ -462,20 +477,20 @@ export default function AdminComplaints() {
                           )}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900">{selected.collector.fullName}</div>
-                          <div className="text-sm text-slate-600 font-mono bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 inline-block mt-0.5">
+                          <div className="text-base font-bold text-slate-900">{selected.collector.fullName}</div>
+                          <div className="text-base text-slate-600 font-mono bg-slate-50 px-2 py-0.5 rounded border border-slate-100 inline-block mt-0.5">
                             {selected.collector.employeeCode}
                           </div>
                         </div>
                       </div>
                       <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
                         <div>
-                          <div className="text-[10px] text-slate-400 font-bold uppercase">Điểm tin cậy</div>
-                          <div className="text-sm font-bold text-emerald-600">{selected.collector.trustScore} điểm</div>
+                          <div className="text-xs text-slate-400 font-bold uppercase">Điểm tin cậy</div>
+                          <div className="text-base font-bold text-emerald-600">{selected.collector.trustScore} điểm</div>
                         </div>
                         <div>
-                          <div className="text-[10px] text-slate-400 font-bold uppercase">Bỏ qua công việc</div>
-                          <div className="text-sm font-bold text-orange-500">{selected.collector.skipCount} lần</div>
+                          <div className="text-xs text-slate-400 font-bold uppercase">Bỏ qua công việc</div>
+                          <div className="text-base font-bold text-orange-500">{selected.collector.skipCount} lần</div>
                         </div>
                       </div>
                     </>
@@ -489,24 +504,24 @@ export default function AdminComplaints() {
 
               {/* Complaint Content */}
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nội dung khiếu nại</div>
-                <div className="text-sm font-medium text-slate-800 leading-relaxed bg-white border border-slate-200 rounded-xl p-3">
+                <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Nội dung khiếu nại</div>
+                <div className="text-base font-medium text-slate-800 leading-relaxed bg-white border border-slate-200 rounded-xl p-3">
                   {selected.content}
                 </div>
               </div>
 
               {/* Report Context Card */}
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Tổng quan báo cáo rác (Mã báo cáo #{selected.context.reportId})</div>
+                <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Tổng quan báo cáo rác (Mã báo cáo #{selected.context.reportId})</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3">
                     <div>
-                      <div className="text-[10px] text-slate-400 font-bold uppercase">Địa chỉ</div>
+                      <div className="text-xs text-slate-400 font-bold uppercase">Địa chỉ</div>
                       <div className="text-sm text-slate-700 font-medium">{selected.context.address || "Không có"}</div>
                     </div>
                     <div className="flex gap-4">
                       <div>
-                        <div className="text-[10px] text-slate-400 font-bold uppercase">Trạng thái báo cáo rác</div>
+                        <div className="text-xs text-slate-400 font-bold uppercase">Trạng thái báo cáo rác</div>
                         <Badge tone="emerald">
                           {selected.context.reportStatus === "COMPLETED" ? "Đã hoàn thành" : selected.context.reportStatus}
                         </Badge>
@@ -514,19 +529,19 @@ export default function AdminComplaints() {
                     </div>
                     {selected.context.weightAction && (
                       <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                        <div className="text-[10px] text-slate-500 font-bold uppercase mb-2">Thông tin khối lượng</div>
+                        <div className="text-xs text-slate-500 font-bold uppercase mb-2">Thông tin khối lượng</div>
                         <div className="grid grid-cols-3 gap-2 text-center">
                           <div>
-                            <div className="text-[10px] text-slate-400 lowercase italic">Ước tính</div>
-                            <div className="text-sm font-bold text-slate-600">{selected.context.weightAction.estimated}kg</div>
+                            <div className="text-xs text-slate-400 lowercase italic">Ước tính</div>
+                            <div className="text-base font-bold text-slate-600">{selected.context.weightAction.estimated}kg</div>
                           </div>
                           <div>
-                            <div className="text-[10px] text-slate-400 lowercase italic">Thực tế</div>
-                            <div className="text-sm font-bold text-slate-900">{selected.context.weightAction.actual}kg</div>
+                            <div className="text-xs text-slate-400 lowercase italic">Thực tế</div>
+                            <div className="text-base font-bold text-slate-900">{selected.context.weightAction.actual}kg</div>
                           </div>
                           <div>
-                            <div className="text-[10px] text-slate-400 lowercase italic">Chênh lệch</div>
-                            <div className="text-sm font-bold text-rose-500">+{selected.context.weightAction.diff}kg</div>
+                            <div className="text-xs text-slate-400 lowercase italic">Chênh lệch</div>
+                            <div className="text-base font-bold text-rose-500">+{selected.context.weightAction.diff}kg</div>
                           </div>
                         </div>
                       </div>
@@ -536,17 +551,17 @@ export default function AdminComplaints() {
                   <div className="space-y-3">
                     {selected.context.timing && (
                       <div>
-                        <div className="text-[10px] text-slate-400 font-bold uppercase mb-2">Thời gian xử lý</div>
+                        <div className="text-xs text-slate-400 font-bold uppercase mb-2">Thời gian xử lý</div>
                         <div className="space-y-1.5">
-                          <div className="flex justify-between text-xs">
+                          <div className="flex justify-between text-sm">
                             <span className="text-slate-500">Hạn chót:</span>
                             <span className="font-semibold">{dayjs(selected.context.timing.deadline).format("DD/MM HH:mm")}</span>
                           </div>
-                          <div className="flex justify-between text-xs">
+                          <div className="flex justify-between text-sm">
                             <span className="text-slate-500">Hoàn thành:</span>
                             <span className="font-semibold">{dayjs(selected.context.timing.completedAt).format("DD/MM HH:mm")}</span>
                           </div>
-                          <div className="flex justify-between text-xs items-center">
+                          <div className="flex justify-between text-sm items-center">
                             <span className="text-slate-500">Trạng thái:</span>
                             <Badge tone={selected.context.timing.isLate ? "rose" : "emerald"}>
                               {selected.context.timing.isLate ? "Trễ hạn" : "Đúng hạn"}
@@ -561,28 +576,46 @@ export default function AdminComplaints() {
                 {/* Report Images Comparison */}
                 {selected.context.images && (
                   <div className="mt-4 pt-4 border-t border-slate-100">
-                    <div className="text-[10px] text-slate-400 font-bold uppercase mb-3">Hình ảnh minh chứng tại Báo cáo</div>
+                    <div className="text-xs text-slate-400 font-bold uppercase mb-3">Hình ảnh minh chứng tại Báo cáo</div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <div className="text-[10px] text-slate-500 mb-1 italic">Ảnh từ Người dân ({selected.context.images.citizen?.length || 0})</div>
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="text-xs text-slate-500 mb-1.5 italic font-semibold">
+                          Ảnh từ Người dân ({selected.context.images.citizen?.length || 0})
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
                           {selected.context.images.citizen?.map((img, i) => (
-                            <a key={i} href={img} target="_blank" rel="noreferrer" className="h-16 w-16 rounded-lg overflow-hidden border border-slate-200">
-                              <img src={img} alt="nguoi-dan-bao-cao" className="h-full w-full object-cover" />
-                            </a>
+                            <button
+                              key={i}
+                              onClick={() => openLightbox(selected.context.images!.citizen ?? [], i)}
+                              className="group relative h-48 w-full rounded-xl overflow-hidden border border-slate-200 hover:border-emerald-300 transition-all"
+                            >
+                              <img src={img} alt="nguoi-dan-bao-cao" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </button>
                           ))}
-                          {!selected.context.images.citizen?.length && <div className="text-xs text-slate-400 py-2">Không có ảnh</div>}
+                          {!selected.context.images.citizen?.length && <div className="col-span-2 text-xs text-slate-400 py-2">Không có ảnh</div>}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[10px] text-slate-500 mb-1 italic">Ảnh từ Tài xế ({selected.context.images.collector?.length || 0})</div>
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="text-xs text-slate-500 mb-1.5 italic font-semibold">
+                          Ảnh từ Tài xế ({selected.context.images.collector?.length || 0})
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
                           {selected.context.images.collector?.map((img, i) => (
-                            <a key={i} href={img} target="_blank" rel="noreferrer" className="h-16 w-16 rounded-lg overflow-hidden border border-slate-200">
-                              <img src={img} alt="collector-report" className="h-full w-full object-cover" />
-                            </a>
+                            <button
+                              key={i}
+                              onClick={() => openLightbox(selected.context.images!.collector ?? [], i)}
+                              className="group relative h-48 w-full rounded-xl overflow-hidden border border-slate-200 hover:border-emerald-300 transition-all"
+                            >
+                              <img src={img} alt="collector-report" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </button>
                           ))}
-                          {!selected.context.images.collector?.length && <div className="text-xs text-slate-400 py-2">Không có ảnh</div>}
+                          {!selected.context.images.collector?.length && <div className="col-span-2 text-xs text-slate-400 py-2">Không có ảnh</div>}
                         </div>
                       </div>
                     </div>
@@ -592,26 +625,27 @@ export default function AdminComplaints() {
 
               {/* Evidence Images for Complaint */}
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
                   Ảnh bằng chứng khiếu nại ({selected.evidenceImages?.length || 0})
                 </div>
 
                 {selected.evidenceImages?.length ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {selected.evidenceImages.map((imageUrl, idx) => (
-                      <a
+                      <button
                         key={`${selected.id}-${idx}`}
-                        href={imageUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+                        onClick={() => openLightbox(selected.evidenceImages ?? [], idx)}
+                        className="group relative block overflow-hidden rounded-xl border border-slate-200 bg-slate-50 hover:border-emerald-300 transition-all"
                       >
                         <img
                           src={imageUrl}
                           alt={`evidence-${idx + 1}`}
-                          className="h-24 w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                          className="h-64 w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
                         />
-                      </a>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors flex items-center justify-center">
+                          <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
+                        </div>
+                      </button>
                     ))}
                   </div>
                 ) : (
@@ -623,13 +657,13 @@ export default function AdminComplaints() {
 
               {/* Admin Response section */}
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-bold text-slate-700">
+                <label className="block text-base font-bold text-slate-700">
                   Nội dung phản hồi của Admin
                 </label>
                 <button
                   type="button"
                   onClick={() => setResponseText("Báo cáo của bạn đã bị đánh dấu sự cố, vui lòng vô phần Lịch sử khiếu nại để theo dõi thêm")}
-                  className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-tight bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 transition-colors"
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-tight bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100 transition-colors"
                 >
                   Sử dụng mẫu hệ thống
                 </button>
@@ -639,12 +673,77 @@ export default function AdminComplaints() {
                 onChange={(e) => setResponseText(e.target.value)}
                 placeholder="Nhập nội dung phản hồi cho người khiếu nại..."
                 rows={4}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-shadow"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-shadow"
               />
             </div>
           ) : null}
         </Modal>
       </div>
+
+      {/* Lightbox */}
+      {lightboxOpen && lightboxImages.length > 0 && (
+        <div
+          className="fixed inset-0 z-[2000] bg-black/90 flex items-center justify-center"
+          onClick={() => setLightboxOpen(false)}
+        >
+          {/* Prev */}
+          {lightboxImages.length > 1 && (
+            <button
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/10 hover:bg-white/25 transition-colors"
+              onClick={(e) => { e.stopPropagation(); setLightboxIdx((i) => (i - 1 + lightboxImages.length) % lightboxImages.length); }}
+            >
+              <ChevronLeft className="h-6 w-6 text-white" />
+            </button>
+          )}
+
+          {/* Image */}
+          <img
+            src={lightboxImages[lightboxIdx]}
+            alt={`Ảnh ${lightboxIdx + 1}`}
+            className="max-h-[88vh] max-w-[90vw] rounded-2xl shadow-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Next */}
+          {lightboxImages.length > 1 && (
+            <button
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/10 hover:bg-white/25 transition-colors"
+              onClick={(e) => { e.stopPropagation(); setLightboxIdx((i) => (i + 1) % lightboxImages.length); }}
+            >
+              <ChevronRight className="h-6 w-6 text-white" />
+            </button>
+          )}
+
+          {/* Counter + Close */}
+          <div className="absolute top-4 right-4 flex items-center gap-3">
+            {lightboxImages.length > 1 && (
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white">
+                {lightboxIdx + 1} / {lightboxImages.length}
+              </span>
+            )}
+            <button
+              className="grid h-9 w-9 place-items-center rounded-full bg-white/10 hover:bg-white/25 transition-colors"
+              onClick={() => setLightboxOpen(false)}
+            >
+              <X className="h-5 w-5 text-white" />
+            </button>
+          </div>
+
+          {/* Dots */}
+          {lightboxImages.length > 1 && (
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {lightboxImages.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); setLightboxIdx(i); }}
+                  className={`h-2 rounded-full transition-all ${i === lightboxIdx ? "w-6 bg-white" : "w-2 bg-white/40"
+                    }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
