@@ -146,16 +146,19 @@ export default function AdminComplaints() {
     ]
     : [];
 
-  const handleRespond = async (nextStatus: AdminComplaintStatus) => {
-    if (!selected) return;
-    if (!responseText.trim()) {
+  const handleRespond = async (
+    targetId: number,
+    nextStatus: AdminComplaintStatus,
+    message: string,
+  ) => {
+    if (!message?.trim()) {
       toast.warning("Vui lòng nhập nội dung phản hồi");
       return;
     }
 
     try {
       setIsResponding(true);
-      const updated = await respondAdminComplaint(complaintId, {
+      const updated = await respondAdminComplaint(targetId, {
         status: nextStatus,
         response: message.trim(),
       });
@@ -679,7 +682,7 @@ export default function AdminComplaints() {
                       <Button
                         variant="danger"
                         disabled={isResponding}
-                        onClick={() => handleRespond("REJECTED")}
+                        onClick={() => handleRespond(selected.id, "REJECTED", responseText)}
                       >
                         {isResponding ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -691,7 +694,7 @@ export default function AdminComplaints() {
                       <Button
                         disabled={isResponding}
                         onClick={() => {
-                          handleRespond("PROCESSED");
+                          handleRespond(selected.id, "PROCESSED", responseText);
                         }}
                       >
                         {isResponding ? (
