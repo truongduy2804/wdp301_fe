@@ -1,7 +1,7 @@
 // components/portal/menu/admin.ts
 import {
   LayoutDashboard,
-  ClipboardList,
+  Settings2,
   Users,
   MessageSquareWarning,
   Gift,
@@ -24,7 +24,7 @@ export function adminMenu(root: string, locale: Locale = "vi"): MenuItem[] {
       MessageSquareWarning,
       `/${endPoint.ADMIN_CHILD.COMPLAINTS}`,
     ],
-    [t.systemMonitoring, ClipboardList, `/${endPoint.ADMIN_CHILD.MONITOR}`],
+    [t.systemMonitoring, Settings2, `/${endPoint.ADMIN_CHILD.MONITOR}`],
     [t.enterpriseMap, Users, `/${endPoint.ADMIN_CHILD.ENTERPRISE_MAP}`],
     [t.giftManagement, Gift, `/${endPoint.ADMIN_CHILD.GIFTS}`],
     [t.redemptionHistory, History, `/${endPoint.ADMIN_CHILD.REDEMPTIONS}`],
