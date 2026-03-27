@@ -150,8 +150,11 @@ export default function AdminOverviewPage() {
     labelDate: item.date.slice(5),
   }));
 
-  const statusBreakdown = data.reportStatusBreakdown.breakdown;
-  const statusTotal = statusBreakdown.reduce((sum, item) => sum + item.count, 0);
+  const statusBreakdown = data.reportStatusBreakdown.breakdown.map(item => ({
+    ...item,
+    statusDisplayName: getReportStatusLabel(item.status),
+  }));
+  const statusTotal = data.reportStatusBreakdown.total;
 
   const pieColors = ["#10b981", "#0ea5e9", "#f59e0b", "#ef4444", "#6366f1", "#8b5cf6"];
 
@@ -167,6 +170,27 @@ export default function AdminOverviewPage() {
         return "Rác nguy hại";
       default:
         return wasteType;
+    }
+  };
+
+  const getReportStatusLabel = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "Đang chờ";
+      case "ACCEPTED":
+        return "Đã chấp nhận";
+      case "ON_THE_WAY":
+        return "Đang đến";
+      case "ARRIVED":
+        return "Đã đến nơi";
+      case "COLLECTING":
+        return "Đang thu gom";
+      case "COMPLETED":
+        return "Hoàn thành";
+      case "CANCELLED":
+        return "Đã hủy";
+      default:
+        return status;
     }
   };
 
@@ -353,7 +377,7 @@ export default function AdminOverviewPage() {
                   <Pie
                     data={statusBreakdown}
                     dataKey="count"
-                    nameKey="status"
+                    nameKey="statusDisplayName"
                     cx="50%"
                     cy="50%"
                     outerRadius={90}

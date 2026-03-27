@@ -65,8 +65,6 @@ function complaintTypeLabel(t: string) {
       return "Sai lệch khối lượng";
     case "UNAUTHORIZED_FEE":
       return "Thu phí bất thường";
-    case "NO_SHOW":
-      return "Không đến thu gom";
     case "OTHER":
       return "Khác";
     default:
