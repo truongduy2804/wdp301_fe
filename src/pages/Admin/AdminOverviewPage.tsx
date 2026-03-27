@@ -381,13 +381,19 @@ export default function AdminOverviewPage() {
                     cx="50%"
                     cy="50%"
                     outerRadius={90}
-                    label={({ payload }) => `${payload?.percentage ?? 0}%`}
+                    label={({ payload }) => `${payload?.statusDisplayName}: ${payload?.percentage ?? 0}%`}
                   >
                     {statusBreakdown.map((_, index) => (
                       <Cell key={`status-${index}`} fill={pieColors[index % pieColors.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    formatter={(value: any, name: any) => [value, name]}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend
+                    formatter={(value) => <span className="text-xs font-semibold text-slate-700">{value}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
