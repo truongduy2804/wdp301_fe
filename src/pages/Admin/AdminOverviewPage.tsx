@@ -227,9 +227,9 @@ export default function AdminOverviewPage() {
             trend={
               data.overview.reports.growthPercent !== null
                 ? {
-                    label: `${data.overview.reports.growthPercent > 0 ? "+" : ""}${data.overview.reports.growthPercent}%`,
-                    positive: data.overview.reports.growthPercent >= 0,
-                  }
+                  label: `${data.overview.reports.growthPercent > 0 ? "+" : ""}${data.overview.reports.growthPercent}%`,
+                  positive: data.overview.reports.growthPercent >= 0,
+                }
                 : undefined
             }
           />
@@ -275,29 +275,27 @@ export default function AdminOverviewPage() {
                   Xu hướng báo cáo {trendRange === 7 ? "1 tuần" : trendRange === 30 ? "1 tháng" : "1 năm"}
                 </h2>
                 <p className="text-sm text-slate-600">
-                  Theo dõi tổng số, hoàn thành và đơn bị hủy 
+                  Theo dõi tổng số, hoàn thành và đơn bị hủy
                 </p>
               </div>
               <div className="inline-flex w-full items-center rounded-xl border border-slate-200 bg-white p-1 sm:w-auto">
                 <button
                   type="button"
                   onClick={() => handleTrendRangeChange(7)}
-                  className={`inline-flex flex-1 items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:flex-none ${
-                    trendRange === 7
-                      ? "bg-emerald-600 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
+                  className={`inline-flex flex-1 items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:flex-none ${trendRange === 7
+                    ? "bg-emerald-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100"
+                    }`}
                 >
                   1 tuần
                 </button>
                 <button
                   type="button"
                   onClick={() => handleTrendRangeChange(30)}
-                  className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:flex-none ${
-                    trendRange === 30
-                      ? "bg-emerald-600 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
+                  className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:flex-none ${trendRange === 30
+                    ? "bg-emerald-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100"
+                    }`}
                 >
                   <Filter className="h-4 w-4" />
                   1 tháng
@@ -305,11 +303,10 @@ export default function AdminOverviewPage() {
                 <button
                   type="button"
                   onClick={() => handleTrendRangeChange(365)}
-                  className={`inline-flex flex-1 items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:flex-none ${
-                    trendRange === 365
-                      ? "bg-emerald-600 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
-                  }`}
+                  className={`inline-flex flex-1 items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:flex-none ${trendRange === 365
+                    ? "bg-emerald-600 text-white"
+                    : "text-slate-600 hover:bg-slate-100"
+                    }`}
                 >
                   1 năm
                 </button>
@@ -416,7 +413,7 @@ export default function AdminOverviewPage() {
 
           <Card className="p-4 sm:p-5">
             <div className="mb-4">
-              <h2 className="text-base font-bold text-slate-900">Điểm thưởng</h2>
+              <h2 className="text-base font-bold text-slate-900">Ưu đãi</h2>
               <p className="text-sm text-slate-600">Điểm thưởng và lượt đổi quà</p>
             </div>
             <div className="space-y-3 text-sm">

@@ -29,6 +29,7 @@ function mapAcceptedToEnterpriseReport(
     latitude: item.latitude ?? null,
     longitude: item.longitude ?? null,
     description: item.description ?? null,
+    distanceKm: item.distanceKm ?? null,
     status: item.status,
     createdAt: item.assignedAt ?? null,
     updatedAt: item.completedAt ?? null,

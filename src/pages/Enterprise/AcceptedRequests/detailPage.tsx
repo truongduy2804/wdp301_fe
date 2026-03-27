@@ -298,11 +298,6 @@ export default function ReportDetailModal({
     );
   }, [open]);
 
-  const displayDistance = useMemo(() => {
-    if (!myPos || lat == null || lng == null) return "—";
-    return formatKm(haversineKm(myPos.lat, myPos.lng, lat, lng));
-  }, [myPos, lat, lng]);
-
   const [geoName, setGeoName] = useState<string | null>(null);
 
   useEffect(() => {
@@ -469,7 +464,7 @@ export default function ReportDetailModal({
                         <InfoRow
                           icon={<Ruler className="h-4 w-4" />}
                           label="Khoảng cách"
-                          value={displayDistance}
+                          value={formatKm(report.distanceKm)}
                         />
                       </div>
                     </SectionCard>
