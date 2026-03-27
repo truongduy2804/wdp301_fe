@@ -57,6 +57,44 @@ function statusLabel(s: AdminComplaintStatus) {
   return "Đã từ chối";
 }
 
+function complaintTypeLabel(t: string) {
+  switch (t) {
+    case "ATTITUDE":
+      return "Thái độ nhân viên";
+    case "WEIGHT_MISMATCH":
+      return "Sai lệch khối lượng";
+    case "UNAUTHORIZED_FEE":
+      return "Thu phí bất thường";
+    case "NO_SHOW":
+      return "Không đến thu gom";
+    case "OTHER":
+      return "Khác";
+    default:
+      return t;
+  }
+}
+
+function reportStatusLabel(s?: string) {
+  switch (s) {
+    case "PENDING":
+      return "Đang chờ";
+    case "ACCEPTED":
+      return "Đã chấp nhận";
+    case "ON_THE_WAY":
+      return "Đang đến";
+    case "ARRIVED":
+      return "Đã đến nơi";
+    case "COLLECTING":
+      return "Đang thu gom";
+    case "COMPLETED":
+      return "Hoàn thành";
+    case "CANCELLED":
+      return "Đã hủy";
+    default:
+      return s || "Không có";
+  }
+}
+
 type StatusFilter = AdminComplaintStatus | "ALL";
 
 export default function AdminComplaints() {
@@ -236,7 +274,7 @@ export default function AdminComplaints() {
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Tìm theo ID / tiêu đề / reporter / liên quan..."
+                  placeholder="Tìm theo ID / tiêu đề / báo cáo / liên quan..."
                   className="w-72 max-w-[65vw] bg-transparent outline-none text-sm font-semibold text-slate-900 placeholder:text-slate-400"
                 />
               </div>
@@ -264,9 +302,8 @@ export default function AdminComplaints() {
               >
                 <span className="inline-flex items-center gap-2">
                   <RefreshCw
-                    className={`h-4 w-4 ${
-                      loading ? "animate-spin text-emerald-700" : "text-slate-600"
-                    }`}
+                    className={`h-4 w-4 ${loading ? "animate-spin text-emerald-700" : "text-slate-600"
+                      }`}
                   />
                   {loading ? "Đang tải..." : "Tải lại"}
                 </span>
@@ -326,7 +363,7 @@ export default function AdminComplaints() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-semibold text-slate-800">
-                          {r.typeLabel}
+                          {complaintTypeLabel(r.type)}
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -474,7 +511,7 @@ export default function AdminComplaints() {
                         <DetailInfoRow
                           icon={<FileText className="h-4 w-4" />}
                           label="Mã loại"
-                          value={selected.type}
+                          value={complaintTypeLabel(selected.type)}
                         />
                         <DetailInfoRow
                           icon={<Clock3 className="h-4 w-4" />}
@@ -494,7 +531,7 @@ export default function AdminComplaints() {
                         <DetailInfoRow
                           icon={<MapPin className="h-4 w-4" />}
                           label="Trạng thái báo cáo"
-                          value={selected.context.reportStatus || "Không có"}
+                          value={reportStatusLabel(selected.context.reportStatus)}
                         />
                       </div>
                     </DetailSectionCard>

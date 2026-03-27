@@ -199,9 +199,8 @@ export default function AdminOverviewPage() {
             >
               <span className="inline-flex items-center gap-2">
                 <RefreshCw
-                  className={`h-4 w-4 ${
-                    refreshing ? "animate-spin text-emerald-700" : "text-slate-600"
-                  }`}
+                  className={`h-4 w-4 ${refreshing ? "animate-spin text-emerald-700" : "text-slate-600"
+                    }`}
                 />
                 {refreshing ? "Đang tải..." : "Tải lại"}
               </span>
@@ -236,7 +235,7 @@ export default function AdminOverviewPage() {
           <StatCard
             title="Tỷ lệ hoàn thành"
             value={`${formatNumber(data.overview.reports.completionRate)}%`}
-            sub={`${formatNumber(data.overview.reports.pending)} chờ • ${formatNumber(
+            sub={`${formatNumber(
               data.overview.reports.completed,
             )} hoàn thành • ${formatNumber(data.overview.reports.cancelled)} hủy`}
             icon={UserCheck}
