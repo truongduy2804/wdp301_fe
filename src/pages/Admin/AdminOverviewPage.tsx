@@ -35,6 +35,40 @@ import type { AdminDashboardData } from "@/api/types/admin.types";
 // Component
 // ============================================================================
 
+const getWasteTypeLabel = (wasteType: string) => {
+  switch (wasteType) {
+    case "ORGANIC":
+      return "Rác hữu cơ";
+    case "RECYCLABLE":
+      return "Rác tái chế";
+    case "HAZARDOUS":
+      return "Rác nguy hại";
+    default:
+      return wasteType;
+  }
+};
+
+const getReportStatusLabel = (status: string) => {
+  switch (status) {
+    case "PENDING":
+      return "Đang chờ";
+    case "ACCEPTED":
+      return "Đã chấp nhận";
+    case "ON_THE_WAY":
+      return "Đang đến";
+    case "ARRIVED":
+      return "Đã đến nơi";
+    case "COLLECTING":
+      return "Đang thu gom";
+    case "COMPLETED":
+      return "Hoàn thành";
+    case "CANCELLED":
+      return "Đã hủy";
+    default:
+      return status;
+  }
+};
+
 /**
  * Admin Overview Dashboard Page
  * Main dashboard showing KPIs, alerts, trends, and top performers.
@@ -160,39 +194,7 @@ export default function AdminOverviewPage() {
 
   const showBannedAlert = data.overview.users.banned > 0;
 
-  const getWasteTypeLabel = (wasteType: string) => {
-    switch (wasteType) {
-      case "ORGANIC":
-        return "Rác hữu cơ";
-      case "RECYCLABLE":
-        return "Rác tái chế";
-      case "HAZARDOUS":
-        return "Rác nguy hại";
-      default:
-        return wasteType;
-    }
-  };
 
-  const getReportStatusLabel = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return "Đang chờ";
-      case "ACCEPTED":
-        return "Đã chấp nhận";
-      case "ON_THE_WAY":
-        return "Đang đến";
-      case "ARRIVED":
-        return "Đã đến nơi";
-      case "COLLECTING":
-        return "Đang thu gom";
-      case "COMPLETED":
-        return "Hoàn thành";
-      case "CANCELLED":
-        return "Đã hủy";
-      default:
-        return status;
-    }
-  };
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-100">
