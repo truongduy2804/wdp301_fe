@@ -11,6 +11,7 @@ import {
     MapPin,
     ShieldBan,
     User,
+    Lock,
     X,
 } from "lucide-react";
 import React, { useEffect, useMemo, useRef } from "react";
@@ -25,6 +26,19 @@ function formatInlineDateTime(iso?: string | null) {
     if (!iso) return "—";
     const d = dayjs(iso);
     return `${d.format("HH:mm")} • ${d.format("DD/MM/YYYY")}`;
+}
+
+function wasteTypeLabel(type: string) {
+    switch (type) {
+        case "ORGANIC":
+            return "Rác hữu cơ";
+        case "RECYCLABLE":
+            return "Rác tái chế";
+        case "HAZARDOUS":
+            return "Rác nguy hại";
+        default:
+            return type;
+    }
 }
 
 /** Lock scroll khi modal mở */
@@ -139,12 +153,12 @@ export default function ViolationDetailModal({
                                 </div>
 
                                 <button
-                                    className="group right-4 top-4 grid h-9 w-9 place-items-center rounded-md hover:bg-emerald-500"
+                                    className="grid h-9 w-9 place-items-center rounded-md hover:bg-emerald-500"
                                     onClick={onClose}
                                     aria-label="Đóng"
                                     type="button"
                                 >
-                                    <X className="h-5 w-5 text-white group-hover:text-white" />
+                                    <X className="h-5 w-5 text-white" />
                                 </button>
                             </div>
                         </div>
@@ -293,7 +307,7 @@ export default function ViolationDetailModal({
                                                                 <div className="flex flex-wrap gap-1.5">
                                                                     {item.originalReport.estimatedWaste.map((w, i) => (
                                                                         <span key={i} className="px-2.5 py-0.5 bg-white border border-slate-200 text-[11px] rounded-full font-semibold text-slate-700">
-                                                                            {w.type}: {w.weight}kg
+                                                                            {wasteTypeLabel(w.type)}: {w.weight}kg
                                                                         </span>
                                                                     ))}
                                                                 </div>
@@ -341,10 +355,10 @@ export default function ViolationDetailModal({
                                     onClick={onBanUser}
                                     disabled={violator.status === "BANNED" || isBanning}
                                     className={[
-                                        "rounded-xl border px-4 py-2 font-extrabold transition",
+                                        "inline-flex h-9 items-center justify-center gap-1 rounded-xl border px-3 text-sm font-medium transition",
                                         violator.status === "BANNED"
                                             ? "border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
-                                            : "border-rose-200 bg-rose-600 text-white hover:bg-rose-700",
+                                            : "border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-300",
                                         isBanning ? "opacity-70 cursor-not-allowed" : "",
                                     ].join(" ")}
                                     type="button"
@@ -355,19 +369,21 @@ export default function ViolationDetailModal({
                                             Đang khóa...
                                         </span>
                                     ) : violator.status === "BANNED" ? (
-                                        "Tài khoản đã bị khóa"
+                                        <span className="inline-flex items-center gap-1">
+                                            <Lock className="h-4 w-4" />
+                                            Tài khoản đã bị khóa
+                                        </span>
                                     ) : (
-                                        "Khóa tài khoản"
+                                        <span className="inline-flex items-center gap-1">
+                                            <Lock className="h-4 w-4" />
+                                            Khóa tài khoản
+                                        </span>
                                     )}
                                 </button>
                             )}
                             <button
                                 onClick={onClose}
-                                className="
-                  rounded-xl border border-slate-200 bg-emerald-600 px-4 py-2
-                  font-extrabold text-white
-                  hover:brightness-90 hover:scale-[1.02] transition
-                "
+                                className="rounded-xl border border-slate-200 bg-emerald-600 px-4 py-2 font-extrabold text-white hover:brightness-90 transition"
                                 type="button"
                             >
                                 Đóng

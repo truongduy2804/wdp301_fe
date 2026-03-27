@@ -1,6 +1,7 @@
 // src/pages/Admin/Complaints.tsx
 import dayjs from "dayjs";
 import {
+  AlertCircle,
   CheckCircle2,
   Clock3,
   ChevronLeft,
@@ -453,7 +454,7 @@ export default function AdminComplaints() {
 
                     <button
                       type="button"
-                      className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 hover:bg-white/20"
+                      className="grid h-9 w-9 place-items-center rounded-md hover:bg-emerald-500"
                       onClick={() => setSelected(null)}
                       aria-label="Đóng"
                     >
@@ -471,6 +472,11 @@ export default function AdminComplaints() {
                     >
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <DetailInfoRow
+                          icon={<FileText className="h-4 w-4" />}
+                          label="Mã loại"
+                          value={selected.type}
+                        />
+                        <DetailInfoRow
                           icon={<Clock3 className="h-4 w-4" />}
                           label="Tạo lúc"
                           value={dayjs(selected.createdAt).format("HH:mm · DD/MM/YYYY")}
@@ -484,6 +490,11 @@ export default function AdminComplaints() {
                           icon={<FileText className="h-4 w-4" />}
                           label="Báo cáo liên quan"
                           value={`#${selected.context.reportId}`}
+                        />
+                        <DetailInfoRow
+                          icon={<MapPin className="h-4 w-4" />}
+                          label="Trạng thái báo cáo"
+                          value={selected.context.reportStatus || "Không có"}
                         />
                       </div>
                     </DetailSectionCard>
@@ -505,11 +516,25 @@ export default function AdminComplaints() {
                         </div>
                         <div className="min-w-0">
                           <div className="text-xl font-bold text-slate-900 truncate">{selected.citizen.fullName}</div>
+                          <div className="mt-1 text-xs font-bold text-slate-500">ID người dân: #{selected.citizen.id}</div>
                           <div className="mt-1 inline-flex items-center gap-1.5 text-sm text-slate-600">
                             <Phone className="h-4 w-4" />
                             {selected.citizen.phone || "Không có"}
                           </div>
                         </div>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-1 gap-2">
+                        <DetailInfoRow
+                          icon={<FileText className="h-4 w-4" />}
+                          label="Tổng khiếu nại trước đó"
+                          value={selected.citizen.trustStats?.totalComplaints ?? "Không có"}
+                        />
+                        <DetailInfoRow
+                          icon={<AlertCircle className="h-4 w-4" />}
+                          label="Số báo cáo giả"
+                          value={selected.citizen.trustStats?.totalFakeReports ?? "Không có"}
+                        />
                       </div>
                     </DetailSectionCard>
                   </div>
@@ -521,6 +546,21 @@ export default function AdminComplaints() {
                           icon={<MapPin className="h-4 w-4" />}
                           label="Địa chỉ"
                           value={<span className="leading-relaxed break-words">{selected.context.address || "Không có"}</span>}
+                        />
+                        <DetailInfoRow
+                          icon={<Clock3 className="h-4 w-4" />}
+                          label="Hạn xử lý"
+                          value={selected.context.timing?.deadline ? dayjs(selected.context.timing.deadline).format("HH:mm · DD/MM/YYYY") : "Không có"}
+                        />
+                        <DetailInfoRow
+                          icon={<Clock3 className="h-4 w-4" />}
+                          label="Hoàn thành lúc"
+                          value={selected.context.timing?.completedAt ? dayjs(selected.context.timing.completedAt).format("HH:mm · DD/MM/YYYY") : "Không có"}
+                        />
+                        <DetailInfoRow
+                          icon={<AlertCircle className="h-4 w-4" />}
+                          label="Trễ hạn"
+                          value={typeof selected.context.timing?.isLate === "boolean" ? (selected.context.timing.isLate ? "Có" : "Không") : "Không có"}
                         />
                         <DetailInfoRow
                           icon={<FileText className="h-4 w-4" />}
@@ -558,6 +598,16 @@ export default function AdminComplaints() {
                             icon={<User className="h-4 w-4" />}
                             label="Mã nhân viên"
                             value={selected.collector.employeeCode || "Không có"}
+                          />
+                          <DetailInfoRow
+                            icon={<FileText className="h-4 w-4" />}
+                            label="Điểm tin cậy"
+                            value={selected.collector.trustScore ?? "Không có"}
+                          />
+                          <DetailInfoRow
+                            icon={<AlertCircle className="h-4 w-4" />}
+                            label="Số lần bỏ qua"
+                            value={selected.collector.skipCount ?? "Không có"}
                           />
                         </div>
                       ) : (
@@ -687,9 +737,12 @@ export default function AdminComplaints() {
                 </div>
 
                 <div className="border-t border-slate-200 bg-white px-5 py-3 flex items-center justify-end gap-2">
-                  <Button variant="ghost" onClick={() => setSelected(null)}>
+                  <button
+                    onClick={() => setSelected(null)}
+                    className="rounded-xl border border-slate-200 bg-emerald-600 px-4 py-2 font-extrabold text-white hover:brightness-90 transition"
+                  >
                     Đóng
-                  </Button>
+                  </button>
                   {selected.status === "OPEN" && (
                     <>
                       <Button

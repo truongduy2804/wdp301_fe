@@ -157,6 +157,19 @@ export default function AdminOverviewPage() {
 
   const showBannedAlert = data.overview.users.banned > 0;
 
+  const getWasteTypeLabel = (wasteType: string) => {
+    switch (wasteType) {
+      case "ORGANIC":
+        return "Rác hữu cơ";
+      case "RECYCLABLE":
+        return "Rác tái chế";
+      case "HAZARDOUS":
+        return "Rác nguy hại";
+      default:
+        return wasteType;
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-100">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 space-y-5">
@@ -169,7 +182,7 @@ export default function AdminOverviewPage() {
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-                    Admin Dashboard
+                    Bảng điều khiển quản trị
                   </h1>
                   <p className="text-sm text-slate-600">
                     Tổng quan hệ thống và các chỉ số vận hành quan trọng
@@ -223,7 +236,9 @@ export default function AdminOverviewPage() {
           <StatCard
             title="Tỷ lệ hoàn thành"
             value={`${formatNumber(data.overview.reports.completionRate)}%`}
-            sub={`${formatNumber(data.overview.reports.pending)} đang chờ`}
+            sub={`${formatNumber(data.overview.reports.pending)} chờ • ${formatNumber(
+              data.overview.reports.completed,
+            )} hoàn thành • ${formatNumber(data.overview.reports.cancelled)} hủy`}
             icon={UserCheck}
           />
           <StatCard
@@ -233,7 +248,7 @@ export default function AdminOverviewPage() {
             icon={Users}
           />
           <StatCard
-            title="Doanh nghiệp active"
+            title="Doanh nghiệp hoạt động"
             value={formatNumber(data.overview.enterprises.active)}
             sub={`${formatNumber(data.overview.enterprises.total)} tổng doanh nghiệp`}
             icon={Building2}
@@ -366,7 +381,7 @@ export default function AdminOverviewPage() {
           <Card className="p-4 sm:p-5">
             <div className="mb-4">
               <h2 className="text-base font-bold text-slate-900">Doanh thu</h2>
-              <p className="text-sm text-slate-600">Tổng hợp doanh thu subscription</p>
+              <p className="text-sm text-slate-600">Tổng hợp doanh thu gói đăng ký</p>
             </div>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
@@ -392,7 +407,7 @@ export default function AdminOverviewPage() {
             <div className="space-y-2">
               {topWasteTypes.map((item) => (
                 <div key={item.wasteType} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
-                  <span className="text-sm font-medium text-slate-700">{item.wasteType}</span>
+                  <span className="text-sm font-medium text-slate-700">{getWasteTypeLabel(item.wasteType)}</span>
                   <span className="text-sm font-semibold text-slate-900">{formatWeight(item.totalWeightKg)}</span>
                 </div>
               ))}
@@ -401,7 +416,7 @@ export default function AdminOverviewPage() {
 
           <Card className="p-4 sm:p-5">
             <div className="mb-4">
-              <h2 className="text-base font-bold text-slate-900">Loyalty</h2>
+              <h2 className="text-base font-bold text-slate-900">Điểm thưởng</h2>
               <p className="text-sm text-slate-600">Điểm thưởng và lượt đổi quà</p>
             </div>
             <div className="space-y-3 text-sm">

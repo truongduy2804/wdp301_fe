@@ -36,14 +36,14 @@ export default function AdminSystemMonitor() {
     { key: "organicMultiplier", label: "Hệ số rác hữu cơ", step: "0.1" },
     { key: "recyclableMultiplier", label: "Hệ số rác tái chế", step: "0.1" },
     { key: "hazardousMultiplier", label: "Hệ số rác nguy hại", step: "0.1" },
-    { key: "accuracyMatchMultiplier", label: "Accuracy match", step: "0.1" },
-    { key: "accuracyModerateMultiplier", label: "Accuracy moderate", step: "0.1" },
-    { key: "accuracyHeavyMultiplier", label: "Accuracy heavy", step: "0.1" },
-    { key: "collectorMatchTrustScore", label: "Điểm trust collector", step: "1" },
-    { key: "penaltyWeightMismatch", label: "Penalty sai cân nặng", step: "1" },
-    { key: "penaltyUnauthorizedFee", label: "Penalty phí sai", step: "1" },
-    { key: "penaltyNoShow", label: "Penalty no-show", step: "1" },
-    { key: "penaltyDefault", label: "Penalty mặc định", step: "1" },
+    { key: "accuracyMatchMultiplier", label: "Hệ số khớp chính xác", step: "0.1" },
+    { key: "accuracyModerateMultiplier", label: "Hệ số khớp vừa phải", step: "0.1" },
+    { key: "accuracyHeavyMultiplier", label: "Hệ số sai lệch", step: "0.1" },
+    { key: "collectorMatchTrustScore", label: "Điểm tin cậy nhân viên", step: "1" },
+    { key: "penaltyWeightMismatch", label: "Phạt sai cân nặng", step: "1" },
+    { key: "penaltyUnauthorizedFee", label: "Phạt phí sai", step: "1" },
+    { key: "penaltyNoShow", label: "Phạt không có mặt", step: "1" },
+    { key: "penaltyDefault", label: "Phạt mặc định", step: "1" },
     { key: "citizenCompensation", label: "Bồi thường công dân", step: "1" },
   ];
 
@@ -147,7 +147,7 @@ export default function AdminSystemMonitor() {
                     Cấu hình hệ thống
                   </h1>
                   <p className="text-sm text-slate-600">
-                    Quản lý hệ số điểm/phạt theo dữ liệu API thực tế.
+                    Quản lý hệ số điểm và các tham số hệ thống.
                   </p>
                 </div>
               </div>
@@ -159,7 +159,6 @@ export default function AdminSystemMonitor() {
           <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-bold text-slate-900">Cấu hình tính điểm hệ thống</h2>
-              <p className="text-sm text-slate-600">Dữ liệu từ API system-config</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
