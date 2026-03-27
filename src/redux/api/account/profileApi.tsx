@@ -1,28 +1,6 @@
 // src/redux/api/account/profileApi.ts
 import { baseApi } from "@/redux/api/baseApi";
-
-export type ApiResponse<T> = {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data: T;
-};
-
-export type AccountProfile = {
-  id: number;
-  email: string;
-  fullName: string;
-  phone: string | null;
-  avatar: string | null;
-  role: string;
-  status: string;
-  createdAt: string;
-};
-
-export type ChangePasswordBody = {
-  currentPassword: string;
-  newPassword: string;
-};
+import type { ApiResponse, AccountProfile, ChangePasswordBody } from "./types";
 
 export const profileApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -68,6 +46,7 @@ export const profileApi = baseApi.injectEndpoints({
 
 export const {
   useGetAccountProfileQuery,
+  useLazyGetAccountProfileQuery,
   useUpdateAccountProfileMutation,
   useChangePasswordMutation,
 } = profileApi;

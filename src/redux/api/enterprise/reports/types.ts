@@ -26,6 +26,17 @@ export type WasteItem = {
   weightKg: number;
 };
 
+export type CollectorLog = {
+  reason?: string | null;
+  images?: string[];
+};
+
+export type CancelDetails = {
+  reason?: string | null;
+  collectorInfo?: CollectorSummary | null;
+  collectorLogs?: CollectorLog[];
+};
+
 export type EnterpriseReport = {
   id: number;
   reportId?: number | null;
@@ -127,4 +138,26 @@ export type AcceptedEnterpriseReport = {
 
   citizen: CitizenSummary;
   collector?: CollectorSummary | null;
+};
+
+export type CancelledEnterpriseReport = {
+  id: number;
+  status?: string | null;
+
+  address: string;
+  latitude?: number | null;
+  longitude?: number | null;
+
+  description?: string | null;
+  createdAt?: string | null;
+  cancelledAt?: string | null;
+
+  wasteItems?: WasteItem[];
+  images?: string[];
+
+  citizen?: CitizenSummary | null;
+
+  type?: string | null;
+  cancelBy?: string | null;
+  cancelDetails?: CancelDetails | null;
 };

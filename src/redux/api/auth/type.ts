@@ -37,6 +37,8 @@ export type ResetPasswordBody = {
 };
 
 /** Swagger login trả về: data.user + data.backendToken */
+export type UserStatus = "ACTIVE" | "INACTIVE";
+
 export type LoginResponseData = {
   user: {
     id: number;
@@ -44,6 +46,8 @@ export type LoginResponseData = {
     role: string;
     email: string;
     fullName: string;
+    avatar?: string;
+    status?: UserStatus;
     permissions: string[];
   };
   backendToken: {
@@ -63,6 +67,8 @@ export type AuthLoginPayload = {
     fullname: string;
     email: string;
     role: string;
+    avatar?: string;
+    status?: UserStatus;
     permissions: string[];
   };
 };

@@ -23,7 +23,6 @@ import {
   Modal,
   EmptyState,
 } from "@/components/ui/page/componentUI";
-import ConfirmModal from "@/pages/Enterprise/components/confirmModal";
 import Pagination from "@/components/Pagination";
 import {
   fetchGifts,
@@ -288,25 +287,40 @@ export default function AdminGifts() {
         />
       )}
 
-      <ConfirmModal
-        open={!!deleteTarget}
-        title={<div className="w-full text-center text-xl font-semibold">Xác nhận xóa quà tặng</div>}
-        content={
-          <div className="w-full py-2 text-center text-lg font-normal text-slate-900 leading-7">
-            Bạn có chắc muốn xóa quà tặng {deleteTarget?.name}?
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-[1500] bg-black/45"
+          onClick={() => !isDeleting && setDeleteTarget(null)}
+        >
+          <div className="fixed left-1/2 top-1/2 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-5 shadow-2xl">
+            <div onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-bold text-slate-900">Xác nhận xóa quà tặng</h3>
+              <p className="mt-2 text-sm text-slate-600">Bạn có chắc muốn xóa quà tặng này?</p>
+              <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 break-all">
+                {deleteTarget.name}
+              </p>
+
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={isDeleting}
+                  className="h-9 rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  className="inline-flex h-9 items-center justify-center gap-1 rounded-xl bg-red-600 px-3 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                >
+                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Xóa
+                </button>
+              </div>
+            </div>
           </div>
-        }
-        okText="Xóa"
-        cancelText="Hủy"
-        tone="rose"
-        loading={isDeleting}
-        onClose={() => {
-          if (!isDeleting) {
-            setDeleteTarget(null);
-          }
-        }}
-        onOk={handleConfirmDelete}
-      />
+        </div>
+      )}
     </div>
   );
 }

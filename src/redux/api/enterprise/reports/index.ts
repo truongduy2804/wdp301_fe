@@ -2,6 +2,7 @@ import { baseApi } from "@/redux/api/baseApi";
 import type {
   AcceptedEnterpriseReport,
   ApiEnvelope,
+  CancelledEnterpriseReport,
   EnterpriseReport,
   WaitingReportDetail,
 } from "./types";
@@ -73,6 +74,35 @@ export const enterpriseReportsApi = baseApi.injectEndpoints({
             ]
           : [{ type: "AcceptedReports" as const, id: "LIST" }],
     }),
+
+    getCancelledReports: b.query<
+      ApiEnvelope<CancelledEnterpriseReport[]>,
+      void
+    >({
+      query: () => ({
+        url: "enterprise/reports/cancelled",
+        method: "GET",
+      }),
+      transformResponse: (
+        response: ApiEnvelope<CancelledEnterpriseReport[]>,
+      ) => ({
+        ...response,
+        data: (response.data ?? []).map((item) => ({
+          ...item,
+          status: "CANCELLED",
+        })),
+      }),
+      providesTags: (res) =>
+        res?.data
+          ? [
+              { type: "CancelledReports" as const, id: "LIST" },
+              ...res.data.map((r) => ({
+                type: "CancelledReports" as const,
+                id: r.id,
+              })),
+            ]
+          : [{ type: "CancelledReports" as const, id: "LIST" }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -83,4 +113,5 @@ export const {
   useAcceptReportMutation,
   useRejectReportMutation,
   useGetAcceptedReportsQuery,
+  useGetCancelledReportsQuery,
 } = enterpriseReportsApi;

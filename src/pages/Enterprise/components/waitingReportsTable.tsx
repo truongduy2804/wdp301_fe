@@ -52,6 +52,13 @@ function expiryText(ms: number) {
   return `${dayjs(ms).format("h:mm A")} | ${dayjs(ms).format("DD/MM/YYYY")}`;
 }
 
+function shortenText(value?: string | null, max = 56) {
+  const text = value?.trim();
+  if (!text) return "—";
+  if (text.length <= max) return text;
+  return `${text.slice(0, max).trimEnd()}…`;
+}
+
 function formatCountdownClamp(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(total / 3600);
@@ -65,6 +72,7 @@ function formatCountdownClamp(ms: number): string {
 
 /** window hiển thị countdown ở cột "Thời gian hết hạn" */
 const LIVE_WINDOW_MS = 60 * 60 * 1000;
+const COUNTDOWN_PLACEHOLDER = "--:--";
 
 /** 1 interval duy nhất cho countdown (chỉ chạy khi có subscriber) */
 const nowStore = (() => {
@@ -90,6 +98,8 @@ const nowStore = (() => {
   return {
     subscribe(cb: () => void) {
       listeners.add(cb);
+      now = Date.now();
+      cb();
       start();
       return () => {
         listeners.delete(cb);
@@ -108,6 +118,21 @@ function useSharedNowMs() {
     nowStore.getSnapshot,
     nowStore.getSnapshot,
   );
+}
+
+function useCountdownHydrated(enabled = true) {
+  const [hydrated, setHydrated] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!enabled) {
+      setHydrated(false);
+      return;
+    }
+
+    setHydrated(true);
+  }, [enabled]);
+
+  return hydrated;
 }
 
 /** ✅ theo dõi hết hạn "đúng thời điểm" */
@@ -160,10 +185,28 @@ const StatusPillLive = React.memo(function StatusPillLive(props: {
 
 const ExpiryLive = React.memo(function ExpiryLive(props: { expMs: number }) {
   const now = useSharedNowMs();
+  const hydrated = useCountdownHydrated();
+  const right = expiryText(props.expMs);
+
+  if (!hydrated) {
+    return (
+      <Tooltip destroyOnHidden title={`Hết hạn lúc ${right}`}>
+        <span
+          className={[
+            "inline-flex items-center justify-center",
+            "rounded-full border px-3 py-1",
+            "tabular-nums font-medium",
+            "border-slate-200 bg-slate-50 text-slate-400",
+          ].join(" ")}
+        >
+          {COUNTDOWN_PLACEHOLDER}
+        </span>
+      </Tooltip>
+    );
+  }
+
   const msLeftRaw = props.expMs - now;
   const expired = msLeftRaw <= 0;
-
-  const right = expiryText(props.expMs);
   const text = formatCountdownClamp(msLeftRaw);
 
   return (
@@ -248,18 +291,19 @@ const ActionButtons = React.memo(function ActionButtons(props: {
   const showRejectSpin = loading && lastActionRef.current === "reject";
 
   return (
-    <div className="inline-flex items-center gap-2 flex-nowrap whitespace-nowrap">
+    <div className="flex w-full flex-wrap items-center gap-2 lg:inline-flex lg:w-auto lg:flex-nowrap lg:justify-center lg:gap-1.5 lg:whitespace-nowrap">
       {/* View luôn cho phép */}
       <button
         onMouseEnter={() => onPrefetchDetail?.(r.id)}
         onClick={() => onView(r.id)}
         className="
-          inline-flex items-center gap-1 rounded-xl
-          border border-slate-200 bg-white px-2 py-1.5
+          inline-flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl
+          border border-slate-200 bg-white px-3 py-2
           text-sm font-medium text-slate-700
           transition-all duration-200 ease-out
           hover:-translate-y-[1px] hover:shadow-sm
           hover:border-emerald-200 hover:bg-emerald-50/60
+          lg:flex-none lg:px-2 lg:py-1.5 lg:text-xs
         "
       >
         <Eye className="h-4 w-4 shrink-0" />
@@ -268,7 +312,7 @@ const ActionButtons = React.memo(function ActionButtons(props: {
 
       {/* ✅ hết hạn thì ẩn Duyệt/Từ chối */}
       {expired ? (
-        <span className="inline-flex items-center gap-2 text-slate-400">
+        <span className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-400 lg:w-auto lg:border-0 lg:bg-transparent lg:px-0 lg:py-0">
           <Lock className="h-4 w-4" />
           <span className="text-sm font-medium">Hết hạn</span>
         </span>
@@ -290,13 +334,14 @@ const ActionButtons = React.memo(function ActionButtons(props: {
               });
             }}
             className="
-              inline-flex items-center gap-1 rounded-xl
-              bg-emerald-600 px-2 py-1.5
+              inline-flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl
+              bg-emerald-600 px-3 py-2
               text-sm font-medium text-white
               transition-all duration-200 ease-out
               hover:-translate-y-[1px] hover:shadow-sm
               hover:bg-emerald-700 active:bg-emerald-800
               disabled:opacity-70
+              lg:flex-none lg:px-2 lg:py-1.5 lg:text-xs
             "
           >
             {showAcceptSpin ? (
@@ -323,13 +368,14 @@ const ActionButtons = React.memo(function ActionButtons(props: {
               });
             }}
             className="
-              inline-flex items-center gap-1 rounded-xl
-              bg-rose-600 px-2 py-1.5
+              inline-flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl
+              bg-rose-600 px-3 py-2
               text-sm font-medium text-white
               transition-all duration-200 ease-out
               hover:-translate-y-[1px] hover:shadow-sm
               hover:bg-rose-700 active:bg-rose-800
               disabled:opacity-70
+              lg:flex-none lg:px-2 lg:py-1.5 lg:text-xs
             "
           >
             {showRejectSpin ? (
@@ -363,7 +409,7 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
         dataIndex: "id",
         key: "id",
         align: "center",
-        width: 90,
+        width: 84,
         render: (id: number) => (
           <span className="font-semibold text-slate-900 tabular-nums">
             #{id}
@@ -374,19 +420,40 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
         title: <div className="text-center font-semibold">Địa chỉ</div>,
         dataIndex: "address",
         key: "address",
-        align: "left",
+        align: "center",
+        width: 210,
         ellipsis: { showTitle: false },
         render: (v: string) => (
           <Tooltip destroyOnHidden title={v}>
-            <span className="block w-full min-w-0 truncate">{v}</span>
+            <span className="block w-full min-w-0 truncate text-sm">{v}</span>
           </Tooltip>
         ),
+      },
+      {
+        title: <div className="text-center font-semibold">Mô tả</div>,
+        dataIndex: "description",
+        key: "description",
+        align: "center",
+        width: 200,
+        ellipsis: { showTitle: false },
+        render: (v?: string | null) => {
+          const value = v?.trim() || "—";
+          const compactValue = shortenText(v, 52);
+
+          return (
+            <Tooltip destroyOnHidden title={value}>
+              <span className="block w-full min-w-0 truncate text-sm">
+                {compactValue}
+              </span>
+            </Tooltip>
+          );
+        },
       },
       {
         title: <div className="text-center font-semibold">Trạng thái</div>,
         key: "status",
         align: "center",
-        width: 170,
+        width: 136,
         render: (_: unknown, r: EnterpriseReport) => (
           <div className="inline-flex justify-center">
             <StatusPillLive
@@ -402,7 +469,7 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
         ),
         key: "expiry",
         align: "center",
-        width: 260,
+        width: 176,
         render: (_: unknown, r: EnterpriseReport) => (
           <ExpiryCell expiredAt={r.expiredAt} />
         ),
@@ -411,7 +478,7 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
         title: <div className="text-center font-semibold">Thao tác</div>,
         key: "actions",
         align: "center",
-        width: 340,
+        width: 210,
         render: (_: unknown, r: EnterpriseReport) => {
           const loading = actionLoadingId === r.id;
           return (
@@ -445,26 +512,34 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
             <div className="p-3">
               <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
                       <div className="font-extrabold text-slate-900 tabular-nums">
                         #{r.id}
                       </div>
                       <StatusPillLive status={status} expiredAt={r.expiredAt} />
                     </div>
 
-                    <div className="mt-1 text-sm text-slate-700 line-clamp-2">
+                    <div className="mt-2 text-sm font-medium text-slate-700 break-words">
                       {r.address}
+                    </div>
+
+                    <div className="mt-1 text-sm text-slate-500 break-words">
+                      {r.description?.trim() || "Không có mô tả"}
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center gap-2 text-xs text-slate-600">
-                  <Clock className="h-4 w-4" />
-                  <span className="font-semibold text-slate-800">Hết hạn:</span>
-                  <span className="min-w-0">
-                    <ExpiryCell expiredAt={r.expiredAt} />
-                  </span>
+                <div className="mt-3 flex items-start gap-2 text-xs text-slate-600">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div className="min-w-0">
+                    <span className="font-semibold text-slate-800">
+                      Hết hạn:{" "}
+                    </span>
+                    <span className="min-w-0 break-words">
+                      <ExpiryCell expiredAt={r.expiredAt} />
+                    </span>
+                  </div>
                 </div>
 
                 <div className="mt-3">
@@ -491,7 +566,7 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
     <>
       <div className="w-full">
         {/* MOBILE */}
-        <div className="block md:hidden">
+        <div className="block lg:hidden">
           <Table
             rowKey={(r) => r.id}
             columns={columnsMobile}
@@ -509,7 +584,7 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
         </div>
 
         {/* DESKTOP */}
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <Table
             rowKey={(r) => r.id}
             columns={columnsDesktop}

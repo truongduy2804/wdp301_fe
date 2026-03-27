@@ -26,6 +26,7 @@ const endPoint = {
     PENDING_REQUESTS: "pending-requests",
     ACCEPTED_REQUESTS: "accepted-requests",
     REQUEST_HISTORY: "request-history",
+    CANCELLED_REQUESTS: "cancelled-requests",
     COLLECTORS: "collectors",
     REWARD_RULES: "reward-rules",
     SETTINGS: "settings",
@@ -53,6 +54,9 @@ const endPoint = {
     ENTERPRISE_MAP: "enterprise-map",
     GIFTS: "gifts",
     REDEMPTIONS: "redemptions",
+    SUBSCRIPTION_PLANS: "subscription-plans",
+    USERS: "users",
+    ENTERPRISES: "enterprises",
   },
 } as const;
 

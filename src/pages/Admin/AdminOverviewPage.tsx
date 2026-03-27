@@ -8,7 +8,6 @@ import {
   Filter,
   FileText,
   RefreshCw,
-  ShieldAlert,
   UserCheck,
   Users,
 } from "lucide-react";
@@ -27,7 +26,7 @@ import {
 } from "recharts";
 import { PageLoader, ErrorMessage } from "@/components/Admin/shared";
 import { TopEnterpriseTable } from "@/components/Admin/Overview/TopEnterpriseTable";
-import { Card, StatCard, formatNumber } from "@/components/ui/page/componentUI";
+import { Button, Card, StatCard, formatNumber } from "@/components/ui/page/componentUI";
 import { formatCurrency, formatWeight } from "@/utils/format";
 import { fetchAdminDashboardData, fetchAdminReportTrends } from "@/api/admin/dashboard";
 import type { AdminDashboardData } from "@/api/types/admin.types";
@@ -151,14 +150,25 @@ export default function AdminOverviewPage() {
     labelDate: item.date.slice(5),
   }));
 
-  const filteredStatusBreakdown = data.reportStatusBreakdown.breakdown.filter(
-    (item) => item.status !== "ENTERPRISE_RESERVED",
-  );
-  const filteredStatusTotal = filteredStatusBreakdown.reduce((sum, item) => sum + item.count, 0);
+  const statusBreakdown = data.reportStatusBreakdown.breakdown;
+  const statusTotal = statusBreakdown.reduce((sum, item) => sum + item.count, 0);
 
   const pieColors = ["#10b981", "#0ea5e9", "#f59e0b", "#ef4444", "#6366f1", "#8b5cf6"];
 
   const showBannedAlert = data.overview.users.banned > 0;
+
+  const getWasteTypeLabel = (wasteType: string) => {
+    switch (wasteType) {
+      case "ORGANIC":
+        return "Rác hữu cơ";
+      case "RECYCLABLE":
+        return "Rác tái chế";
+      case "HAZARDOUS":
+        return "Rác nguy hại";
+      default:
+        return wasteType;
+    }
+  };
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-100">
@@ -172,7 +182,7 @@ export default function AdminOverviewPage() {
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-                    Admin Dashboard
+                    Bảng điều khiển quản trị
                   </h1>
                   <p className="text-sm text-slate-600">
                     Tổng quan hệ thống và các chỉ số vận hành quan trọng
@@ -181,14 +191,21 @@ export default function AdminOverviewPage() {
               </div>
             </div>
 
-            <button
+            <Button
+              variant="ghost"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="!rounded-2xl !px-3 !py-2 !bg-white !border !border-slate-200 !text-slate-800 !font-medium hover:!border-emerald-300 hover:!bg-emerald-50/60 hover:!text-emerald-800 active:!bg-emerald-100/60 disabled:!opacity-70 disabled:!cursor-not-allowed transition-all duration-200 ease-out shadow-sm hover:shadow"
             >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-              {refreshing ? "Đang cập nhật" : "Làm mới"}
-            </button>
+              <span className="inline-flex items-center gap-2">
+                <RefreshCw
+                  className={`h-4 w-4 ${
+                    refreshing ? "animate-spin text-emerald-700" : "text-slate-600"
+                  }`}
+                />
+                {refreshing ? "Đang tải..." : "Tải lại"}
+              </span>
+            </Button>
           </div>
         </Card>
 
@@ -219,7 +236,9 @@ export default function AdminOverviewPage() {
           <StatCard
             title="Tỷ lệ hoàn thành"
             value={`${formatNumber(data.overview.reports.completionRate)}%`}
-            sub={`${formatNumber(data.overview.reports.pending)} đang chờ`}
+            sub={`${formatNumber(data.overview.reports.pending)} chờ • ${formatNumber(
+              data.overview.reports.completed,
+            )} hoàn thành • ${formatNumber(data.overview.reports.cancelled)} hủy`}
             icon={UserCheck}
           />
           <StatCard
@@ -229,7 +248,7 @@ export default function AdminOverviewPage() {
             icon={Users}
           />
           <StatCard
-            title="Doanh nghiệp active"
+            title="Doanh nghiệp hoạt động"
             value={formatNumber(data.overview.enterprises.active)}
             sub={`${formatNumber(data.overview.enterprises.total)} tổng doanh nghiệp`}
             icon={Building2}
@@ -256,7 +275,7 @@ export default function AdminOverviewPage() {
                   Xu hướng báo cáo {trendRange === 7 ? "1 tuần" : trendRange === 30 ? "1 tháng" : "1 năm"}
                 </h2>
                 <p className="text-sm text-slate-600">
-                  Theo dõi tổng số, hoàn thành và đơn bị hủy
+                  Theo dõi tổng số, hoàn thành và đơn bị hủy 
                 </p>
               </div>
               <div className="inline-flex w-full items-center rounded-xl border border-slate-200 bg-white p-1 sm:w-auto">
@@ -330,21 +349,21 @@ export default function AdminOverviewPage() {
           <Card className="p-4 sm:p-5">
             <div className="mb-4">
               <h2 className="text-base font-bold text-slate-900">Trạng thái báo cáo</h2>
-              <p className="text-sm text-slate-600">Phân bố theo từng trạng thái xử lý</p>
+              <p className="text-sm text-slate-600">Phân bố theo từng trạng thái xử lý (toàn bộ dữ liệu)</p>
             </div>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={filteredStatusBreakdown}
+                    data={statusBreakdown}
                     dataKey="count"
                     nameKey="status"
                     cx="50%"
                     cy="50%"
                     outerRadius={90}
-                    label={({ percent = 0 }) => `${(percent * 100).toFixed(0)}%`}
+                    label={({ payload }) => `${payload?.percentage ?? 0}%`}
                   >
-                    {filteredStatusBreakdown.map((_, index) => (
+                    {statusBreakdown.map((_, index) => (
                       <Cell key={`status-${index}`} fill={pieColors[index % pieColors.length]} />
                     ))}
                   </Pie>
@@ -353,7 +372,7 @@ export default function AdminOverviewPage() {
               </ResponsiveContainer>
             </div>
             <p className="text-sm font-semibold text-slate-700">
-              Tổng hiển thị: {formatNumber(filteredStatusTotal)} báo cáo
+              Tổng hiển thị: {formatNumber(statusTotal)} báo cáo
             </p>
           </Card>
         </div>
@@ -362,7 +381,7 @@ export default function AdminOverviewPage() {
           <Card className="p-4 sm:p-5">
             <div className="mb-4">
               <h2 className="text-base font-bold text-slate-900">Doanh thu</h2>
-              <p className="text-sm text-slate-600">Tổng hợp doanh thu subscription</p>
+              <p className="text-sm text-slate-600">Tổng hợp doanh thu gói đăng ký</p>
             </div>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
@@ -388,7 +407,7 @@ export default function AdminOverviewPage() {
             <div className="space-y-2">
               {topWasteTypes.map((item) => (
                 <div key={item.wasteType} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
-                  <span className="text-sm font-medium text-slate-700">{item.wasteType}</span>
+                  <span className="text-sm font-medium text-slate-700">{getWasteTypeLabel(item.wasteType)}</span>
                   <span className="text-sm font-semibold text-slate-900">{formatWeight(item.totalWeightKg)}</span>
                 </div>
               ))}
@@ -397,7 +416,7 @@ export default function AdminOverviewPage() {
 
           <Card className="p-4 sm:p-5">
             <div className="mb-4">
-              <h2 className="text-base font-bold text-slate-900">Loyalty</h2>
+              <h2 className="text-base font-bold text-slate-900">Điểm thưởng</h2>
               <p className="text-sm text-slate-600">Điểm thưởng và lượt đổi quà</p>
             </div>
             <div className="space-y-3 text-sm">

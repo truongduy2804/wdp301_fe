@@ -12,6 +12,7 @@ export interface AdminComplaintCitizen {
   id: number;
   fullName: string;
   phone?: string | null;
+  avatar?: string | null;
   trustStats?: {
     totalComplaints: number;
     totalFakeReports: number;
@@ -21,6 +22,7 @@ export interface AdminComplaintCitizen {
 export interface AdminComplaintCollector {
   id: number;
   fullName: string;
+  avatar?: string | null;
   employeeCode: string;
   trustScore: number;
   skipCount: number;
@@ -30,6 +32,20 @@ export interface AdminComplaintContext {
   reportId: number;
   address?: string;
   reportStatus?: string;
+  images?: {
+    citizen: string[];
+    collector: string[];
+  };
+  weightAction?: {
+    estimated: number;
+    actual: number;
+    diff: number;
+  };
+  timing?: {
+    deadline: string;
+    completedAt: string;
+    isLate: boolean;
+  };
 }
 
 export interface AdminComplaint {

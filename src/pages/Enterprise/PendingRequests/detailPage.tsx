@@ -28,10 +28,28 @@ import TagPill from "../components/tagPill";
 import { getLocationNamesFromCodes } from "@/utils/helpers";
 
 /** ===== Helpers ===== */
-function toMs(iso?: string | null): number | null {
-  if (!iso) return null;
-  const t = new Date(iso).getTime();
-  return Number.isFinite(t) ? t : null;
+function toMs(value?: unknown): number | null {
+  if (value == null) return null;
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value < 1e12 ? value * 1000 : value;
+  }
+
+  if (typeof value === "string") {
+    const s = value.trim();
+    if (!s) return null;
+
+    if (/^\d+$/.test(s)) {
+      const n = Number(s);
+      if (!Number.isFinite(n)) return null;
+      return n < 1e12 ? n * 1000 : n;
+    }
+
+    const t = new Date(s).getTime();
+    return Number.isFinite(t) ? t : null;
+  }
+
+  return null;
 }
 
 function formatCountdown(ms: number): string {
@@ -62,11 +80,17 @@ function formatKm(v: unknown): string {
 
 /** Chỉ tick khi modal mở */
 function useNowWhenOpen(open: boolean, intervalMs = 1000) {
-  const [nowMs, setNowMs] = useState(() => Date.now());
+  const [nowMs, setNowMs] = useState<number | null>(null);
   useEffect(() => {
-    if (!open) return;
-    setNowMs(Date.now());
-    const id = window.setInterval(() => setNowMs(Date.now()), intervalMs);
+    if (!open) {
+      setNowMs(null);
+      return;
+    }
+
+    const syncNow = () => setNowMs(Date.now());
+    syncNow();
+
+    const id = window.setInterval(syncNow, intervalMs);
     return () => window.clearInterval(id);
   }, [open, intervalMs]);
   return nowMs;
@@ -179,7 +203,8 @@ export default function ReportDetailModal({
   const report = detail?.report ?? null;
 
   const expMs = toMs(meta?.expiredAt);
-  const leftMs = expMs ? expMs - nowMs : null;
+  const leftMs = expMs != null && nowMs != null ? expMs - nowMs : null;
+  const isCountdownSyncing = open && expMs != null && nowMs == null;
   const expired = leftMs != null && leftMs <= 0;
 
   const lat = report?.latitude ?? null;
@@ -454,7 +479,11 @@ export default function ReportDetailModal({
               }
             `}
                             >
-                              {leftMs == null ? (
+                              {isCountdownSyncing ? (
+                                <div className="text-sm font-extrabold text-slate-500">
+                                  Đang đồng bộ...
+                                </div>
+                              ) : leftMs == null ? (
                                 <div className="text-sm font-extrabold text-slate-700">
                                   —
                                 </div>

@@ -12,11 +12,15 @@ import {
 } from "@/utils/authStorage";
 import type { RootState } from "@/redux/store/store";
 
+export type UserStatus = "ACTIVE" | "INACTIVE";
+
 export type User = {
   id: number;
   fullname: string;
   email: string;
   role: string;
+  avatar?: string;
+  status?: UserStatus;
   permissions?: string[];
 };
 
@@ -55,8 +59,9 @@ const authSlice = createSlice({
       s.refreshToken = a.payload.refreshToken;
       s.user = a.payload.user;
 
-      if (typeof a.payload.remember === "boolean")
+      if (typeof a.payload.remember === "boolean") {
         s.remember = a.payload.remember;
+      }
 
       writeProfile(s.user, s.remember);
       persistTokens(s.accessToken, s.refreshToken, s.remember);
@@ -79,8 +84,9 @@ const authSlice = createSlice({
       a: PayloadAction<{ user: User | null; remember?: boolean }>,
     ) => {
       s.user = a.payload.user;
-      if (typeof a.payload.remember === "boolean")
+      if (typeof a.payload.remember === "boolean") {
         s.remember = a.payload.remember;
+      }
 
       writeProfile(s.user, s.remember);
       persistTokens(s.accessToken, s.refreshToken, s.remember);

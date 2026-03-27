@@ -100,6 +100,10 @@ export type UpdateCollectorBody = {
   avatar?: File | Blob | null;
 };
 
+export type UpdateCollectorWorkingHoursBody = {
+  workingHours: CollectorWorkingHours;
+};
+
 export type ApiResponse<T> = {
   success?: boolean;
   statusCode?: number;

@@ -1,39 +1,21 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AlertCircle, Mail, Phone, User, X } from "lucide-react";
+
+import type { CollectorWorkingHours } from "@/redux/api/enterprise/collectors/types";
+import WorkingHoursEditor from "./WorkingHoursEditor";
 import {
-  AlertCircle,
-  CalendarDays,
-  Clock3,
-  Mail,
-  Phone,
-  User,
-  X,
-} from "lucide-react";
-
-import { Dropdown, cx } from "@/components/ui/page/componentUI";
-
-type DayKey =
-  | "Monday"
-  | "Tuesday"
-  | "Wednesday"
-  | "Thursday"
-  | "Friday"
-  | "Saturday"
-  | "Sunday";
-
-type WorkingHourItem = {
-  start?: string;
-  end?: string;
-  active: boolean;
-};
-
-type WorkingHours = Record<DayKey, WorkingHourItem>;
+  DAY_ORDER,
+  createDefaultWorkingHours,
+  normalizeWorkingHoursForSubmit,
+  type WorkingHoursFormValue,
+} from "@/utils/collectorWorkingHours";
 
 type FormValues = {
   email: string;
   fullName: string;
   phone: string;
-  workingHours: WorkingHours;
+  workingHours: CollectorWorkingHours;
 };
 
 type Props = {
@@ -41,82 +23,6 @@ type Props = {
   submitting?: boolean;
   onClose: () => void;
   onSubmit: (values: FormValues) => Promise<void> | void;
-};
-
-type ShiftValue = "MORNING" | "AFTERNOON" | "FULL_DAY" | "EVENING";
-
-const DAY_ORDER: DayKey[] = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
-const DAY_LABELS: Record<DayKey, string> = {
-  Monday: "Thứ 2",
-  Tuesday: "Thứ 3",
-  Wednesday: "Thứ 4",
-  Thursday: "Thứ 5",
-  Friday: "Thứ 6",
-  Saturday: "Thứ 7",
-  Sunday: "Chủ nhật",
-};
-
-const SHIFT_OPTIONS: {
-  value: ShiftValue;
-  label: string;
-  start: string;
-  end: string;
-  active: boolean;
-}[] = [
-  {
-    value: "FULL_DAY",
-    label: "08:00 - 17:00",
-    start: "08:00",
-    end: "17:00",
-    active: true,
-  },
-  {
-    value: "MORNING",
-    label: "08:00 - 12:00",
-    start: "08:00",
-    end: "12:00",
-    active: true,
-  },
-  {
-    value: "AFTERNOON",
-    label: "13:00 - 17:00",
-    start: "13:00",
-    end: "17:00",
-    active: true,
-  },
-  {
-    value: "EVENING",
-    label: "18:00 - 22:00",
-    start: "18:00",
-    end: "22:00",
-    active: true,
-  },
-];
-
-const SHIFT_MAP: Record<ShiftValue, WorkingHourItem> = {
-  MORNING: { start: "08:00", end: "12:00", active: true },
-  AFTERNOON: { start: "13:00", end: "17:00", active: true },
-  FULL_DAY: { start: "08:00", end: "17:00", active: true },
-  EVENING: { start: "18:00", end: "22:00", active: true },
-};
-
-const DEFAULT_WORKING_HOURS: WorkingHours = {
-  Monday: { start: "08:00", end: "17:00", active: true },
-  Tuesday: { start: "08:00", end: "17:00", active: true },
-  Wednesday: { start: "08:00", end: "17:00", active: true },
-  Thursday: { start: "08:00", end: "17:00", active: true },
-  Friday: { start: "08:00", end: "17:00", active: true },
-  Saturday: { start: "08:00", end: "17:00", active: true },
-  Sunday: { start: "08:00", end: "17:00", active: true },
 };
 
 function useLockBodyScroll(open: boolean) {
@@ -150,7 +56,7 @@ function FormField({
   className?: string;
 }) {
   return (
-    <div className={cx("space-y-2", className)}>
+    <div className={["space-y-2", className].filter(Boolean).join(" ")}>
       <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
         <div className="flex h-5 w-5 items-center justify-center rounded bg-emerald-100">
           <Icon className="h-3 w-3 text-emerald-700" />
@@ -171,89 +77,15 @@ function FormField({
   );
 }
 
-/* ===== input style mới ===== */
 const fieldWrapBase = "relative rounded-2xl border bg-white transition-colors";
-
 const fieldWrapOk =
-  "border-slate-300 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 ";
-
+  "border-slate-300 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400";
 const fieldWrapErr =
-  "border-slate-300 focus-within:border-red-400 focus-within:ring-1 focus-within:ring-red-400 ";
-
+  "border-slate-300 focus-within:border-red-400 focus-within:ring-1 focus-within:ring-red-400";
 const fieldInputBase =
-  "w-full h-11 rounded-2xl bg-transparent pl-10 pr-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-500";
-
+  "h-11 w-full rounded-2xl bg-transparent pl-10 pr-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-500";
 const fieldIconBase =
   "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400";
-
-function getShiftValue(item: WorkingHourItem): ShiftValue {
-  const found = SHIFT_OPTIONS.find(
-    (s) => s.start === item.start && s.end === item.end && item.active === true,
-  );
-  return found?.value ?? "FULL_DAY";
-}
-
-function WorkingDayCard({
-  day,
-  value,
-  disabled,
-  onToggle,
-  onChangeShift,
-}: {
-  day: DayKey;
-  value: WorkingHourItem;
-  disabled?: boolean;
-  onToggle: (checked: boolean) => void;
-  onChangeShift: (value: ShiftValue) => void;
-}) {
-  const isOff = !value.active;
-  const shift = getShiftValue(value);
-
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-slate-900">
-            {DAY_LABELS[day]}
-          </div>
-          <div className="text-xs text-slate-500">
-            {isOff ? "Đang tắt ngày làm việc" : "Chọn theo ca cố định"}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => !disabled && onToggle(!value.active)}
-          className={cx(
-            "relative h-6 w-11 rounded-full transition",
-            value.active ? "bg-blue-500" : "bg-slate-300",
-            disabled && "cursor-not-allowed opacity-60",
-          )}
-        >
-          <span
-            className={cx(
-              "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition",
-              value.active ? "left-[22px]" : "left-0.5",
-            )}
-          />
-        </button>
-      </div>
-
-      <Dropdown<ShiftValue>
-        icon={Clock3}
-        label="Ca"
-        value={shift}
-        options={SHIFT_OPTIONS.map((s) => ({
-          value: s.value,
-          label: s.label,
-        }))}
-        onChange={onChangeShift}
-        minWidth={220}
-        className={cx((disabled || isOff) && "pointer-events-none opacity-50")}
-      />
-    </div>
-  );
-}
 
 export default function CollectorCreateModal({
   open,
@@ -269,8 +101,8 @@ export default function CollectorCreateModal({
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [workingHours, setWorkingHours] = useState<WorkingHours>(
-    DEFAULT_WORKING_HOURS,
+  const [workingHours, setWorkingHours] = useState<WorkingHoursFormValue>(() =>
+    createDefaultWorkingHours(),
   );
 
   const [errors, setErrors] = useState<{
@@ -285,7 +117,7 @@ export default function CollectorCreateModal({
     setEmail("");
     setFullName("");
     setPhone("");
-    setWorkingHours(DEFAULT_WORKING_HOURS);
+    setWorkingHours(createDefaultWorkingHours());
     setErrors({});
   }, [open]);
 
@@ -330,41 +162,6 @@ export default function CollectorCreateModal({
     [reduceMotion],
   );
 
-  const updateDay = (day: DayKey, next: Partial<WorkingHourItem>) => {
-    setWorkingHours((prev) => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        ...next,
-      },
-    }));
-
-    if (errors.workingHours) {
-      setErrors((prev) => ({ ...prev, workingHours: undefined }));
-    }
-  };
-
-  const normalizePayloadWorkingHours = (data: WorkingHours): WorkingHours => {
-    const result = {} as WorkingHours;
-
-    DAY_ORDER.forEach((day) => {
-      const item = data[day];
-
-      if (!item.active) {
-        result[day] = { active: false };
-        return;
-      }
-
-      result[day] = {
-        active: true,
-        start: item.start,
-        end: item.end,
-      };
-    });
-
-    return result;
-  };
-
   const validate = () => {
     const next: typeof errors = {};
 
@@ -396,7 +193,7 @@ export default function CollectorCreateModal({
       email: email.trim(),
       fullName: fullName.trim(),
       phone: phone.trim(),
-      workingHours: normalizePayloadWorkingHours(workingHours),
+      workingHours: normalizeWorkingHoursForSubmit(workingHours),
     });
   };
 
@@ -476,7 +273,10 @@ export default function CollectorCreateModal({
                           onChange={(e) => {
                             setEmail(e.target.value);
                             if (errors.email) {
-                              setErrors((p) => ({ ...p, email: undefined }));
+                              setErrors((prev) => ({
+                                ...prev,
+                                email: undefined,
+                              }));
                             }
                           }}
                           className={fieldInputBase}
@@ -503,8 +303,8 @@ export default function CollectorCreateModal({
                           onChange={(e) => {
                             setFullName(e.target.value);
                             if (errors.fullName) {
-                              setErrors((p) => ({
-                                ...p,
+                              setErrors((prev) => ({
+                                ...prev,
                                 fullName: undefined,
                               }));
                             }
@@ -533,7 +333,10 @@ export default function CollectorCreateModal({
                           onChange={(e) => {
                             setPhone(e.target.value);
                             if (errors.phone) {
-                              setErrors((p) => ({ ...p, phone: undefined }));
+                              setErrors((prev) => ({
+                                ...prev,
+                                phone: undefined,
+                              }));
                             }
                           }}
                           className={fieldInputBase}
@@ -544,60 +347,20 @@ export default function CollectorCreateModal({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="mb-4 flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100">
-                      <CalendarDays className="h-4 w-4 text-emerald-700" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-slate-900">
-                        Lịch làm việc
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        Chọn theo ca cố định cho từng ngày
-                      </p>
-                    </div>
-                  </div>
-
-                  {errors.workingHours ? (
-                    <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                      <AlertCircle className="h-4 w-4" />
-                      <span>{errors.workingHours}</span>
-                    </div>
-                  ) : null}
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {DAY_ORDER.map((day) => (
-                      <WorkingDayCard
-                        key={day}
-                        day={day}
-                        value={workingHours[day]}
-                        disabled={submitting}
-                        onToggle={(checked) => {
-                          if (!checked) {
-                            updateDay(day, {
-                              active: false,
-                              start: undefined,
-                              end: undefined,
-                            });
-                            return;
-                          }
-
-                          if (day === "Saturday") {
-                            updateDay(day, SHIFT_MAP.MORNING);
-                            return;
-                          }
-
-                          updateDay(day, SHIFT_MAP.FULL_DAY);
-                        }}
-                        onChangeShift={(next) => {
-                          if (!workingHours[day].active) return;
-                          updateDay(day, SHIFT_MAP[next]);
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <WorkingHoursEditor
+                  value={workingHours}
+                  disabled={submitting}
+                  error={errors.workingHours}
+                  onChange={(next) => {
+                    setWorkingHours(next);
+                    if (errors.workingHours) {
+                      setErrors((prev) => ({
+                        ...prev,
+                        workingHours: undefined,
+                      }));
+                    }
+                  }}
+                />
               </div>
             </div>
 

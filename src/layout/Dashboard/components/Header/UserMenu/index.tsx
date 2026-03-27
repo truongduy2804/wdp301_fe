@@ -115,6 +115,12 @@ const UserMenu: React.FC<UserMenuProps> = ({
   // user lấy từ redux (không mock)
   const fullname = authUser?.fullname ?? "";
   const email = authUser?.email ?? "";
+  const avatar = authUser?.avatar ?? "";
+
+  const status = authUser?.status ?? "";
+  const isActive = status === "ACTIVE";
+
+  console.log("status:", status);
 
   const [open, setOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -196,7 +202,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
         ref={btnRef}
         onClick={() => !isLoggingOut && setOpen((o) => !o)}
         className={`group relative flex items-center gap-2.5 rounded-full bg-white px-3 py-1.5 overflow-hidden transition-all duration-300
-        ${isLoggingOut ? "cursor-wait opacity-90" : "hover:shadow-md"}`}
+          ${isLoggingOut ? "cursor-wait opacity-90" : "hover:shadow-md"}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-busy={isLoggingOut}
@@ -205,24 +211,31 @@ const UserMenu: React.FC<UserMenuProps> = ({
         <span
           aria-hidden
           className="pointer-events-none absolute inset-0 rounded-full border border-transparent
-          opacity-0 group-hover:opacity-100 transition-opacity duration-300
-          [background:linear-gradient(#fff,#fff)_padding-box,linear-gradient(90deg,#14b8a6,#10b981,#22c55e)_border-box]"
+            opacity-0 group-hover:opacity-100 transition-opacity duration-300
+            [background:linear-gradient(#fff,#fff)_padding-box,linear-gradient(90deg,#14b8a6,#10b981,#22c55e)_border-box]"
         />
         <span
           aria-hidden
           className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-emerald-500/50
-          group-hover:ring-transparent transition"
+            group-hover:ring-transparent transition"
         />
         <div className="relative flex items-center gap-2">
           <div className="relative">
             <AvatarUserImage
+              src={avatar}
               name={fullname || email || "User"}
               size={36}
               ringClassName="ring-2 ring-white"
             />
 
             {!isLoggingOut && (
-              <span className="absolute -bottom-0.5 right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
+              <span
+                className={[
+                  "absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white z-10",
+                  isActive ? "bg-emerald-500" : "bg-slate-400",
+                ].join(" ")}
+                title={isActive ? "Đang hoạt động" : "Không hoạt động"}
+              />
             )}
             {isLoggingOut && (
               <span className="pointer-events-none absolute inset-[-3px] rounded-full border-2 border-transparent border-t-sky-500 animate-spin" />
@@ -409,13 +422,13 @@ const UserMenu: React.FC<UserMenuProps> = ({
       </AnimatePresence>
 
       <style>{`
-        .bg-grid-pattern {
-          background-image:
-            linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-      `}</style>
+          .bg-grid-pattern {
+            background-image:
+              linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+          }
+        `}</style>
     </div>
   );
 };

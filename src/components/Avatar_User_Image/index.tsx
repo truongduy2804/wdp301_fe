@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 export const avatarColors = [
   "bg-slate-500",
@@ -35,15 +35,18 @@ export const getColorFromName = (name: string): string => {
 };
 
 export const getInitials = (name?: string): string => {
-  if (!name) return "";
+  if (!name?.trim()) return "U";
+
   const parts = name.trim().split(/\s+/);
   const first = parts[0]?.[0]?.toUpperCase() || "";
   const last =
     parts.length > 1 ? parts[parts.length - 1]?.[0]?.toUpperCase() : "";
-  return first + last || (name[0]?.toUpperCase() ?? "");
+
+  return first + last || name[0]?.toUpperCase() || "U";
 };
 
 type Status = "online" | "busy" | "offline" | "none";
+
 const statusColor: Record<Exclude<Status, "none">, string> = {
   online: "bg-emerald-500",
   busy: "bg-amber-500",
@@ -52,22 +55,29 @@ const statusColor: Record<Exclude<Status, "none">, string> = {
 
 interface AvatarUserImageProps {
   name?: string;
+  src?: string;
   avatarUrl?: string;
-  size?: number | string; // px number hoặc class "w-8 h-8"
+  size?: number | string;
   className?: string;
-  ringClassName?: string; // ví dụ: "ring-2 ring-white"
+  ringClassName?: string;
   status?: Status;
 }
 
 const AvatarUserImage: React.FC<AvatarUserImageProps> = ({
   name = "User",
+  src,
   avatarUrl,
   size = 36,
   className = "",
   ringClassName = "",
   status = "none",
 }) => {
+  const imageUrl = src || avatarUrl || "";
   const [imgFailed, setImgFailed] = useState(false);
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [imageUrl]);
 
   const { isNumberSize, pixelSize, fontSize } = useMemo(() => {
     const isNumberSize = typeof size === "number";
@@ -75,12 +85,13 @@ const AvatarUserImage: React.FC<AvatarUserImageProps> = ({
     const fontSize = isNumberSize
       ? `${Math.max(10, Math.round(Number(size) / 2.2))}px`
       : undefined;
+
     return { isNumberSize, pixelSize, fontSize };
   }, [size]);
 
-  const bgColor = useMemo(() => getColorFromName(name), [name]);
+  const bgColor = useMemo(() => getColorFromName(name || "User"), [name]);
   const initials = useMemo(() => getInitials(name), [name]);
-  const showImage = !!avatarUrl && !imgFailed;
+  const showImage = Boolean(imageUrl) && !imgFailed;
 
   return (
     <div
@@ -90,10 +101,16 @@ const AvatarUserImage: React.FC<AvatarUserImageProps> = ({
         typeof size === "string" ? size : "",
         ringClassName,
         className,
-      ].join(" ")}
+      ]
+        .filter(Boolean)
+        .join(" ")}
       style={
         isNumberSize
-          ? { width: pixelSize, height: pixelSize, fontSize }
+          ? {
+              width: pixelSize,
+              height: pixelSize,
+              fontSize,
+            }
           : undefined
       }
       aria-label={name}
@@ -101,21 +118,21 @@ const AvatarUserImage: React.FC<AvatarUserImageProps> = ({
     >
       {showImage ? (
         <img
-          src={avatarUrl}
+          src={imageUrl}
           alt={name}
           className="absolute inset-0 w-full h-full object-cover"
           onError={() => setImgFailed(true)}
           draggable={false}
         />
       ) : (
-        <span className="z-10 select-none">{initials}</span>
+        <span className="z-10 leading-none">{initials}</span>
       )}
 
       {status !== "none" && (
         <span
           className={[
-            "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-2 ring-white",
-            statusColor[status as Exclude<Status, "none">],
+            "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white",
+            statusColor[status],
           ].join(" ")}
           aria-hidden
         />
