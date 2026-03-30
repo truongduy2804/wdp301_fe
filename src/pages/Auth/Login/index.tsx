@@ -253,40 +253,6 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
             </span>
           )}
         </button>
-
-        <div className="my-3 flex items-center gap-4">
-          <div className="h-px flex-1 bg-slate-200" />
-          <span className="text-xs font-semibold text-slate-500">
-            HOẶC TIẾP TỤC VỚI
-          </span>
-          <div className="h-px flex-1 bg-slate-200" />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            type="button"
-            className="w-full rounded-2xl border border-slate-200 bg-white py-3 font-semibold text-slate-700
-                       hover:brightness-90 transition flex items-center justify-center gap-2"
-            onClick={() =>
-              toast.info("Demo: Social login chưa nối API", { autoClose: 1500 })
-            }
-          >
-            <FcGoogle className="h-5 w-5" />
-            Google
-          </button>
-          <button
-            type="button"
-            className="w-full rounded-2xl border border-slate-200 bg-white py-3 font-semibold text-slate-700
-                        hover:brightness-90 transition flex items-center justify-center gap-2"
-            onClick={() =>
-              toast.info("Demo: Social login chưa nối API", { autoClose: 1500 })
-            }
-          >
-            <FaFacebook className="h-5 w-5 text-[#1877F2]" />
-            Facebook
-          </button>
-        </div>
-
         <p className="pt-2 text-center text-sm text-slate-600">
           Chưa có tài khoản?{" "}
           <button
