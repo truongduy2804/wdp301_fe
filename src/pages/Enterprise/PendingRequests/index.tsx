@@ -122,7 +122,7 @@ export default function EnterprisePendingRequestsPage() {
                   <ClipboardList className="h-5 w-5 text-emerald-700" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
+                  <h1 className="text-lg sm:text-xl font-semibold text-slate-900 truncate">
                     Đơn chờ phản hồi
                   </h1>
                   <p className="text-sm text-slate-600">

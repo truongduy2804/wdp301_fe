@@ -250,7 +250,7 @@ export function PlanSelectModal({
                   <CreditCard className="w-6 h-6 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg sm:text-xl font-bold text-white truncate">
+                  <h2 className="text-lg sm:text-xl font-semibold text-white truncate">
                     {title}
                   </h2>
                   <p className="text-sm text-emerald-50">{subtitle}</p>
@@ -280,7 +280,7 @@ export function PlanSelectModal({
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <div className="text-base font-extrabold text-slate-900 truncate">
+                            <div className="text-base font-semibold text-slate-900 truncate">
                               {p.name}
                             </div>
                             <div className="mt-1 text-xs text-slate-500 line-clamp-2">
@@ -289,7 +289,7 @@ export function PlanSelectModal({
                           </div>
 
                           {active ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white">
                               <CheckCircle2 className="h-3.5 w-3.5" />
                               Đang chọn
                             </span>
@@ -305,7 +305,7 @@ export function PlanSelectModal({
                             <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                               Thời hạn
                             </div>
-                            <div className="mt-1 text-sm font-bold text-slate-900">
+                            <div className="mt-1 text-sm font-semibold text-slate-900">
                               {p.durationMonths} tháng
                             </div>
                           </div>
@@ -314,7 +314,7 @@ export function PlanSelectModal({
                             <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                               Giá
                             </div>
-                            <div className="mt-1 text-sm font-black text-slate-900">
+                            <div className="mt-1 text-sm font-semibold text-slate-900">
                               {formatNumber(price)} VNĐ
                             </div>
                           </div>
@@ -579,7 +579,7 @@ export function PaymentQrModal({
                   <QrCode className="w-6 h-6 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg sm:text-xl font-bold text-white truncate">
+                  <h2 className="text-lg sm:text-xl font-semibold text-white truncate">
                     Thanh toán chuyển khoản
                   </h2>
                   <p className="text-sm text-emerald-50">
@@ -593,7 +593,7 @@ export function PaymentQrModal({
               {isContentLoading ? (
                 <div className="min-h-[480px] rounded-2xl border border-slate-200 bg-slate-50 flex flex-col items-center justify-center">
                   <LoadingSpinner color="blue" size="12" inline />
-                  <div className="mt-4 text-base font-bold text-slate-800">
+                  <div className="mt-4 text-base font-semibold text-slate-800">
                     Đang tải thông tin thanh toán...
                   </div>
                   <div className="mt-1 text-sm text-slate-500">
@@ -604,7 +604,7 @@ export function PaymentQrModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="font-bold text-slate-900">Mã QR</div>
+                      <div className="font-semibold text-slate-900">Mã QR</div>
                     </div>
 
                     <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 flex items-center justify-center min-h-[280px]">
@@ -701,7 +701,7 @@ export function PaymentQrModal({
                           </div>
                         ) : qrExpired ? (
                           <>
-                            <div className="mt-1 text-2xl sm:text-3xl font-black tracking-tight text-rose-700">
+                            <div className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-rose-700">
                               QR đã hết hạn
                             </div>
                             <div className="mt-1 text-sm text-rose-700">
@@ -711,7 +711,7 @@ export function PaymentQrModal({
                           </>
                         ) : (
                           <>
-                            <div className="mt-1 text-2xl sm:text-3xl font-black tracking-wider text-rose-700">
+                            <div className="mt-1 text-2xl sm:text-3xl font-semibold tracking-wider text-rose-700">
                               {countdownText}
                             </div>
                             <div className="mt-1 text-xs text-rose-600">
@@ -726,7 +726,7 @@ export function PaymentQrModal({
 
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="font-bold text-slate-900">
+                      <div className="font-semibold text-slate-900">
                         Thông tin thanh toán
                       </div>
                       <div className="flex items-center gap-2">
@@ -741,7 +741,7 @@ export function PaymentQrModal({
                             <div className="text-xs font-semibold text-slate-500">
                               Gói
                             </div>
-                            <div className="mt-1 font-bold text-slate-900">
+                            <div className="mt-1 font-semibold text-slate-900">
                               {planName}
                             </div>
                             <div className="text-xs text-slate-500 mt-0.5">
@@ -794,7 +794,7 @@ export function PaymentQrModal({
                         <div className="text-xs font-semibold text-slate-500">
                           Số tiền
                         </div>
-                        <div className="mt-1 text-lg font-black text-slate-900">
+                        <div className="mt-1 text-lg font-semibold text-slate-900">
                           {formatNumber(amount)} VND
                         </div>
                       </div>
@@ -804,7 +804,7 @@ export function PaymentQrModal({
                           Số tài khoản
                         </div>
                         <div className="mt-1 flex items-center justify-between gap-2">
-                          <div className="font-bold text-slate-900 break-all">
+                          <div className="font-semibold text-slate-900 break-all">
                             {bankInfo?.accountNumber ?? "—"}
                           </div>
                           <button
@@ -832,7 +832,7 @@ export function PaymentQrModal({
                           Nội dung chuyển khoản
                         </div>
                         <div className="mt-1 flex items-start justify-between gap-2">
-                          <div className="font-bold text-slate-900 break-all">
+                          <div className="font-semibold text-slate-900 break-all">
                             {transferContent}
                           </div>
                           <button

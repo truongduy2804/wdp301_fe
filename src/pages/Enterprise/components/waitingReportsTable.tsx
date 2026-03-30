@@ -514,7 +514,7 @@ const WaitingReportsTable = React.memo(function WaitingReportsTable({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <div className="font-extrabold text-slate-900 tabular-nums">
+                      <div className="font-semibold text-slate-800 tabular-nums">
                         #{r.id}
                       </div>
                       <StatusPillLive status={status} expiredAt={r.expiredAt} />

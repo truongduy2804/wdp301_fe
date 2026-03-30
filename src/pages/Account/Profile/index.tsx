@@ -176,7 +176,7 @@ export default function AccountProfilePage() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-3xl font-black text-emerald-700">
+                      <div className="flex h-full w-full items-center justify-center text-3xl font-semibold text-emerald-700">
                         {initials(profile?.fullName)}
                       </div>
                     )}
@@ -192,7 +192,7 @@ export default function AccountProfilePage() {
                 </div>
 
                 {/* Name */}
-                <h1 className="mt-4 text-2xl font-black tracking-tight text-slate-900">
+                <h1 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900">
                   {profile?.fullName ?? "—"}
                 </h1>
 

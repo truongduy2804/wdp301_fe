@@ -54,7 +54,7 @@ function CollectorsTable({ data, busy, onView, onEdit, onDelete }: Props) {
     <div className="w-full overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-slate-50 border-b border-slate-100">
-          <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-slate-700 [&>th]:font-extrabold">
+          <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-slate-700 [&>th]:font-semibold">
             <th className="text-center w-[90px]">ID</th>
             <th className="text-center min-w-[280px]">Nhân sự</th>
             <th className="text-center min-w-[220px]">Email</th>
@@ -70,7 +70,7 @@ function CollectorsTable({ data, busy, onView, onEdit, onDelete }: Props) {
               key={r.id}
               className="transition-colors duration-200 hover:bg-emerald-50/30"
             >
-              <td className="px-4 py-3 text-center font-extrabold tabular-nums text-slate-900">
+              <td className="px-4 py-3 text-center font-semibold tabular-nums text-slate-900">
                 #{r.id}
               </td>
 
@@ -78,7 +78,7 @@ function CollectorsTable({ data, busy, onView, onEdit, onDelete }: Props) {
                 <div className="flex items-center gap-3 min-w-0">
                   <Avatar src={r.avatar ?? null} name={r.fullName ?? null} />
                   <div className="min-w-0">
-                    <div className="font-extrabold text-slate-900 truncate">
+                    <div className="font-semibold text-slate-900 truncate">
                       {r.fullName ?? "—"}
                     </div>
                     <div className="mt-0.5 text-xs text-slate-500 truncate">
@@ -120,7 +120,7 @@ function CollectorsTable({ data, busy, onView, onEdit, onDelete }: Props) {
                     className="
                       inline-flex items-center gap-1 rounded-xl
                       border border-slate-200 bg-white px-2 py-1.5
-                      text-sm font-extrabold text-slate-700
+                      text-sm font-semibold text-slate-700
                       transition-all duration-200 ease-out
                       hover:-translate-y-[1px] hover:shadow-sm
                       hover:border-emerald-200 hover:bg-emerald-50/60
@@ -136,7 +136,7 @@ function CollectorsTable({ data, busy, onView, onEdit, onDelete }: Props) {
                     className="
                       inline-flex items-center gap-1 rounded-xl
                       bg-emerald-600 px-2 py-1.5
-                      text-sm font-extrabold text-white
+                      text-sm font-semibold text-white
                       transition-all duration-200 ease-out
                       hover:-translate-y-[1px] hover:shadow-sm
                       hover:bg-emerald-700 active:bg-emerald-800
@@ -153,7 +153,7 @@ function CollectorsTable({ data, busy, onView, onEdit, onDelete }: Props) {
                     className="
                       inline-flex items-center gap-1 rounded-xl
                       bg-rose-600 px-2 py-1.5
-                      text-sm font-extrabold text-white
+                      text-sm font-semibold text-white
                       transition-all duration-200 ease-out
                       hover:-translate-y-[1px] hover:shadow-sm
                       hover:bg-rose-700 active:bg-rose-800

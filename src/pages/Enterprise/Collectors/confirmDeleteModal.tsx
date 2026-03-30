@@ -1,6 +1,11 @@
 // ConfirmDeleteModal.tsx
 import React, { useEffect, useMemo, useRef } from "react";
-import { AnimatePresence, motion, useReducedMotion, easeInOut } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  easeInOut,
+} from "framer-motion";
 import { AlertTriangle, X, Trash2 } from "lucide-react";
 
 import LoadingSpinner from "@/components/ui/loadingSpinner";
@@ -101,7 +106,7 @@ export default function ConfirmDeleteModal({
                   <AlertTriangle className="h-5 w-5 text-rose-700" />
                 </span>
                 <div className="min-w-0">
-                  <div className="text-base font-extrabold text-slate-900 truncate">
+                  <div className="text-base font-semibold text-slate-900 truncate">
                     {title}
                   </div>
                   <div className="mt-0.5 text-sm text-slate-600">
@@ -148,7 +153,7 @@ export default function ConfirmDeleteModal({
                 onClick={onClose}
                 className="
                   rounded-xl border border-slate-200 bg-white px-4 py-2
-                  text-sm font-extrabold text-slate-700
+                  text-sm font-semibold text-slate-700
                   hover:bg-slate-50 active:scale-[0.98] transition
                   disabled:opacity-60 disabled:cursor-not-allowed
                 "
@@ -163,7 +168,7 @@ export default function ConfirmDeleteModal({
                 className="
                   inline-flex items-center gap-2
                   rounded-xl bg-rose-600 px-4 py-2
-                  text-sm font-extrabold text-white
+                  text-sm font-semibold text-white
                   hover:bg-rose-700 active:bg-rose-800 active:scale-[0.98]
                   transition disabled:opacity-60 disabled:cursor-not-allowed
                 "

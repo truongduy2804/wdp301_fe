@@ -386,7 +386,7 @@ export default function AccountProfileUpsertModal({
                   <User className="w-6 h-6 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg sm:text-xl font-bold text-white truncate">
+                  <h2 className="text-lg sm:text-xl font-semibold text-white truncate">
                     Cập nhật hồ sơ
                   </h2>
                   <p className="text-sm text-emerald-50">

@@ -119,7 +119,7 @@ export default function ConfirmModal({
                 </div>
 
                 <div className="min-w-0">
-                  <div className="text-[15px] font-extrabold text-slate-900 leading-6">
+                  <div className="text-[15px] font-semibold text-slate-900 leading-6">
                     {title}
                   </div>
                 </div>
@@ -148,7 +148,7 @@ export default function ConfirmModal({
                 disabled={loading}
                 className="
                   rounded-xl border border-slate-200 bg-white px-4 py-2
-                  text-sm font-extrabold text-slate-700
+                  text-sm font-semibold text-slate-700
                   hover:bg-slate-50 active:scale-[0.98] transition
                   disabled:opacity-60 disabled:cursor-not-allowed
                 "
@@ -162,7 +162,7 @@ export default function ConfirmModal({
                 disabled={loading}
                 className={`
                   inline-flex items-center justify-center gap-2
-                  rounded-xl px-4 py-2 text-sm font-extrabold text-white
+                  rounded-xl px-4 py-2 text-sm font-semibold text-white
                   ${okBtnCls}
                   disabled:opacity-70 disabled:cursor-not-allowed
                   active:scale-[0.98] transition

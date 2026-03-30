@@ -133,7 +133,7 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
   return (
     <div className="w-full">
       <div className="mb-4 text-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="text-3xl font-semibold text-slate-700 tracking-tight">
           Đăng nhập
         </h2>
         <p className="mt-1 text-slate-700">
@@ -260,31 +260,6 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
             HOẶC TIẾP TỤC VỚI
           </span>
           <div className="h-px flex-1 bg-slate-200" />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
-            type="button"
-            className="w-full rounded-2xl border border-slate-200 bg-white py-3 font-semibold text-slate-700
-                       hover:brightness-90 transition flex items-center justify-center gap-2"
-            onClick={() =>
-              toast.info("Demo: Social login chưa nối API", { autoClose: 1500 })
-            }
-          >
-            <FcGoogle className="h-5 w-5" />
-            Google
-          </button>
-          <button
-            type="button"
-            className="w-full rounded-2xl border border-slate-200 bg-white py-3 font-semibold text-slate-700
-                        hover:brightness-90 transition flex items-center justify-center gap-2"
-            onClick={() =>
-              toast.info("Demo: Social login chưa nối API", { autoClose: 1500 })
-            }
-          >
-            <FaFacebook className="h-5 w-5 text-[#1877F2]" />
-            Facebook
-          </button>
         </div>
 
         <p className="pt-2 text-center text-sm text-slate-600">

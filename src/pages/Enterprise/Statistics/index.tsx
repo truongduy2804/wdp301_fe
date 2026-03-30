@@ -360,7 +360,7 @@ export default function EnterpriseStatsPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <h1 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
+                  <h1 className="text-lg sm:text-xl font-semibold text-slate-900 truncate">
                     Thống kê
                   </h1>
                   <p className="text-sm text-slate-600">{topBarSubtitle}</p>
@@ -466,7 +466,7 @@ export default function EnterpriseStatsPage() {
           <Card className="p-4 border border-red-200 bg-red-50">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-bold text-red-800">
+                <p className="text-sm font-semibold text-red-800">
                   Không tải được dữ liệu dashboard
                 </p>
                 <p className="text-sm text-red-700">
@@ -557,7 +557,7 @@ export default function EnterpriseStatsPage() {
           <Card className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-bold text-slate-900">
+                <p className="text-sm font-semibold text-slate-900">
                   Xu hướng rác thải theo thời gian
                 </p>
                 <p className="text-xs text-slate-600">
@@ -616,7 +616,7 @@ export default function EnterpriseStatsPage() {
           <Card className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-bold text-slate-900">
+                <p className="text-sm font-semibold text-slate-900">
                   Tổng khối lượng theo nhóm rác
                 </p>
                 <p className="text-xs text-slate-600">
@@ -662,7 +662,7 @@ export default function EnterpriseStatsPage() {
           <Card className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-bold text-slate-900">
+                <p className="text-sm font-semibold text-slate-900">
                   Cơ cấu loại rác
                 </p>
                 <p className="text-xs text-slate-600">
@@ -710,7 +710,7 @@ export default function EnterpriseStatsPage() {
         <Card className="overflow-hidden" hover={false}>
           <div className="p-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-bold text-slate-900">
+              <p className="text-sm font-semibold text-slate-900">
                 Bảng xếp hạng nhân viên
               </p>
               <p className="text-xs text-slate-600">
@@ -756,7 +756,7 @@ export default function EnterpriseStatsPage() {
                                 className="h-10 w-10 rounded-full object-cover border border-slate-200"
                               />
                             ) : (
-                              <div className="h-10 w-10 rounded-full border border-slate-200 bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-bold">
+                              <div className="h-10 w-10 rounded-full border border-slate-200 bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-semibold">
                                 {getAvatarFallback(collector.fullName)}
                               </div>
                             )}

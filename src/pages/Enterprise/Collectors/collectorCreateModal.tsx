@@ -231,7 +231,7 @@ export default function CollectorCreateModal({
                   <User className="h-6 w-6 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="truncate text-lg font-bold text-white sm:text-xl">
+                  <h2 className="truncate text-lg font-semibold text-white sm:text-xl">
                     Tạo nhân sự thu gom
                   </h2>
                   <p className="text-sm text-emerald-50">

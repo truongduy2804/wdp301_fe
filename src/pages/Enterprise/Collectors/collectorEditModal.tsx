@@ -202,7 +202,9 @@ export default function CollectorEditModal({
     hydratedCollectorIdRef.current = collectorId;
     setFullName(initialFullName);
     setPhone(initialPhone);
-    setWorkingHours(toFormWorkingHours(initial.workingHours, createEmptyWorkingHours()));
+    setWorkingHours(
+      toFormWorkingHours(initial.workingHours, createEmptyWorkingHours()),
+    );
   }, [collectorId, initial, initialFullName, initialPhone, open]);
 
   useEffect(() => {
@@ -359,7 +361,7 @@ export default function CollectorEditModal({
                   <User className="h-6 w-6 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="truncate text-lg font-bold text-white sm:text-xl">
+                  <h2 className="truncate text-lg font-semibold text-white sm:text-xl">
                     Cập nhật nhân sự thu gom
                   </h2>
                   <p className="text-sm text-emerald-50">

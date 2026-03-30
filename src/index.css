@@ -3,7 +3,7 @@
 /* ==========================================================================
    GOOGLE FONTS - Inter
    ========================================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
 /* ==========================================================================
    1) VITE DEFAULT (base styles from template)
@@ -121,7 +121,7 @@
    ========================================================================== */
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback";
+  --font-sans: "Inter", "sans-serif";
   --font-mono: "Geist Mono", "Geist Mono Fallback";
 }
 

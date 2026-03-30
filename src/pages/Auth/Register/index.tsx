@@ -94,7 +94,7 @@ const Register: React.FC<RegisterProps> = ({ toggleView }) => {
   return (
     <div className="w-full">
       <div className="mb-4 text-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="text-3xl font-semibold text-slate-700 tracking-tight">
           Đăng ký
         </h2>
         <p className="mt-1 text-slate-700">

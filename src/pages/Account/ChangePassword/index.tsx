@@ -427,7 +427,7 @@ export default function ChangePasswordPage() {
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div className="min-w-0">
-                <div className="text-xl font-black tracking-tight">
+                <div className="text-xl font-semibold tracking-tight">
                   Cập nhật mật khẩu
                 </div>
                 <div className="text-sm text-white/85">
