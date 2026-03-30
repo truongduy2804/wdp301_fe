@@ -4,6 +4,8 @@ import {
   Users,
   Search,
   AlertCircle,
+  CheckCircle,
+  Ban,
   Loader2,
   Eye,
   Lock,
@@ -152,6 +154,19 @@ export default function AdminUserManagement() {
         return "Đã xóa";
       default:
         return status;
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return <CheckCircle className="h-4 w-4" />;
+      case "BANNED":
+        return <Ban className="h-4 w-4" />;
+      case "DELETED":
+        return <AlertCircle className="h-4 w-4" />;
+      default:
+        return null;
     }
   };
 
@@ -357,10 +372,11 @@ export default function AdminUserManagement() {
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
+                          className={`inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
                             user.status
                           )}`}
                         >
+                          {getStatusIcon(user.status)}
                           {getStatusLabel(user.status)}
                         </span>
                       </td>

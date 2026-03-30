@@ -171,13 +171,13 @@ export default function AdminEnterprisesManagement() {
                 <Search className="h-4 w-4 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Tìm theo tên doanh nghiệp hoặc email..."
+                  placeholder="Tìm theo tên doanh nghiệp hoặc gmail"
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-56 max-w-[52vw] bg-transparent outline-none text-sm font-semibold text-slate-900 placeholder:text-slate-400"
+                  className="w-65 max-w-[52vw] bg-transparent outline-none text-sm font-semibold text-slate-900 placeholder:text-slate-400"
                 />
               </div>
 
