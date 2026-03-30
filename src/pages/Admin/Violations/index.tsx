@@ -7,6 +7,8 @@ import {
   Search,
   ShieldBan,
   Eye,
+  Lock,
+  LockOpen,
 } from "lucide-react";
 import dayjs from "dayjs";
 import {
@@ -115,6 +117,9 @@ export default function AdminViolations() {
         setSelectedViolator((prev) =>
           prev ? { ...prev, status: "BANNED" } : prev,
         );
+        setShowDetailModal(false);
+        setSelectedViolator(null);
+        setDetails([]);
       }
     } catch (error) {
       toast.error(
@@ -221,7 +226,7 @@ export default function AdminViolations() {
               <table className="min-w-full">
                 <thead className="bg-slate-50 border-y border-slate-200">
                   <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-600">
-                    <th className="px-4 py-3">User</th>
+                    <th className="px-4 py-3">Người dùng</th>
                     <th className="px-4 py-3">Email</th>
                     <th className="px-4 py-3">Số lần vi phạm</th>
                     <th className="px-4 py-3">Trạng thái</th>
@@ -285,42 +290,40 @@ export default function AdminViolations() {
 
                       {/* Actions */}
                       <td className="px-5 py-4">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1.5">
                           <button
                             onClick={() => openDetails(item)}
-                            className="
-                              inline-flex items-center justify-center gap-1 rounded-xl
-                              border border-slate-200 bg-white px-3 py-1.5
-                              text-xs font-medium text-slate-700
-                              transition-all duration-200
-                              hover:-translate-y-[1px] hover:shadow-sm
-                              hover:border-emerald-200 hover:bg-emerald-50/60
-                            "
+                            disabled={false}
+                            className="inline-flex items-center justify-center h-8 w-8 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/60 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                            title="Xem chi tiết"
                           >
                             <Eye className="h-3.5 w-3.5" />
-                            Chi tiết
                           </button>
 
                           <button
                             disabled={isBanningUserId === item.userId}
                             onClick={() => handleToggleUser(item)}
                             className={cx(
-                              "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-1.5",
-                              "text-xs font-medium text-white disabled:opacity-70 disabled:cursor-not-allowed",
-                              "transition-all duration-200",
-                              "hover:-translate-y-[1px] hover:shadow-sm",
+                              "inline-flex h-8 items-center justify-center gap-1 rounded-xl px-2.5 text-xs font-medium disabled:opacity-60 disabled:cursor-not-allowed transition-all",
                               item.status === "BANNED"
-                                ? "bg-slate-400"
-                                : "bg-rose-600 hover:bg-rose-700"
+                                ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                                : "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-300"
                             )}
                             title={item.status === "BANNED" ? "Tài khoản đã bị khóa" : "Khóa tài khoản"}
                           >
                             {isBanningUserId === item.userId ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : item.status === "BANNED" ? (
+                              <>
+                                <LockOpen className="h-3.5 w-3.5" />
+                                Mở
+                              </>
                             ) : (
-                              <ShieldBan className="h-3.5 w-3.5" />
+                              <>
+                                <Lock className="h-3.5 w-3.5" />
+                                Khóa
+                              </>
                             )}
-                            {item.status === "BANNED" ? "Đã khóa" : "Khóa tài khoản"}
                           </button>
                         </div>
                       </td>

@@ -1,6 +1,7 @@
 // src/pages/Admin/Complaints.tsx
 import dayjs from "dayjs";
 import {
+  AlertCircle,
   CheckCircle2,
   Clock3,
   ChevronLeft,
@@ -54,6 +55,42 @@ function statusLabel(s: AdminComplaintStatus) {
   if (s === "OPEN") return "Đang mở";
   if (s === "PROCESSED") return "Đã chấp nhận";
   return "Đã từ chối";
+}
+
+function complaintTypeLabel(t: string) {
+  switch (t) {
+    case "ATTITUDE":
+      return "Thái độ nhân viên";
+    case "WEIGHT_MISMATCH":
+      return "Sai lệch khối lượng";
+    case "UNAUTHORIZED_FEE":
+      return "Thu phí bất thường";
+    case "OTHER":
+      return "Khác";
+    default:
+      return t;
+  }
+}
+
+function reportStatusLabel(s?: string) {
+  switch (s) {
+    case "PENDING":
+      return "Đang chờ";
+    case "ACCEPTED":
+      return "Đã chấp nhận";
+    case "ON_THE_WAY":
+      return "Đang đến";
+    case "ARRIVED":
+      return "Đã đến nơi";
+    case "COLLECTING":
+      return "Đang thu gom";
+    case "COMPLETED":
+      return "Hoàn thành";
+    case "CANCELLED":
+      return "Đã hủy";
+    default:
+      return s || "Không có";
+  }
 }
 
 type StatusFilter = AdminComplaintStatus | "ALL";
@@ -235,7 +272,7 @@ export default function AdminComplaints() {
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Tìm theo ID / tiêu đề / reporter / liên quan..."
+                  placeholder="Tìm theo ID / tiêu đề / báo cáo / liên quan..."
                   className="w-72 max-w-[65vw] bg-transparent outline-none text-sm font-semibold text-slate-900 placeholder:text-slate-400"
                 />
               </div>
@@ -263,9 +300,8 @@ export default function AdminComplaints() {
               >
                 <span className="inline-flex items-center gap-2">
                   <RefreshCw
-                    className={`h-4 w-4 ${
-                      loading ? "animate-spin text-emerald-700" : "text-slate-600"
-                    }`}
+                    className={`h-4 w-4 ${loading ? "animate-spin text-emerald-700" : "text-slate-600"
+                      }`}
                   />
                   {loading ? "Đang tải..." : "Tải lại"}
                 </span>
@@ -325,7 +361,7 @@ export default function AdminComplaints() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-semibold text-slate-800">
-                          {r.typeLabel}
+                          {complaintTypeLabel(r.type)}
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -453,7 +489,7 @@ export default function AdminComplaints() {
 
                     <button
                       type="button"
-                      className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 hover:bg-white/20"
+                      className="grid h-9 w-9 place-items-center rounded-md hover:bg-emerald-500"
                       onClick={() => setSelected(null)}
                       aria-label="Đóng"
                     >
@@ -471,6 +507,11 @@ export default function AdminComplaints() {
                     >
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <DetailInfoRow
+                          icon={<FileText className="h-4 w-4" />}
+                          label="Mã loại"
+                          value={complaintTypeLabel(selected.type)}
+                        />
+                        <DetailInfoRow
                           icon={<Clock3 className="h-4 w-4" />}
                           label="Tạo lúc"
                           value={dayjs(selected.createdAt).format("HH:mm · DD/MM/YYYY")}
@@ -484,6 +525,11 @@ export default function AdminComplaints() {
                           icon={<FileText className="h-4 w-4" />}
                           label="Báo cáo liên quan"
                           value={`#${selected.context.reportId}`}
+                        />
+                        <DetailInfoRow
+                          icon={<MapPin className="h-4 w-4" />}
+                          label="Trạng thái báo cáo"
+                          value={reportStatusLabel(selected.context.reportStatus)}
                         />
                       </div>
                     </DetailSectionCard>
@@ -505,11 +551,25 @@ export default function AdminComplaints() {
                         </div>
                         <div className="min-w-0">
                           <div className="text-xl font-bold text-slate-900 truncate">{selected.citizen.fullName}</div>
+                          <div className="mt-1 text-xs font-bold text-slate-500">ID người dân: #{selected.citizen.id}</div>
                           <div className="mt-1 inline-flex items-center gap-1.5 text-sm text-slate-600">
                             <Phone className="h-4 w-4" />
                             {selected.citizen.phone || "Không có"}
                           </div>
                         </div>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-1 gap-2">
+                        <DetailInfoRow
+                          icon={<FileText className="h-4 w-4" />}
+                          label="Tổng khiếu nại trước đó"
+                          value={selected.citizen.trustStats?.totalComplaints ?? "Không có"}
+                        />
+                        <DetailInfoRow
+                          icon={<AlertCircle className="h-4 w-4" />}
+                          label="Số báo cáo giả"
+                          value={selected.citizen.trustStats?.totalFakeReports ?? "Không có"}
+                        />
                       </div>
                     </DetailSectionCard>
                   </div>
@@ -521,6 +581,21 @@ export default function AdminComplaints() {
                           icon={<MapPin className="h-4 w-4" />}
                           label="Địa chỉ"
                           value={<span className="leading-relaxed break-words">{selected.context.address || "Không có"}</span>}
+                        />
+                        <DetailInfoRow
+                          icon={<Clock3 className="h-4 w-4" />}
+                          label="Hạn xử lý"
+                          value={selected.context.timing?.deadline ? dayjs(selected.context.timing.deadline).format("HH:mm · DD/MM/YYYY") : "Không có"}
+                        />
+                        <DetailInfoRow
+                          icon={<Clock3 className="h-4 w-4" />}
+                          label="Hoàn thành lúc"
+                          value={selected.context.timing?.completedAt ? dayjs(selected.context.timing.completedAt).format("HH:mm · DD/MM/YYYY") : "Không có"}
+                        />
+                        <DetailInfoRow
+                          icon={<AlertCircle className="h-4 w-4" />}
+                          label="Trễ hạn"
+                          value={typeof selected.context.timing?.isLate === "boolean" ? (selected.context.timing.isLate ? "Có" : "Không") : "Không có"}
                         />
                         <DetailInfoRow
                           icon={<FileText className="h-4 w-4" />}
@@ -558,6 +633,16 @@ export default function AdminComplaints() {
                             icon={<User className="h-4 w-4" />}
                             label="Mã nhân viên"
                             value={selected.collector.employeeCode || "Không có"}
+                          />
+                          <DetailInfoRow
+                            icon={<FileText className="h-4 w-4" />}
+                            label="Điểm tin cậy"
+                            value={selected.collector.trustScore ?? "Không có"}
+                          />
+                          <DetailInfoRow
+                            icon={<AlertCircle className="h-4 w-4" />}
+                            label="Số lần bỏ qua"
+                            value={selected.collector.skipCount ?? "Không có"}
                           />
                         </div>
                       ) : (
@@ -687,9 +772,12 @@ export default function AdminComplaints() {
                 </div>
 
                 <div className="border-t border-slate-200 bg-white px-5 py-3 flex items-center justify-end gap-2">
-                  <Button variant="ghost" onClick={() => setSelected(null)}>
+                  <button
+                    onClick={() => setSelected(null)}
+                    className="rounded-xl border border-slate-200 bg-emerald-600 px-4 py-2 font-extrabold text-white hover:brightness-90 transition"
+                  >
                     Đóng
-                  </Button>
+                  </button>
                   {selected.status === "OPEN" && (
                     <>
                       <Button

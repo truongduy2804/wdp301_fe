@@ -5,7 +5,7 @@ export default function AdminDashboard() {
     <div className="space-y-4">
       <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
         <h1 className="text-xl font-semibold text-slate-900">
-          Admin Dashboard
+          Bảng điều khiển quản trị
         </h1>
         <p className="text-slate-600 mt-1">
           Quản trị hệ thống, người dùng, phân quyền, giám sát và xử lý khiếu
@@ -17,34 +17,34 @@ export default function AdminDashboard() {
             className="px-3 py-2 rounded-xl bg-emerald-600 text-white"
             to="/admin/users"
           >
-            Users
+            Quản lí người dùng
           </Link>
           <Link
             className="px-3 py-2 rounded-xl bg-white border border-slate-200"
             to="/admin/roles"
           >
-            Roles
+            Vai trò
           </Link>
           <Link
             className="px-3 py-2 rounded-xl bg-white border border-slate-200"
             to="/admin/monitoring"
           >
-            Monitoring
+            Giám sát
           </Link>
           <Link
             className="px-3 py-2 rounded-xl bg-white border border-slate-200"
             to="/admin/complaints"
           >
-            Complaints
+            Khiếu nại
           </Link>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {[
-          { k: "Users", v: "1,248" },
-          { k: "Active Reports", v: "342" },
-          { k: "Open Complaints", v: "7" },
+          { k: "Người dùng", v: "1,248" },
+          { k: "Báo cáo đang hoạt động", v: "342" },
+          { k: "Khiếu nại chưa giải quyết", v: "7" },
         ].map((x) => (
           <div
             key={x.k}

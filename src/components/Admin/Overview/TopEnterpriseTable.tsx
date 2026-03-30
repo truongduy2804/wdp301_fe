@@ -81,15 +81,15 @@ export const TopEnterpriseTable: React.FC<TopEnterpriseTableProps> = ({
 
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
               <div className="rounded-lg bg-slate-50 p-2">
+                <p className="text-[11px] text-slate-500">Tổng đơn</p>
+                <p className="text-sm font-bold text-slate-900">{formatNumber(enterprise.totalAssignments ?? 0)}</p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-2">
                 <p className="text-[11px] text-slate-500">Hoàn thành</p>
                 <p className="text-sm font-bold text-slate-900">{formatNumber(enterprise.completedReports)}</p>
               </div>
               <div className="rounded-lg bg-slate-50 p-2">
-                <p className="text-[11px] text-slate-500">Phân công</p>
-                <p className="text-sm font-bold text-slate-900">{formatNumber(enterprise.totalAssignments ?? 0)}</p>
-              </div>
-              <div className="rounded-lg bg-slate-50 p-2">
-                <p className="text-[11px] text-slate-500">Collector</p>
+                <p className="text-[11px] text-slate-500">Tài xế</p>
                 <p className="text-sm font-bold text-slate-900">{formatNumber(enterprise.collectorsCount ?? 0)}</p>
               </div>
             </div>
@@ -111,9 +111,9 @@ export const TopEnterpriseTable: React.FC<TopEnterpriseTableProps> = ({
             <tr className="border-b border-gray-100 bg-gray-50/50">
               <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Hạng</th>
               <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Doanh nghiệp</th>
+              <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Tổng đơn</th>
               <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Hoàn thành</th>
-              <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Phân công</th>
-              <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Collector</th>
+              <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Tài xế</th>
               <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Tỷ lệ</th>
             </tr>
           </thead>
@@ -168,11 +168,11 @@ export const TopEnterpriseTable: React.FC<TopEnterpriseTableProps> = ({
                 </td>
 
                 <td className="px-5 py-3.5 whitespace-nowrap text-center align-middle">
-                  <div className="text-sm font-bold text-gray-900">{formatNumber(enterprise.completedReports)}</div>
+                  <div className="text-sm font-bold text-gray-900">{formatNumber(enterprise.totalAssignments ?? 0)}</div>
                 </td>
 
                 <td className="px-5 py-3.5 whitespace-nowrap text-center align-middle">
-                  <div className="text-sm font-bold text-gray-900">{formatNumber(enterprise.totalAssignments ?? 0)}</div>
+                  <div className="text-sm font-bold text-gray-900">{formatNumber(enterprise.completedReports)}</div>
                 </td>
 
                 <td className="px-5 py-3.5 whitespace-nowrap text-center align-middle">

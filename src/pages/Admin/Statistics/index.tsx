@@ -244,9 +244,9 @@ export default function AdminDashboard() {
                 options={[
                   { value: "ALL", label: "Tất cả" },
                   { value: "API", label: "API" },
-                  { value: "Auth", label: "Auth" },
-                  { value: "Portal", label: "Portal" },
-                  { value: "Worker", label: "Worker" },
+                  { value: "Auth", label: "Xác thực" },
+                  { value: "Portal", label: "Cổng thông tin" },
+                  { value: "Worker", label: "Công nhân" },
                 ]}
               />
             </div>
@@ -259,28 +259,28 @@ export default function AdminDashboard() {
         {/* KPI */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
           <StatCard
-            title="Active users"
+            title="Người dùng hoạt động"
             value={formatNumber(kpi.avgActiveUsers)}
             sub="Trung bình / ngày"
             icon={Users}
             trend={{ label: "+3.2%", positive: true }}
           />
           <StatCard
-            title="Requests"
+            title="Yêu cầu"
             value={formatNumber(kpi.totalRequests)}
             sub="Tổng request"
             icon={Activity}
             trend={{ label: "+5.1%", positive: true }}
           />
           <StatCard
-            title="Errors"
+            title="Lỗi"
             value={formatNumber(kpi.totalErrors)}
             sub={`Tỷ lệ: ${kpi.errRate}%`}
             icon={Bug}
             trend={{ label: "+0.2%", positive: false }}
           />
           <StatCard
-            title="Uptime"
+            title="Thời gian hoạt động"
             value={`${kpi.uptimeAvg}%`}
             sub="Trung bình service"
             icon={ShieldCheck}

@@ -35,6 +35,40 @@ import type { AdminDashboardData } from "@/api/types/admin.types";
 // Component
 // ============================================================================
 
+const getWasteTypeLabel = (wasteType: string) => {
+  switch (wasteType) {
+    case "ORGANIC":
+      return "Rác hữu cơ";
+    case "RECYCLABLE":
+      return "Rác tái chế";
+    case "HAZARDOUS":
+      return "Rác nguy hại";
+    default:
+      return wasteType;
+  }
+};
+
+const getReportStatusLabel = (status: string) => {
+  switch (status) {
+    case "PENDING":
+      return "Đang chờ";
+    case "ACCEPTED":
+      return "Đã chấp nhận";
+    case "ON_THE_WAY":
+      return "Đang đến";
+    case "ARRIVED":
+      return "Đã đến nơi";
+    case "COLLECTING":
+      return "Đang thu gom";
+    case "COMPLETED":
+      return "Hoàn thành";
+    case "CANCELLED":
+      return "Đã hủy";
+    default:
+      return status;
+  }
+};
+
 /**
  * Admin Overview Dashboard Page
  * Main dashboard showing KPIs, alerts, trends, and top performers.
@@ -135,7 +169,7 @@ export default function AdminOverviewPage() {
     .sort((a, b) => b.totalWeightKg - a.totalWeightKg)
     .slice(0, 5);
 
-  const enterpriseRows = data.topEnterprises.map((item) => ({
+  const enterpriseRows = data.topEnterprises.slice(0, 10).map((item) => ({
     id: String(item.id),
     name: item.name,
     completedReports: item.completedAssignments,
@@ -150,12 +184,17 @@ export default function AdminOverviewPage() {
     labelDate: item.date.slice(5),
   }));
 
-  const statusBreakdown = data.reportStatusBreakdown.breakdown;
-  const statusTotal = statusBreakdown.reduce((sum, item) => sum + item.count, 0);
+  const statusBreakdown = data.reportStatusBreakdown.breakdown.map(item => ({
+    ...item,
+    statusDisplayName: getReportStatusLabel(item.status),
+  }));
+  const statusTotal = data.reportStatusBreakdown.total;
 
   const pieColors = ["#10b981", "#0ea5e9", "#f59e0b", "#ef4444", "#6366f1", "#8b5cf6"];
 
   const showBannedAlert = data.overview.users.banned > 0;
+
+
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-100">
@@ -169,7 +208,7 @@ export default function AdminOverviewPage() {
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-                    Admin Dashboard
+                    Bảng điều khiển quản trị
                   </h1>
                   <p className="text-sm text-slate-600">
                     Tổng quan hệ thống và các chỉ số vận hành quan trọng
@@ -186,9 +225,8 @@ export default function AdminOverviewPage() {
             >
               <span className="inline-flex items-center gap-2">
                 <RefreshCw
-                  className={`h-4 w-4 ${
-                    refreshing ? "animate-spin text-emerald-700" : "text-slate-600"
-                  }`}
+                  className={`h-4 w-4 ${refreshing ? "animate-spin text-emerald-700" : "text-slate-600"
+                    }`}
                 />
                 {refreshing ? "Đang tải..." : "Tải lại"}
               </span>
@@ -223,7 +261,9 @@ export default function AdminOverviewPage() {
           <StatCard
             title="Tỷ lệ hoàn thành"
             value={`${formatNumber(data.overview.reports.completionRate)}%`}
-            sub={`${formatNumber(data.overview.reports.pending)} đang chờ`}
+            sub={`${formatNumber(
+              data.overview.reports.completed,
+            )} hoàn thành • ${formatNumber(data.overview.reports.cancelled)} hủy`}
             icon={UserCheck}
           />
           <StatCard
@@ -339,17 +379,23 @@ export default function AdminOverviewPage() {
                   <Pie
                     data={statusBreakdown}
                     dataKey="count"
-                    nameKey="status"
+                    nameKey="statusDisplayName"
                     cx="50%"
                     cy="50%"
                     outerRadius={90}
-                    label={({ payload }) => `${payload?.percentage ?? 0}%`}
+                    label={({ payload }) => `${payload?.statusDisplayName}: ${payload?.percentage ?? 0}%`}
                   >
                     {statusBreakdown.map((_, index) => (
                       <Cell key={`status-${index}`} fill={pieColors[index % pieColors.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    formatter={(value: any, name: any) => [value, name]}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend
+                    formatter={(value) => <span className="text-xs font-semibold text-slate-700">{value}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -363,7 +409,7 @@ export default function AdminOverviewPage() {
           <Card className="p-4 sm:p-5">
             <div className="mb-4">
               <h2 className="text-base font-bold text-slate-900">Doanh thu</h2>
-              <p className="text-sm text-slate-600">Tổng hợp doanh thu subscription</p>
+              <p className="text-sm text-slate-600">Tổng hợp doanh thu gói đăng ký</p>
             </div>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
@@ -389,7 +435,7 @@ export default function AdminOverviewPage() {
             <div className="space-y-2">
               {topWasteTypes.map((item) => (
                 <div key={item.wasteType} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
-                  <span className="text-sm font-medium text-slate-700">{item.wasteType}</span>
+                  <span className="text-sm font-medium text-slate-700">{getWasteTypeLabel(item.wasteType)}</span>
                   <span className="text-sm font-semibold text-slate-900">{formatWeight(item.totalWeightKg)}</span>
                 </div>
               ))}

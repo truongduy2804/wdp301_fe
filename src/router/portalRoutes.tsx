@@ -18,6 +18,9 @@ import AdminComplaints from "@/pages/Admin/Complaints";
 import AdminEnterprisesMap from "@/pages/Admin/EnterprisesMap";
 import AdminGifts from "@/pages/Admin/Gifts";
 import AdminRedemptions from "@/pages/Admin/Redemptions";
+import AdminUserManagement from "@/pages/Admin/UserManagement";
+import AdminEnterprisesManagement from "@/pages/Admin/EnterprisesManagement";
+import AdminSubscriptionPlans from "@/pages/Admin/SubscriptionPlans";
 
 // Enterprise Pages
 import EnterpriseDashboard from "@/pages/Enterprise/Statistics";
@@ -71,6 +74,7 @@ export const portalRoutes: PortalRoute[] = [
     role: "ADMIN",
     children: [
       { index: true, element: <AdminOverviewPage /> },
+      { path: endPoint.ADMIN_CHILD.USERS, element: <AdminUserManagement /> },
       { path: endPoint.ADMIN_CHILD.MONITOR, element: <AdminSystemMonitor /> },
       { path: endPoint.ADMIN_CHILD.VIOLATIONS, element: <AdminViolations /> },
       { path: endPoint.ADMIN_CHILD.COMPLAINTS, element: <AdminComplaints /> },
@@ -80,6 +84,14 @@ export const portalRoutes: PortalRoute[] = [
       },
       { path: endPoint.ADMIN_CHILD.GIFTS, element: <AdminGifts /> },
       { path: endPoint.ADMIN_CHILD.REDEMPTIONS, element: <AdminRedemptions /> },
+      {
+        path: endPoint.ADMIN_CHILD.ENTERPRISES,
+        element: <AdminEnterprisesManagement />,
+      },
+      {
+        path: endPoint.ADMIN_CHILD.SUBSCRIPTION_PLANS,
+        element: <AdminSubscriptionPlans />,
+      },
     ],
   },
   {

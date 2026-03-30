@@ -527,7 +527,7 @@ export default function CollectorDetailModal({
 
                               <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 ring-1 ring-slate-200">
                                 <Zap className="h-3 w-3 text-slate-500" />
-                                <span className="font-mono text-[11px] font-semibold text-slate-600">
+                                <span className="font-sans text-[11px] font-semibold text-slate-600">
                                   {profile.employeeCode}
                                 </span>
                               </div>
@@ -648,11 +648,11 @@ export default function CollectorDetailModal({
 
                                 {active ? (
                                   <div className="mt-2 flex flex-col items-center gap-0.5">
-                                    <span className="font-mono text-[14px] font-semibold text-slate-700">
+                                    <span className="font-sans text-[14px] font-semibold text-slate-700">
                                       {item.data?.start ?? "--:--"}
                                     </span>
                                     <span className="h-3 w-px bg-slate-300" />
-                                    <span className="font-mono text-[14px] font-semibold text-slate-700">
+                                    <span className="font-sans text-[14px] font-semibold text-slate-700">
                                       {item.data?.end ?? "--:--"}
                                     </span>
                                   </div>

@@ -293,7 +293,8 @@ export default function PortalHeader({
         )}
 
         {/* ADMIN: cron buttons (desktop) */}
-        {isAdmin && (
+        {/* Ẩn các nút CRON tạm thời */}
+        {/* isAdmin && (
           <div className="hidden md:flex items-center gap-2">
             <button
               onClick={onProcessPendingReports}
@@ -361,7 +362,7 @@ export default function PortalHeader({
               )}
             </button>
           </div>
-        )}
+        ) */}
 
         <div className="flex items-center gap-2 shrink-0">
           <div className="relative" ref={notificationRef}>

@@ -54,6 +54,9 @@ const endPoint = {
     ENTERPRISE_MAP: "enterprise-map",
     GIFTS: "gifts",
     REDEMPTIONS: "redemptions",
+    SUBSCRIPTION_PLANS: "subscription-plans",
+    USERS: "users",
+    ENTERPRISES: "enterprises",
   },
 } as const;
 
