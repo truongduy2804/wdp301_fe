@@ -35,6 +35,40 @@ import type { AdminDashboardData } from "@/api/types/admin.types";
 // Component
 // ============================================================================
 
+const getWasteTypeLabel = (wasteType: string) => {
+  switch (wasteType) {
+    case "ORGANIC":
+      return "Rác hữu cơ";
+    case "RECYCLABLE":
+      return "Rác tái chế";
+    case "HAZARDOUS":
+      return "Rác nguy hại";
+    default:
+      return wasteType;
+  }
+};
+
+const getReportStatusLabel = (status: string) => {
+  switch (status) {
+    case "PENDING":
+      return "Đang chờ";
+    case "ACCEPTED":
+      return "Đã chấp nhận";
+    case "ON_THE_WAY":
+      return "Đang đến";
+    case "ARRIVED":
+      return "Đã đến nơi";
+    case "COLLECTING":
+      return "Đang thu gom";
+    case "COMPLETED":
+      return "Hoàn thành";
+    case "CANCELLED":
+      return "Đã hủy";
+    default:
+      return status;
+  }
+};
+
 /**
  * Admin Overview Dashboard Page
  * Main dashboard showing KPIs, alerts, trends, and top performers.
@@ -150,25 +184,17 @@ export default function AdminOverviewPage() {
     labelDate: item.date.slice(5),
   }));
 
-  const statusBreakdown = data.reportStatusBreakdown.breakdown;
-  const statusTotal = statusBreakdown.reduce((sum, item) => sum + item.count, 0);
+  const statusBreakdown = data.reportStatusBreakdown.breakdown.map(item => ({
+    ...item,
+    statusDisplayName: getReportStatusLabel(item.status),
+  }));
+  const statusTotal = data.reportStatusBreakdown.total;
 
   const pieColors = ["#10b981", "#0ea5e9", "#f59e0b", "#ef4444", "#6366f1", "#8b5cf6"];
 
   const showBannedAlert = data.overview.users.banned > 0;
 
-  const getWasteTypeLabel = (wasteType: string) => {
-    switch (wasteType) {
-      case "ORGANIC":
-        return "Rác hữu cơ";
-      case "RECYCLABLE":
-        return "Rác tái chế";
-      case "HAZARDOUS":
-        return "Rác nguy hại";
-      default:
-        return wasteType;
-    }
-  };
+
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-slate-100">
@@ -199,9 +225,8 @@ export default function AdminOverviewPage() {
             >
               <span className="inline-flex items-center gap-2">
                 <RefreshCw
-                  className={`h-4 w-4 ${
-                    refreshing ? "animate-spin text-emerald-700" : "text-slate-600"
-                  }`}
+                  className={`h-4 w-4 ${refreshing ? "animate-spin text-emerald-700" : "text-slate-600"
+                    }`}
                 />
                 {refreshing ? "Đang tải..." : "Tải lại"}
               </span>
@@ -236,7 +261,7 @@ export default function AdminOverviewPage() {
           <StatCard
             title="Tỷ lệ hoàn thành"
             value={`${formatNumber(data.overview.reports.completionRate)}%`}
-            sub={`${formatNumber(data.overview.reports.pending)} chờ • ${formatNumber(
+            sub={`${formatNumber(
               data.overview.reports.completed,
             )} hoàn thành • ${formatNumber(data.overview.reports.cancelled)} hủy`}
             icon={UserCheck}
@@ -354,17 +379,23 @@ export default function AdminOverviewPage() {
                   <Pie
                     data={statusBreakdown}
                     dataKey="count"
-                    nameKey="status"
+                    nameKey="statusDisplayName"
                     cx="50%"
                     cy="50%"
                     outerRadius={90}
-                    label={({ payload }) => `${payload?.percentage ?? 0}%`}
+                    label={({ payload }) => `${payload?.statusDisplayName}: ${payload?.percentage ?? 0}%`}
                   >
                     {statusBreakdown.map((_, index) => (
                       <Cell key={`status-${index}`} fill={pieColors[index % pieColors.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    formatter={(value: any, name: any) => [value, name]}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend
+                    formatter={(value) => <span className="text-xs font-semibold text-slate-700">{value}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
