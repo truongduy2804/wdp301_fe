@@ -6,7 +6,6 @@ import {
   Clock3,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
   FileText,
   Eye,
   Filter,
@@ -174,9 +173,6 @@ export default function AdminComplaints() {
     });
   }, [q, status, list]);
 
-  const selectedMapUrl = selected?.context.address
-    ? `https://www.google.com/maps?q=${encodeURIComponent(selected.context.address)}`
-    : null;
   const contextImages = selected
     ? [
       ...(selected.context.images?.citizen ?? []),
@@ -473,17 +469,6 @@ export default function AdminComplaints() {
                       </div>
                       <div className="mt-2 flex items-center gap-2 text-sm text-emerald-50">
                         <span className="truncate">{selected.context.address || "Không có địa chỉ"}</span>
-                        {selectedMapUrl && (
-                          <a
-                            href={selectedMapUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                            Maps
-                          </a>
-                        )}
                       </div>
                     </div>
 
@@ -741,13 +726,7 @@ export default function AdminComplaints() {
                     <div className="space-y-3">
                       {selected.status === "OPEN" && (
                         <div className="flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => setResponseText("Báo cáo của bạn đã bị đánh dấu sự cố, vui lòng vô phần Lịch sử khiếu nại để theo dõi thêm")}
-                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-tight bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100 transition-colors"
-                          >
-                            Sử dụng mẫu hệ thống
-                          </button>
+                          
                         </div>
                       )}
                       <textarea

@@ -43,6 +43,7 @@ function mapAcceptedToEnterpriseReport(
     actualWeight: item.actualWeight ?? null,
     accuracyBucket: item.accuracyBucket ?? null,
     images: item.images ?? [],
+    evidenceImages: item.evidenceImages ?? [],
     citizen: item.citizen
       ? {
           id: item.citizen.id ?? null,

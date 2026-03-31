@@ -11,7 +11,6 @@ import {
   Clock,
   Images,
   Leaf,
-  ExternalLink,
   FileText,
   CheckCircle2,
   Truck,
@@ -55,6 +54,7 @@ type ReportDetailData = (AcceptedEnterpriseReport | EnterpriseReport) & {
   accuracyBucket?: string | null;
 
   images?: string[];
+  evidenceImages?: string[];
 
   citizen?: {
     id?: number | null;
@@ -245,11 +245,6 @@ export default function ReportDetailModal({
   const lat = report?.latitude ?? null;
   const lng = report?.longitude ?? null;
 
-  const googleMapUrl = useMemo(() => {
-    if (lat == null || lng == null) return null;
-    return `https://www.google.com/maps?q=${lat},${lng}`;
-  }, [lat, lng]);
-
   const osmEmbedUrl = useMemo(() => {
     if (lat == null || lng == null) return null;
     const d = 0.004;
@@ -364,6 +359,10 @@ export default function ReportDetailModal({
 
   const citizen = report?.citizen ?? null;
   const collector = report?.collector ?? null;
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const shipperFeedbackImages = Array.isArray(report?.evidenceImages)
+    ? report.evidenceImages
+    : [];
 
   return (
     <AnimatePresence>
@@ -405,18 +404,6 @@ export default function ReportDetailModal({
                     <span className="truncate">
                       {geoName ?? report?.address ?? "—"}
                     </span>
-
-                    {googleMapUrl ? (
-                      <a
-                        href={googleMapUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Maps
-                      </a>
-                    ) : null}
                   </div>
                 </div>
 
@@ -581,17 +568,16 @@ export default function ReportDetailModal({
                     </SectionCard>
 
                     <SectionCard
-                      title="Hình ảnh"
+                      title="Hình ảnh người dân"
                       icon={<Images className="h-4 w-4 text-indigo-700" />}
                     >
                       {report.images?.length ? (
                         <div className="grid grid-cols-2 gap-3 overflow-auto custom-scrollbar pr-1 max-h-72">
                           {report.images.map((url, i) => (
-                            <a
+                            <button
                               key={`${url}-${i}`}
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
+                              type="button"
+                              onClick={() => setPreviewImage(url)}
                               className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
                             >
                               <img
@@ -602,13 +588,44 @@ export default function ReportDetailModal({
                                 className="w-full h-[150px] object-cover transition-transform duration-300 group-hover:scale-[1.04]"
                               />
                               <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                            </a>
+                            </button>
                           ))}
                         </div>
                       ) : (
                         <div className="text-slate-500">—</div>
                       )}
                     </SectionCard>
+
+                    {isCompleted ? (
+                      <SectionCard
+                        title="Hình ảnh từ tài xế"
+                        icon={<Images className="h-4 w-4 text-indigo-700" />}
+                      >
+                        {shipperFeedbackImages.length ? (
+                          <div className="grid grid-cols-2 gap-3 overflow-auto custom-scrollbar pr-1 max-h-72">
+                            {shipperFeedbackImages.map((url, i) => (
+                              <button
+                                key={`${url}-${i}`}
+                                type="button"
+                                onClick={() => setPreviewImage(url)}
+                                className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                              >
+                                <img
+                                  src={url}
+                                  alt={`shipper-feedback-${report?.id ?? "report"}-${i}`}
+                                  loading="lazy"
+                                  decoding="async"
+                                  className="w-full h-[150px] object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                                />
+                                <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-slate-500">Tài xế không cung cấp ảnh.</div>
+                        )}
+                      </SectionCard>
+                    ) : null}
                   </div>
 
                   {hasActualReport ? (
@@ -742,19 +759,6 @@ export default function ReportDetailModal({
                     <SectionCard
                       title="Bản đồ"
                       icon={<MapPin className="h-4 w-4 text-emerald-700" />}
-                      right={
-                        googleMapUrl ? (
-                          <a
-                            href={googleMapUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-2 text-sm font-extrabold text-emerald-700 hover:underline"
-                          >
-                            <MapPin className="h-4 w-4" />
-                            Mở Google Maps
-                          </a>
-                        ) : null
-                      }
                     >
                       {osmEmbedUrl ? (
                         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -788,6 +792,20 @@ export default function ReportDetailModal({
               </button>
             </div>
           </div>
+
+          {previewImage ? (
+            <div
+              className="fixed inset-0 z-[1600] bg-black/85 flex items-center justify-center p-4"
+              onClick={() => setPreviewImage(null)}
+            >
+              <img
+                src={previewImage}
+                alt="preview"
+                className="max-h-[90vh] max-w-[92vw] rounded-2xl object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          ) : null}
         </motion.div>
       ) : null}
     </AnimatePresence>

@@ -3,7 +3,6 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   AlertTriangle,
   Clock3,
-  ExternalLink,
   FileText,
   Images,
   Leaf,
@@ -256,11 +255,6 @@ export default function CancelledReportDetailModal({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
-  const googleMapUrl = useMemo(() => {
-    if (report?.latitude == null || report?.longitude == null) return null;
-    return `https://www.google.com/maps?q=${report.latitude},${report.longitude}`;
-  }, [report?.latitude, report?.longitude]);
-
   const osmEmbedUrl = useMemo(() => {
     if (report?.latitude == null || report?.longitude == null) return null;
 
@@ -294,6 +288,7 @@ export default function CancelledReportDetailModal({
   const cancellationReason = report ? getCancellationReason(report) : "—";
   const collectorInfo = report?.cancelDetails?.collectorInfo ?? null;
   const collectorLogs = report?.cancelDetails?.collectorLogs ?? [];
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   return (
     <AnimatePresence>
@@ -331,17 +326,6 @@ export default function CancelledReportDetailModal({
 
                   <div className="mt-2 flex items-center gap-2 text-sm text-emerald-50">
                     <span className="truncate">{report?.address ?? "—"}</span>
-                    {googleMapUrl ? (
-                      <a
-                        href={googleMapUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Maps
-                      </a>
-                    ) : null}
                   </div>
                 </div>
 
@@ -516,11 +500,10 @@ export default function CancelledReportDetailModal({
                       {report.images?.length ? (
                         <div className="custom-scrollbar grid max-h-72 grid-cols-2 gap-3 overflow-auto pr-1">
                           {report.images.map((url, index) => (
-                            <a
+                            <button
                               key={`${url}-${index}`}
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
+                              type="button"
+                              onClick={() => setPreviewImage(url)}
                               className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
                             >
                               <img
@@ -531,7 +514,7 @@ export default function CancelledReportDetailModal({
                                 className="h-[150px] w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
                               />
                               <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
-                            </a>
+                            </button>
                           ))}
                         </div>
                       ) : (
@@ -598,11 +581,10 @@ export default function CancelledReportDetailModal({
                                 {log.images?.length ? (
                                   <div className="mt-3 grid grid-cols-2 gap-3">
                                     {log.images.map((image, imageIndex) => (
-                                      <a
+                                      <button
                                         key={`${image}-${imageIndex}`}
-                                        href={image}
-                                        target="_blank"
-                                        rel="noreferrer"
+                                        type="button"
+                                        onClick={() => setPreviewImage(image)}
                                         className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
                                       >
                                         <img
@@ -613,7 +595,7 @@ export default function CancelledReportDetailModal({
                                           className="h-[132px] w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
                                         />
                                         <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
-                                      </a>
+                                      </button>
                                     ))}
                                   </div>
                                 ) : null}
@@ -633,19 +615,6 @@ export default function CancelledReportDetailModal({
                     <SectionCard
                       title="Bản đồ"
                       icon={<MapPin className="h-4 w-4 text-emerald-700" />}
-                      right={
-                        googleMapUrl ? (
-                          <a
-                            href={googleMapUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-2 text-sm font-extrabold text-emerald-700 hover:underline"
-                          >
-                            <MapPin className="h-4 w-4" />
-                            Mở Google Maps
-                          </a>
-                        ) : null
-                      }
                     >
                       {osmEmbedUrl ? (
                         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -677,6 +646,20 @@ export default function CancelledReportDetailModal({
                 Đóng
               </button>
             </div>
+
+            {previewImage ? (
+              <div
+                className="fixed inset-0 z-[1600] bg-black/85 flex items-center justify-center p-4"
+                onClick={() => setPreviewImage(null)}
+              >
+                <img
+                  src={previewImage}
+                  alt="preview"
+                  className="max-h-[90vh] max-w-[92vw] rounded-2xl object-contain"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            ) : null}
           </div>
         </motion.div>
       ) : null}

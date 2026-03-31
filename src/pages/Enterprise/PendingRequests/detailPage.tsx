@@ -12,7 +12,6 @@ import {
   Clock,
   Images,
   Leaf,
-  ExternalLink,
   AlertTriangle,
   FileText,
 } from "lucide-react";
@@ -210,11 +209,6 @@ export default function ReportDetailModal({
   const lat = report?.latitude ?? null;
   const lng = report?.longitude ?? null;
 
-  const googleMapUrl = useMemo(() => {
-    if (lat == null || lng == null) return null;
-    return `https://www.google.com/maps?q=${lat},${lng}`;
-  }, [lat, lng]);
-
   const osmEmbedUrl = useMemo(() => {
     if (lat == null || lng == null) return null;
     const d = 0.004;
@@ -350,6 +344,7 @@ export default function ReportDetailModal({
   }, [reduceMotion]);
 
   const citizen = report?.citizen ?? null;
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   return (
     <AnimatePresence>
@@ -393,18 +388,6 @@ export default function ReportDetailModal({
                     <span className="truncate">
                       {geoName ?? report?.address ?? meta?.address ?? "—"}
                     </span>
-
-                    {googleMapUrl ? (
-                      <a
-                        href={googleMapUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Maps
-                      </a>
-                    ) : null}
                   </div>
                 </div>
 
@@ -660,11 +643,10 @@ export default function ReportDetailModal({
                           ].join(" ")}
                         >
                           {report.images.map((url, i) => (
-                            <a
+                            <button
                               key={`${url}-${i}`}
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
+                              type="button"
+                              onClick={() => setPreviewImage(url)}
                               className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
                             >
                               <img
@@ -678,7 +660,7 @@ export default function ReportDetailModal({
                                 ].join(" ")}
                               />
                               <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                            </a>
+                            </button>
                           ))}
                         </div>
                       ) : (
@@ -692,19 +674,6 @@ export default function ReportDetailModal({
                     <SectionCard
                       title="Bản đồ"
                       icon={<MapPin className="h-4 w-4 text-emerald-700" />}
-                      right={
-                        googleMapUrl ? (
-                          <a
-                            href={googleMapUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-2 text-sm font-extrabold text-emerald-700 hover:underline"
-                          >
-                            <MapPin className="h-4 w-4" />
-                            Mở Google Maps
-                          </a>
-                        ) : null
-                      }
                     >
                       {osmEmbedUrl ? (
                         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -739,6 +708,20 @@ export default function ReportDetailModal({
               </button>
             </div>
           </div>
+
+          {previewImage ? (
+            <div
+              className="fixed inset-0 z-[1600] bg-black/85 flex items-center justify-center p-4"
+              onClick={() => setPreviewImage(null)}
+            >
+              <img
+                src={previewImage}
+                alt="preview"
+                className="max-h-[90vh] max-w-[92vw] rounded-2xl object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          ) : null}
         </motion.div>
       ) : null}
     </AnimatePresence>

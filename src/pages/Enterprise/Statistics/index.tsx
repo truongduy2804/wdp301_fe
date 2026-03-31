@@ -22,8 +22,6 @@ import { usePendingPaymentToast } from "@/hooks/usePendingPaymentToast";
 
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
   CartesianGrid,
   XAxis,
   YAxis,
@@ -274,7 +272,7 @@ export default function EnterpriseStatsPage() {
     dateParams
       ? {
           ...dateParams,
-          interval,
+          interval: "day",
         }
       : undefined,
     {
@@ -553,7 +551,7 @@ export default function EnterpriseStatsPage() {
 
         {/* Charts */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          {/* Line chart */}
+          {/* Daily grouped bar chart */}
           <Card className="p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -561,18 +559,18 @@ export default function EnterpriseStatsPage() {
                   Xu hướng rác thải theo thời gian
                 </p>
                 <p className="text-xs text-slate-600">
-                  Theo {INTERVAL_LABEL[interval].toLowerCase()}
+                  Theo ngày, mỗi cột thể hiện từng loại rác
                 </p>
               </div>
 
               <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                {INTERVAL_LABEL[interval]}
+                Ngày
               </span>
             </div>
 
             <div className="mt-4 h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trendData}>
+                <BarChart data={trendData} barCategoryGap={8}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
@@ -583,31 +581,25 @@ export default function EnterpriseStatsPage() {
                     }}
                   />
                   <Legend />
-                  <Line
-                    type="monotone"
+                  <Bar
                     dataKey="ORGANIC"
                     name="Hữu cơ"
-                    stroke={CHART.organic}
-                    strokeWidth={3}
-                    dot={false}
+                    fill={CHART.organic}
+                    radius={[6, 6, 0, 0]}
                   />
-                  <Line
-                    type="monotone"
+                  <Bar
                     dataKey="RECYCLABLE"
                     name="Tái chế"
-                    stroke={CHART.recyclable}
-                    strokeWidth={3}
-                    dot={false}
+                    fill={CHART.recyclable}
+                    radius={[6, 6, 0, 0]}
                   />
-                  <Line
-                    type="monotone"
+                  <Bar
                     dataKey="HAZARDOUS"
                     name="Nguy hại"
-                    stroke={CHART.hazardous}
-                    strokeWidth={3}
-                    dot={false}
+                    fill={CHART.hazardous}
+                    radius={[6, 6, 0, 0]}
                   />
-                </LineChart>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </Card>
