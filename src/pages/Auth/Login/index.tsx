@@ -133,7 +133,7 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
   return (
     <div className="w-full">
       <div className="mb-4 text-center">
-        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="text-3xl font-semibold text-slate-700 tracking-tight">
           Đăng nhập
         </h2>
         <p className="mt-1 text-slate-700">
@@ -253,6 +253,15 @@ const Login: React.FC<LoginProps> = ({ toggleView, onForgotPassword }) => {
             </span>
           )}
         </button>
+
+        <div className="my-3 flex items-center gap-4">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs font-semibold text-slate-500">
+            HOẶC TIẾP TỤC VỚI
+          </span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
         <p className="pt-2 text-center text-sm text-slate-600">
           Chưa có tài khoản?{" "}
           <button

@@ -138,7 +138,7 @@ export default function TagPill({ kind, value, className }: Props) {
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-full border px-2.5 py-1 text-xs font-bold",
+        "inline-flex items-center justify-center rounded-full border px-2.5 py-1 text-xs font-semibold",
         cls,
         className,
       )}

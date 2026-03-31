@@ -1,0 +1,137 @@
+PRESENTATION TEXT LAYOUT FOR CANVA
+=====================================
+
+LEFT COLUMN - ADMIN
+==================
+
+**ADMIN**
+**Quản trị viên**
+
+🎁 Quản lý quà & điểm
+Tạo & phân phối quà tặng, quản lý điểm thưởng
+
+📊 Bảng Tổng quan
+Xem KPI, biểu đồ xu hướng, xếp hạng doanh nghiệp
+
+⚠️ Quản lý Vi phạm
+Xử lý & theo dõi các báo cáo vi phạm
+
+⚖️ Khiếu nại & Tranh chấp
+Giải quyết khiếu nại từ người dùng
+
+🔧 Cấu hình Hệ thống
+Giám sát & cấu hình tham số hệ thống
+
+🗺️ Bản đồ Doanh nghiệp
+Xem vị trí & chi tiết doanh nghiệp
+
+📜 Lịch sử Đổi quà
+Theo dõi lịch sử redemption người dùng
+
+---
+
+RIGHT COLUMN - ENTERPRISE
+==========================
+
+**ENTERPRISE**
+**Doanh nghiệp Tái chế**
+
+📈 Bảng Thống kê
+Xem thống kê & KPI hoạt động doanh nghiệp
+
+📥 Đơn Chờ Phản hồi
+Quản lý & phản hồi yêu cầu thu gom
+
+⚙️ Đơn Đang Xử lý
+Quản lý đơn trong tiến trình, gán nhân viên
+
+✅ Lịch sử Hoàn thành
+Xem & xuất báo cáo đơn đã hoàn thành
+
+❌ Đơn Hủy
+Xem danh sách & lý do hủy đơn
+
+👥 Quản lý Nhân viên
+Quản lý đội ngũ thu gom, hiệu suất
+
+🎖️ Quy tắc Điểm Thưởng
+Tùy chỉnh quy tắc & chương trình khuyến mãi
+
+⚙️ Thông tin Doanh nghiệp
+Cập nhật profile, giấy phép, khu vực
+
+---
+
+QUICK BULLETS FORMAT
+====================
+
+**ADMIN - 7 FUNCTIONS:**
+✅ Quản lý Vi phạm Báo cáo
+✅ Xử lý Khiếu nại & Tranh chấp
+✅ Cấu hình & Giám sát Hệ thống
+✅ Bản đồ Doanh nghiệp toàn cộng
+✅ Quản lý Quà tặng & Điểm thưởng
+✅ Bảng Tổng quan (KPI & Analytics)
+✅ Lịch sử Đổi quà
+
+**ENTERPRISE - 8 FUNCTIONS:**
+✅ Bảng Thống kê Hoạt động
+✅ Quản lý Đơn Chờ Phản hồi
+✅ Điều phối Đơn Xử lý
+✅ Lịch sử Đơn Hoàn thành
+✅ Quản lý Đơn Hủy
+✅ Quản lý Đội ngũ Thu gom
+✅ Tùy chỉnh Quy tắc Điểm
+✅ Cập nhật Thông tin Công ty
+
+---
+
+COMPARISON TABLE TEXT
+=====================
+
+| Chức năng | ADMIN | ENTERPRISE |
+|-----------|-------|-----------|
+| Dashboard | Toàn hệ thống | Công ty |
+| Vi phạm | ✅ | ❌ |
+| Khiếu nại | ✅ | ❌ |
+| Cấu hình Hệ thống | ✅ | ❌ |
+| Bản đồ | ✅ | ❌ |
+| Quà tặng | ✅ | ❌ |
+| Quản lý Đơn hàng | ❌ | ✅ |
+| Quản lý Nhân viên | ❌ | ✅ |
+| Quy tắc Điểm | ❌ | ✅ |
+
+---
+
+KEY MESSAGES (TAGLINE)
+======================
+
+ADMIN:
+"Kiểm soát toàn bộ nền tảng - Xử lý vi phạm & tranh chấp - Giám sát hiệu suất"
+
+ENTERPRISE:
+"Quản lý yêu cầu hiệu quả - Điều phối đội ngũ - Tối đa hóa lợi nhuận"
+
+---
+
+ENGLISH VERSION
+===============
+
+**ADMIN**
+- Dashboard Overview & KPIs
+- Violations Management
+- Complaints & Disputes Resolution
+- System Monitoring & Configuration
+- Enterprise Map & Details
+- Gift & Reward Management
+- Redemption History & Reports
+
+**ENTERPRISE**
+- Dashboard Statistics
+- Pending Requests Management
+- Orders In Progress
+- Completed History & Reports
+- Cancelled Orders
+- Collector Team Management
+- Reward Rules Configuration
+- Enterprise Settings & Profile

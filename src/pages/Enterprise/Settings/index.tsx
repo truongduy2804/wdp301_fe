@@ -137,7 +137,7 @@ function SectionHead({
           <Icon className="h-4.5 w-4.5" />
         </div>
         <div>
-          <h3 className="text-[15px] font-bold text-slate-900">{title}</h3>
+          <h3 className="text-[15px] font-semibold text-slate-900">{title}</h3>
           {sub ? <p className="text-[12px] text-slate-500">{sub}</p> : null}
         </div>
       </div>
@@ -257,7 +257,7 @@ export default function EnterpriseProfilePage() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
             <ShieldCheck className="h-6 w-6" />
           </div>
-          <div className="mt-3 text-[15px] font-bold text-slate-800">
+          <div className="mt-3 text-[15px] font-semibold text-slate-800">
             Lỗi tải dữ liệu
           </div>
           <div className="mt-1 text-[13px] text-slate-500">
@@ -294,7 +294,7 @@ export default function EnterpriseProfilePage() {
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-white/10">
-                        <span className="text-3xl font-black text-white">
+                        <span className="text-3xl font-semibold text-white">
                           {initials(profile.name)}
                         </span>
                       </div>
@@ -312,7 +312,7 @@ export default function EnterpriseProfilePage() {
                 </div>
 
                 <div className="min-w-0">
-                  <div className="text-xl sm:text-2xl font-black text-white truncate">
+                  <div className="text-xl sm:text-2xl font-semibold text-white truncate">
                     {profile.name}
                   </div>
 
@@ -337,7 +337,7 @@ export default function EnterpriseProfilePage() {
               <div className="flex md:justify-end">
                 <button
                   onClick={() => setOpen(true)}
-                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-white hover:brightness-90 px-5 py-2.5 text-[13px] font-bold text-emerald-700 shadow-md hover:shadow-lg active:scale-[0.98] transition"
+                  className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-white hover:brightness-90 px-5 py-2.5 text-[13px] font-semibold text-emerald-700 shadow-md hover:shadow-lg active:scale-[0.98] transition"
                   type="button"
                 >
                   <Building2 className="h-4 w-4" />

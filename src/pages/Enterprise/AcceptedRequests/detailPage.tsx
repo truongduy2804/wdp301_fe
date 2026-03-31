@@ -393,7 +393,7 @@ export default function ReportDetailModal({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="m-0 text-lg sm:text-xl font-extrabold text-white">
+                    <h2 className="m-0 text-lg sm:text-xl font-semibold text-white">
                       Chi tiết đơn {report?.id ? `#${report.id}` : ""}
                     </h2>
 
@@ -504,7 +504,7 @@ export default function ReportDetailModal({
                       {collector ? (
                         <div className="space-y-3">
                           <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4">
-                            <div className="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-700">
+                            <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-700">
                               Đơn đã được gán cho tài xế
                             </div>
 
@@ -638,7 +638,7 @@ export default function ReportDetailModal({
                         right={
                           <span
                             className={[
-                              "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold",
+                              "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
                               accuracyToneClass(report.accuracyBucket),
                             ].join(" ")}
                           >
@@ -649,10 +649,10 @@ export default function ReportDetailModal({
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                             <div className="flex items-center justify-between gap-2">
-                              <div className="text-sm font-extrabold text-slate-900">
+                              <div className="text-sm font-semibold text-slate-900">
                                 Công dân khai báo
                               </div>
-                              <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                              <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
                                 Ban đầu
                               </span>
                             </div>
@@ -674,10 +674,10 @@ export default function ReportDetailModal({
                             </div>
 
                             <div className="mt-4 rounded-xl border border-slate-200 bg-white px-3 py-2">
-                              <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                                 Tổng khối lượng khai báo
                               </div>
-                              <div className="mt-1 text-base font-extrabold text-slate-900">
+                              <div className="mt-1 text-base font-semibold text-slate-900">
                                 {sumWaste(report.wasteItems)} kg
                               </div>
                             </div>
@@ -685,10 +685,10 @@ export default function ReportDetailModal({
 
                           <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4">
                             <div className="flex items-center justify-between gap-2">
-                              <div className="text-sm font-extrabold text-slate-900">
+                              <div className="text-sm font-semibold text-slate-900">
                                 Tài xế xác nhận thực tế
                               </div>
-                              <span className="inline-flex items-center rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-xs font-bold text-emerald-700">
+                              <span className="inline-flex items-center rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-xs font-semibold text-emerald-700">
                                 Thực tế
                               </span>
                             </div>
@@ -710,10 +710,10 @@ export default function ReportDetailModal({
                             </div>
 
                             <div className="mt-4 rounded-xl border border-emerald-200 bg-white px-3 py-2">
-                              <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                                 Tổng khối lượng thực tế
                               </div>
-                              <div className="mt-1 text-base font-extrabold text-emerald-700">
+                              <div className="mt-1 text-base font-semibold text-emerald-700">
                                 {report.actualWeight ?? 0} kg
                               </div>
                             </div>
@@ -721,14 +721,14 @@ export default function ReportDetailModal({
                         </div>
 
                         <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-                          <div className="text-sm font-extrabold text-slate-900">
+                          <div className="text-sm font-semibold text-slate-900">
                             Đánh giá tổng từ hệ thống
                           </div>
 
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <span
                               className={[
-                                "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold",
+                                "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
                                 accuracyToneClass(report.accuracyBucket),
                               ].join(" ")}
                             >
@@ -738,7 +738,7 @@ export default function ReportDetailModal({
                             {collector?.fullName ? (
                               <span className="text-sm text-slate-600">
                                 Báo cáo xác nhận bởi{" "}
-                                <span className="font-bold text-slate-900">
+                                <span className="font-semibold text-slate-900">
                                   {collector.fullName}
                                 </span>
                               </span>
@@ -783,7 +783,7 @@ export default function ReportDetailModal({
                 onClick={onClose}
                 className="
                   rounded-xl border border-slate-200 bg-emerald-600 px-4 py-2
-                  font-extrabold text-slate-100
+                  font-semibold text-slate-100
                   hover:brightness-90 hover:scale-[1.02] transition
                 "
                 type="button"
@@ -840,7 +840,7 @@ function SectionCard({
               {icon}
             </span>
           ) : null}
-          <div className="font-extrabold text-slate-900 truncate">{title}</div>
+          <div className="font-semibold text-slate-900 truncate">{title}</div>
         </div>
         {right ? <div className="shrink-0">{right}</div> : null}
       </div>
@@ -857,11 +857,11 @@ function InfoRow(props: {
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-      <div className="flex items-center gap-2 text-xs font-extrabold text-slate-500">
+      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
         <span className="text-slate-500">{props.icon}</span>
         {props.label}
       </div>
-      <div className="mt-1 text-sm font-extrabold text-slate-900">
+      <div className="mt-1 text-sm font-semibold text-slate-900">
         {props.value}
       </div>
     </div>
@@ -903,7 +903,7 @@ function PersonBlock({
       <Avatar src={avatar} name={name} />
 
       <div className="min-w-0">
-        <div className="font-extrabold text-slate-900 truncate">
+        <div className="font-semibold text-slate-900 truncate">
           {name ?? "Không rõ"}
         </div>
 
@@ -947,7 +947,7 @@ function WasteRow({ type, weightKg }: { type: string; weightKg: number }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 flex items-center justify-between">
       <TagPill kind="wasteType" value={type as any} className="!px-2.5 !py-1" />
-      <span className="tabular-nums text-sm font-extrabold text-emerald-700">
+      <span className="tabular-nums text-sm font-semibold text-emerald-700">
         {weightKg} kg
       </span>
     </div>
@@ -964,7 +964,7 @@ function WasteCompareRow({
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 flex items-center justify-between">
       <TagPill kind="wasteType" value={type as any} className="!px-2.5 !py-1" />
-      <span className="tabular-nums text-sm font-extrabold text-slate-900">
+      <span className="tabular-nums text-sm font-semibold text-slate-900">
         {weightKg} kg
       </span>
     </div>

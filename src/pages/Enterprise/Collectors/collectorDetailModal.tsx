@@ -174,7 +174,7 @@ const Avatar = React.memo(function Avatar({
 
   if (!src || broken) {
     return (
-      <div className="flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-emerald-600 text-[22px] font-bold text-white shadow-md ring-4 ring-slate-50">
+      <div className="flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-emerald-600 text-[22px] font-semibold text-white shadow-md ring-4 ring-slate-50">
         {initials}
       </div>
     );
@@ -247,7 +247,7 @@ const StatCard = React.memo(function StatCard({
           <Icon className={`h-3.5 w-3.5 ${a.iconColor}`} />
         </div>
       </div>
-      <div className={`mt-3 text-[26px] font-bold tracking-tight ${a.num}`}>
+      <div className={`mt-3 text-[26px] font-semibold tracking-tight ${a.num}`}>
         {value}
       </div>
     </div>
@@ -275,8 +275,9 @@ const InfoRow = React.memo(function InfoRow({
           {label}
         </div>
         <div
-          className={`truncate text-sm font-medium ${accent ? "text-emerald-700" : "text-slate-800"
-            }`}
+          className={`truncate text-sm font-medium ${
+            accent ? "text-emerald-700" : "text-slate-800"
+          }`}
         >
           {value}
         </div>
@@ -298,7 +299,7 @@ const SectionHeader = React.memo(function SectionHeader({
       <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600">
         <Icon className="h-3.5 w-3.5 text-slate-50" />
       </div>
-      <h3 className="text-[12px] font-bold uppercase text-slate-800">
+      <h3 className="text-[12px] font-semibold uppercase text-slate-800">
         {title}
       </h3>
       <div className="h-[1px] flex-1 bg-slate-200" />
@@ -460,7 +461,7 @@ export default function CollectorDetailModal({
                   </div>
 
                   <div className="min-w-0">
-                    <h2 className="truncate text-lg font-bold text-white sm:text-xl">
+                    <h2 className="truncate text-lg font-semibold text-white sm:text-xl">
                       {detail?.id
                         ? `Collector #${detail.id}`
                         : "Chi tiết collector"}
@@ -504,7 +505,7 @@ export default function CollectorDetailModal({
                             />
 
                             <div className="min-w-0 pt-0.5">
-                              <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                              <h2 className="text-xl font-semibold tracking-tight text-slate-900">
                                 {profile.fullName}
                               </h2>
 
@@ -629,16 +630,18 @@ export default function CollectorDetailModal({
                                   duration: 0.18,
                                   ease: [0.22, 1, 0.36, 1],
                                 }}
-                                className={`flex flex-col items-center rounded-2xl border px-1 py-3 transition-colors duration-200 ${active
+                                className={`flex flex-col items-center rounded-2xl border px-1 py-3 transition-colors duration-200 ${
+                                  active
                                     ? "border-emerald-200 bg-emerald-50 hover:brightness-95"
                                     : "border-slate-200 bg-white text-slate-400"
-                                  }`}
+                                }`}
                               >
                                 <span
-                                  className={`text-[14px] font-bold uppercase tracking-wider ${active
+                                  className={`text-[14px] font-semibold uppercase tracking-wider ${
+                                    active
                                       ? "text-emerald-800"
                                       : "text-slate-700"
-                                    }`}
+                                  }`}
                                 >
                                   {item.label}
                                 </span>

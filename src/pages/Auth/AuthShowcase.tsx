@@ -45,7 +45,7 @@ const BrandMark = ({
 
       {textMode !== "none" && (
         <div className={isStack ? "" : "leading-none"}>
-          <div className="font-black text-2xl text-slate-900">
+          <div className="font-bold text-2xl text-slate-900">
             ECO<span className="text-emerald-600">NET</span>
           </div>
           {isStack && (
@@ -135,7 +135,7 @@ const RotatingStat = ({
           <Icon className="h-5 w-5" strokeWidth={2.3} />
         </span>
         <div className="text-left leading-tight">
-          <div className="text-3xl font-black tracking-tight text-emerald-700">
+          <div className="text-3xl font-bold tracking-tight text-emerald-700">
             {items[idx].value}
           </div>
           <div className="text-xs font-medium text-slate-600">

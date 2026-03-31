@@ -93,7 +93,7 @@ export default function EnterpriseApprovedRequestsPage() {
                   <ClipboardCheck className="h-5 w-5 text-emerald-700" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="truncate text-lg font-bold text-slate-900 sm:text-xl">
+                  <h1 className="truncate text-lg font-semibold text-slate-900 sm:text-xl">
                     Đơn đang xử lí
                   </h1>
                   <p className="text-sm text-slate-600">

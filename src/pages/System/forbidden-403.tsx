@@ -50,10 +50,10 @@ export default function ForbiddenPage() {
             </div>
 
             <div className="space-y-2">
-              <div className="text-6xl font-black text-slate-900 tracking-tight">
+              <div className="text-6xl font-semibold text-slate-900 tracking-tight">
                 403
               </div>
-              <h1 className="text-xl font-bold text-slate-900">
+              <h1 className="text-xl font-semibold text-slate-900">
                 Forbidden — Bạn không có quyền truy cập
               </h1>
               <p className="text-sm text-slate-600 leading-relaxed">

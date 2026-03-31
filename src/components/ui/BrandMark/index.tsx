@@ -22,7 +22,7 @@ const BrandMark: React.FC<Props> = ({
   textMode = "none",
   brandName = "ECONET",
   tagline,
-  textClassName = "text-3xl font-black leading-none text-slate-900",
+  textClassName = "text-3xl font-bold leading-none text-slate-900",
 
   accentSuffix = "NET",
   accentClassName = "text-emerald-600",

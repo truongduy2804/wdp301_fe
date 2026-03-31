@@ -168,7 +168,7 @@ export default function MapPickerSection({
       {showHeader ? (
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
-            <h3 className="flex items-center gap-2 text-base font-bold text-slate-900 mb-1">
+            <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 mb-1">
               <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center">
                 <MapPin className="w-4 h-4 text-rose-600" />
               </div>
