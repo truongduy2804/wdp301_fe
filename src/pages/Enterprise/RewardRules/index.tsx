@@ -177,7 +177,7 @@ export default function EnterpriseRewardRulesPage() {
                   <Gift className="h-5 w-5 text-emerald-700" />
                 </div>
                 <div>
-                  <h1 className="text-lg sm:text-xl font-bold text-slate-900">
+                  <h1 className="text-lg sm:text-xl font-semibold text-slate-900">
                     Quy tắc điểm thưởng
                   </h1>
                   <p className="text-sm text-slate-600">
@@ -236,7 +236,7 @@ export default function EnterpriseRewardRulesPage() {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <div className="text-base font-extrabold text-slate-900">
+                          <div className="text-base font-semibold text-slate-900">
                             {r.wasteType}
                           </div>
                           <Badge tone={toneByRuleStatus(r.status) as any}>
@@ -246,7 +246,7 @@ export default function EnterpriseRewardRulesPage() {
                         </div>
 
                         <div className="mt-2 text-sm text-slate-700">
-                          <span className="font-bold text-slate-900">
+                          <span className="font-semibold text-slate-900">
                             {r.pointsPerKg}
                           </span>{" "}
                           điểm / kg
@@ -254,11 +254,11 @@ export default function EnterpriseRewardRulesPage() {
                             <>
                               {" "}
                               • Bonus{" "}
-                              <span className="font-bold text-slate-900">
+                              <span className="font-semibold text-slate-900">
                                 {r.bonusPoints}
                               </span>{" "}
                               điểm nếu ≥{" "}
-                              <span className="font-bold text-slate-900">
+                              <span className="font-semibold text-slate-900">
                                 {r.bonusThresholdKg}kg
                               </span>
                             </>
@@ -285,10 +285,10 @@ export default function EnterpriseRewardRulesPage() {
                       </div>
 
                       <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                        <div className="text-xs font-bold text-slate-500">
+                        <div className="text-xs font-semibold text-slate-500">
                           Rule ID
                         </div>
-                        <div className="text-sm font-extrabold text-slate-900">
+                        <div className="text-sm font-semibold text-slate-900">
                           {r.id}
                         </div>
                       </div>
@@ -343,10 +343,10 @@ export default function EnterpriseRewardRulesPage() {
               </div>
 
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                <div className="text-xs font-bold text-emerald-700">
+                <div className="text-xs font-semibold text-emerald-700">
                   Điểm dự kiến
                 </div>
-                <div className="mt-1 text-3xl font-extrabold text-emerald-900">
+                <div className="mt-1 text-3xl font-semibold text-emerald-900">
                   {formatNumber(calculatorPoints)}
                 </div>
                 <div className="mt-1 text-xs text-emerald-800">

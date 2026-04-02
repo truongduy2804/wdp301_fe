@@ -103,7 +103,7 @@ export async function fetchAdminRevenueStats(): Promise<AdminRevenueStats> {
   return getDashboardResource<AdminRevenueStats>("revenue-stats");
 }
 
-export async function fetchAdminTopEnterprises(limit = 8): Promise<AdminTopEnterpriseItem[]> {
+export async function fetchAdminTopEnterprises(limit = 10): Promise<AdminTopEnterpriseItem[]> {
   return getDashboardResource<AdminTopEnterpriseItem[]>(`top-enterprises?limit=${limit}`);
 }
 
@@ -125,7 +125,7 @@ export async function fetchAdminDashboardData(trendsDays: number = 30): Promise<
       fetchAdminReportStatusBreakdown(),
       fetchAdminWasteTypeStats(),
       fetchAdminRevenueStats(),
-      fetchAdminTopEnterprises(8),
+      fetchAdminTopEnterprises(10),
       fetchAdminSystemConfig(),
     ]);
 

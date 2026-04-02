@@ -169,7 +169,7 @@ export default function AdminOverviewPage() {
     .sort((a, b) => b.totalWeightKg - a.totalWeightKg)
     .slice(0, 5);
 
-  const enterpriseRows = data.topEnterprises.map((item) => ({
+  const enterpriseRows = data.topEnterprises.slice(0, 10).map((item) => ({
     id: String(item.id),
     name: item.name,
     completedReports: item.completedAssignments,

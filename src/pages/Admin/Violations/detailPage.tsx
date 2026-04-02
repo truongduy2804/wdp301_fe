@@ -74,6 +74,7 @@ export default function ViolationDetailModal({
     isBanning = false,
 }: Props) {
     useLockBodyScroll(open);
+    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
 
     const overlayRef = useRef<HTMLDivElement | null>(null);
     const reduceMotion = useReducedMotion();
@@ -259,11 +260,10 @@ export default function ViolationDetailModal({
                                                                 </p>
                                                                 <div className="grid grid-cols-2 gap-2">
                                                                     {item.collectorEvidence.map((img, i) => (
-                                                                        <a
+                                                                        <button
                                                                             key={i}
-                                                                            href={img}
-                                                                            target="_blank"
-                                                                            rel="noreferrer"
+                                                                            type="button"
+                                                                            onClick={() => setPreviewImage(img)}
                                                                             className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
                                                                         >
                                                                             <img
@@ -272,7 +272,7 @@ export default function ViolationDetailModal({
                                                                                 alt={`Evidence ${i + 1}`}
                                                                             />
                                                                             <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                                                                        </a>
+                                                                        </button>
                                                                     ))}
                                                                 </div>
                                                             </div>
@@ -322,11 +322,10 @@ export default function ViolationDetailModal({
                                                                 </p>
                                                                 <div className="grid grid-cols-2 gap-2">
                                                                     {item.originalReport.citizenImages.map((img, i) => (
-                                                                        <a
+                                                                        <button
                                                                             key={i}
-                                                                            href={img}
-                                                                            target="_blank"
-                                                                            rel="noreferrer"
+                                                                            type="button"
+                                                                            onClick={() => setPreviewImage(img)}
                                                                             className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50 opacity-90 hover:opacity-100"
                                                                         >
                                                                             <img
@@ -334,7 +333,7 @@ export default function ViolationDetailModal({
                                                                                 className="h-56 w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
                                                                                 alt={`Citizen ${i + 1}`}
                                                                             />
-                                                                        </a>
+                                                                        </button>
                                                                     ))}
                                                                 </div>
                                                             </div>
@@ -389,6 +388,20 @@ export default function ViolationDetailModal({
                                 Đóng
                             </button>
                         </div>
+
+                        {previewImage ? (
+                            <div
+                                className="fixed inset-0 z-[1600] bg-black/85 flex items-center justify-center p-4"
+                                onClick={() => setPreviewImage(null)}
+                            >
+                                <img
+                                    src={previewImage}
+                                    alt="preview"
+                                    className="max-h-[90vh] max-w-[92vw] rounded-2xl object-contain"
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </div>
+                        ) : null}
                     </div>
                 </motion.div>
             ) : null}

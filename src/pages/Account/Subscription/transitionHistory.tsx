@@ -222,7 +222,7 @@ export function TransactionHistoryModal({
                 </div>
 
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-white">
+                  <h2 className="text-lg sm:text-xl font-semibold text-white">
                     Lịch sử giao dịch
                   </h2>
                 </div>
@@ -234,7 +234,7 @@ export function TransactionHistoryModal({
                 <div className="min-h-[320px] rounded-3xl border border-slate-200 bg-white flex items-center justify-center">
                   <div className="flex flex-col items-center gap-3">
                     <LoadingSpinner color="blue" size="12" inline />
-                    <div className="text-base font-bold text-slate-800">
+                    <div className="text-base font-semibold text-slate-800">
                       Đang tải lịch sử giao dịch...
                     </div>
                     <div className="text-sm text-slate-500">
@@ -247,7 +247,7 @@ export function TransactionHistoryModal({
                   <div className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-slate-500">
                     <ReceiptText className="h-7 w-7" />
                   </div>
-                  <div className="mt-4 text-base font-bold text-slate-800">
+                  <div className="mt-4 text-base font-semibold text-slate-800">
                     Chưa có giao dịch nào
                   </div>
                   <div className="mt-1 text-sm text-slate-500">
@@ -258,7 +258,9 @@ export function TransactionHistoryModal({
                 <div>
                   <div className="text-sm text-slate-500 mb-2">
                     Tổng số giao dịch:
-                    <span className="ml-1 font-bold text-red-700">{total}</span>
+                    <span className="ml-1 font-semibold text-red-700">
+                      {total}
+                    </span>
                   </div>
                   <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
@@ -305,7 +307,7 @@ export function TransactionHistoryModal({
                               key={item.id}
                               className="hover:bg-slate-50/80 transition"
                             >
-                              <td className="px-4 py-4 font-bold text-slate-900 break-words">
+                              <td className="px-4 py-4 font-semibold text-slate-900 break-words">
                                 {item.referenceCode}
                               </td>
 
@@ -317,7 +319,7 @@ export function TransactionHistoryModal({
                                 {item.planName || "—"}
                               </td>
 
-                              <td className="px-4 py-4 font-bold text-slate-900 whitespace-nowrap">
+                              <td className="px-4 py-4 font-semibold text-slate-900 whitespace-nowrap">
                                 {formatNumber(Number(item.amount || 0))}{" "}
                                 {item.currency || "VND"}
                               </td>

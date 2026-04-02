@@ -1,0 +1,131 @@
+{
+  "project": {
+    "name": "DRONIVERSE - Hệ thống Thu gom & Tái chế Chất thải",
+    "title": "Actors & Functions"
+  },
+  "roles": {
+    "ADMIN": {
+      "title": "ADMIN",
+      "subtitle": "Quản trị viên",
+      "icon": "⚙️",
+      "color": "#FF4444",
+      "background": "dark-red",
+      "functions": [
+        {
+          "id": 1,
+          "name": "Bảng Tổng quan",
+          "description": "Xem KPI, biểu đồ xu hướng, xếp hạng doanh nghiệp",
+          "english": "Dashboard Overview",
+          "icon": "📊"
+        },
+        {
+          "id": 2,
+          "name": "Quản lý Vi phạm",
+          "description": "Xử lý & theo dõi các báo cáo vi phạm",
+          "english": "Violations Management",
+          "icon": "⚠️"
+        },
+        {
+          "id": 3,
+          "name": "Khiếu nại & Tranh chấp",
+          "description": "Giải quyết khiếu nại từ người dùng",
+          "english": "Complaints & Disputes",
+          "icon": "⚖️"
+        },
+        {
+          "id": 4,
+          "name": "Cấu hình Hệ thống",
+          "description": "Giám sát & cấu hình tham số hệ thống",
+          "english": "System Configuration",
+          "icon": "🔧"
+        },
+        {
+          "id": 5,
+          "name": "Bản đồ Doanh nghiệp",
+          "description": "Xem vị trí & chi tiết doanh nghiệp",
+          "english": "Enterprise Map",
+          "icon": "🗺️"
+        },
+        {
+          "id": 6,
+          "name": "Quản lý Quà & Điểm",
+          "description": "Tạo & phân phối quà tặng, điểm thưởng",
+          "english": "Gift & Reward Management",
+          "icon": "🎁"
+        },
+        {
+          "id": 7,
+          "name": "Lịch sử Đổi quà",
+          "description": "Theo dõi lịch sử redemption người dùng",
+          "english": "Redemption History",
+          "icon": "📜"
+        }
+      ]
+    },
+    "ENTERPRISE": {
+      "title": "ENTERPRISE",
+      "subtitle": "Doanh nghiệp Tái chế",
+      "icon": "🏭",
+      "color": "#00AA00",
+      "background": "dark-green",
+      "functions": [
+        {
+          "id": 1,
+          "name": "Bảng Thống kê",
+          "description": "Xem thống kê & KPI hoạt động doanh nghiệp",
+          "english": "Dashboard Statistics",
+          "icon": "📈"
+        },
+        {
+          "id": 2,
+          "name": "Đơn Chờ Phản hồi",
+          "description": "Quản lý & phản hồi yêu cầu thu gom",
+          "english": "Pending Requests",
+          "icon": "📥"
+        },
+        {
+          "id": 3,
+          "name": "Đơn Đang Xử lý",
+          "description": "Quản lý đơn trong tiến trình, gán nhân viên",
+          "english": "Orders in Progress",
+          "icon": "⚙️"
+        },
+        {
+          "id": 4,
+          "name": "Lịch sử Hoàn thành",
+          "description": "Xem & xuất báo cáo đơn đã hoàn thành",
+          "english": "Completed History",
+          "icon": "✅"
+        },
+        {
+          "id": 5,
+          "name": "Đơn Hủy",
+          "description": "Xem danh sách & lý do hủy đơn",
+          "english": "Cancelled Orders",
+          "icon": "❌"
+        },
+        {
+          "id": 6,
+          "name": "Quản lý Nhân viên",
+          "description": "Quản lý đội ngũ thu gom, hiệu suất",
+          "english": "Collector Management",
+          "icon": "👥"
+        },
+        {
+          "id": 7,
+          "name": "Quy tắc Điểm Thưởng",
+          "description": "Tùy chỉnh quy tắc & chương trình khuyến mãi",
+          "english": "Reward Rules",
+          "icon": "🎖️"
+        },
+        {
+          "id": 8,
+          "name": "Thông tin Doanh nghiệp",
+          "description": "Cập nhật profile, giấy phép, khu vực",
+          "english": "Enterprise Settings",
+          "icon": "⚙️"
+        }
+      ]
+    }
+  }
+}

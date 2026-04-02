@@ -223,7 +223,7 @@ export default function ReportsHistoryTable({
                   <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
                     Mã đơn
                   </div>
-                  <div className="mt-1 text-base font-bold text-slate-900">
+                  <div className="mt-1 text-base font-semibold text-slate-900">
                     #{report.id}
                   </div>
                 </div>

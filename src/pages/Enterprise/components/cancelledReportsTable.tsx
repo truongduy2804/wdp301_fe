@@ -19,7 +19,7 @@ function MetaPill({ label, className }: { label: string; className: string }) {
   return (
     <span
       className={[
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold",
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
         className,
       ].join(" ")}
     >
@@ -210,7 +210,7 @@ export default function CancelledReportsTable({ data, onView }: Props) {
                   <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
                     Mã đơn
                   </div>
-                  <div className="mt-1 text-base font-bold text-slate-900">
+                  <div className="mt-1 text-base font-semibold text-slate-900">
                     #{report.id}
                   </div>
                 </div>

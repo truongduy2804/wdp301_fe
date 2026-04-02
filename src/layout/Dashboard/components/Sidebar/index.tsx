@@ -520,7 +520,7 @@ export default function Sidebar({
         >
           <BrandMark
             sizeClassName="h-14 w-14"
-            textClassName="text-2xl font-black leading-none text-slate-900"
+            textClassName="text-2xl font-bold leading-none text-slate-900"
             textMode="inline"
             brandName="ECONET"
             accentSuffix="NET"

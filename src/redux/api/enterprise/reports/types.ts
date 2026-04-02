@@ -71,6 +71,7 @@ export type EnterpriseReport = {
   actualWeight?: number | null;
   accuracyBucket?: string | null;
   images?: string[];
+  evidenceImages?: string[];
 
   distanceKm?: number | null;
 
@@ -98,6 +99,7 @@ export type ReportDetail = {
   actualWeight?: number | null;
   accuracyBucket?: string | null;
   images: string[];
+  evidenceImages?: string[];
 
   citizen: CitizenSummary;
   collector?: CollectorSummary | null;
@@ -137,6 +139,7 @@ export type AcceptedEnterpriseReport = {
   accuracyBucket?: string | null;
 
   images: string[];
+  evidenceImages?: string[];
 
   distanceKm?: number | null;
 

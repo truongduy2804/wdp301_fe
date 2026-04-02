@@ -3,7 +3,6 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   AlertTriangle,
   Clock3,
-  ExternalLink,
   FileText,
   Images,
   Leaf,
@@ -64,18 +63,12 @@ function FallbackAvatar({ name }: { name?: string | null }) {
 
   return (
     <div className="grid h-14 w-14 place-items-center rounded-2xl border border-slate-200 bg-slate-100">
-      <span className="text-sm font-extrabold text-slate-700">{initials}</span>
+      <span className="text-sm font-semibold text-slate-700">{initials}</span>
     </div>
   );
 }
 
-function Avatar({
-  src,
-  name,
-}: {
-  src?: string | null;
-  name?: string | null;
-}) {
+function Avatar({ src, name }: { src?: string | null; name?: string | null }) {
   const [broken, setBroken] = useState(false);
 
   if (!src || broken) {
@@ -110,7 +103,7 @@ function PersonBlock({
       <Avatar src={avatar} name={name} />
 
       <div className="min-w-0">
-        <div className="truncate text-base font-extrabold text-slate-900">
+        <div className="truncate text-base font-semibold text-slate-900">
           {name ?? "Không rõ"}
         </div>
 
@@ -168,7 +161,7 @@ function SectionCard({
               {icon}
             </span>
           ) : null}
-          <div className="truncate font-extrabold text-slate-900">{title}</div>
+          <div className="truncate font-semibold text-slate-900">{title}</div>
         </div>
         {right ? <div className="shrink-0">{right}</div> : null}
       </div>
@@ -189,11 +182,11 @@ function InfoRow({
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-      <div className="flex items-center gap-2 text-xs font-extrabold text-slate-500">
+      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
         <span className="text-slate-500">{icon}</span>
         {label}
       </div>
-      <div className="mt-1 text-sm font-extrabold text-slate-900">{value}</div>
+      <div className="mt-1 text-sm font-semibold text-slate-900">{value}</div>
     </div>
   );
 }
@@ -208,7 +201,7 @@ function WasteRow({
   return (
     <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2">
       <TagPill kind="wasteType" value={wasteType} className="!px-2.5 !py-1" />
-      <span className="tabular-nums text-sm font-extrabold text-emerald-700">
+      <span className="tabular-nums text-sm font-semibold text-emerald-700">
         {weightKg} kg
       </span>
     </div>
@@ -225,7 +218,7 @@ function StatusMetaPill({
   return (
     <span
       className={[
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold",
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
         className,
       ].join(" ")}
     >
@@ -255,11 +248,6 @@ export default function CancelledReportDetailModal({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
-
-  const googleMapUrl = useMemo(() => {
-    if (report?.latitude == null || report?.longitude == null) return null;
-    return `https://www.google.com/maps?q=${report.latitude},${report.longitude}`;
-  }, [report?.latitude, report?.longitude]);
 
   const osmEmbedUrl = useMemo(() => {
     if (report?.latitude == null || report?.longitude == null) return null;
@@ -294,6 +282,7 @@ export default function CancelledReportDetailModal({
   const cancellationReason = report ? getCancellationReason(report) : "—";
   const collectorInfo = report?.cancelDetails?.collectorInfo ?? null;
   const collectorLogs = report?.cancelDetails?.collectorLogs ?? [];
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   return (
     <AnimatePresence>
@@ -323,7 +312,7 @@ export default function CancelledReportDetailModal({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="m-0 text-lg font-extrabold text-white sm:text-xl">
+                    <h2 className="m-0 text-lg font-semibold text-white sm:text-xl">
                       Chi tiết đơn đã hủy {report?.id ? `#${report.id}` : ""}
                     </h2>
                     <TagPill kind="reportStatus" value="CANCELLED" />
@@ -331,17 +320,6 @@ export default function CancelledReportDetailModal({
 
                   <div className="mt-2 flex items-center gap-2 text-sm text-emerald-50">
                     <span className="truncate">{report?.address ?? "—"}</span>
-                    {googleMapUrl ? (
-                      <a
-                        href={googleMapUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Maps
-                      </a>
-                    ) : null}
                   </div>
                 </div>
 
@@ -466,7 +444,7 @@ export default function CancelledReportDetailModal({
                       icon={<AlertTriangle className="h-4 w-4 text-rose-700" />}
                     >
                       <div className="rounded-2xl border border-rose-200 bg-gradient-to-r from-rose-50 to-orange-50 p-4">
-                        <div className="text-xs font-bold uppercase tracking-wider text-rose-700">
+                        <div className="text-xs font-semibold uppercase tracking-wider text-rose-700">
                           Thông tin chính
                         </div>
                         <div className="mt-2 text-sm font-semibold leading-7 text-slate-800">
@@ -516,11 +494,10 @@ export default function CancelledReportDetailModal({
                       {report.images?.length ? (
                         <div className="custom-scrollbar grid max-h-72 grid-cols-2 gap-3 overflow-auto pr-1">
                           {report.images.map((url, index) => (
-                            <a
+                            <button
                               key={`${url}-${index}`}
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
+                              type="button"
+                              onClick={() => setPreviewImage(url)}
                               className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
                             >
                               <img
@@ -531,7 +508,7 @@ export default function CancelledReportDetailModal({
                                 className="h-[150px] w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
                               />
                               <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
-                            </a>
+                            </button>
                           ))}
                         </div>
                       ) : (
@@ -549,7 +526,7 @@ export default function CancelledReportDetailModal({
                         {collectorInfo ? (
                           <div className="space-y-3">
                             <div className="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4">
-                              <div className="mb-2 text-xs font-bold uppercase tracking-wider text-amber-700">
+                              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-700">
                                 Nhân viên thu gom được nhắc đến trong hủy đơn
                               </div>
                               <PersonBlock
@@ -583,26 +560,26 @@ export default function CancelledReportDetailModal({
                                 className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
                               >
                                 <div className="flex items-center justify-between gap-2">
-                                  <div className="text-sm font-extrabold text-slate-900">
+                                  <div className="text-sm font-semibold text-slate-900">
                                     Nhật ký #{index + 1}
                                   </div>
-                                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-600">
+                                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">
                                     {(log.images ?? []).length} ảnh
                                   </span>
                                 </div>
 
                                 <div className="mt-2 text-sm leading-7 text-slate-700">
-                                  {log.reason?.trim() || "Không có mô tả chi tiết."}
+                                  {log.reason?.trim() ||
+                                    "Không có mô tả chi tiết."}
                                 </div>
 
                                 {log.images?.length ? (
                                   <div className="mt-3 grid grid-cols-2 gap-3">
                                     {log.images.map((image, imageIndex) => (
-                                      <a
+                                      <button
                                         key={`${image}-${imageIndex}`}
-                                        href={image}
-                                        target="_blank"
-                                        rel="noreferrer"
+                                        type="button"
+                                        onClick={() => setPreviewImage(image)}
                                         className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
                                       >
                                         <img
@@ -613,7 +590,7 @@ export default function CancelledReportDetailModal({
                                           className="h-[132px] w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
                                         />
                                         <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
-                                      </a>
+                                      </button>
                                     ))}
                                   </div>
                                 ) : null}
@@ -633,19 +610,6 @@ export default function CancelledReportDetailModal({
                     <SectionCard
                       title="Bản đồ"
                       icon={<MapPin className="h-4 w-4 text-emerald-700" />}
-                      right={
-                        googleMapUrl ? (
-                          <a
-                            href={googleMapUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-2 text-sm font-extrabold text-emerald-700 hover:underline"
-                          >
-                            <MapPin className="h-4 w-4" />
-                            Mở Google Maps
-                          </a>
-                        ) : null
-                      }
                     >
                       {osmEmbedUrl ? (
                         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -670,13 +634,27 @@ export default function CancelledReportDetailModal({
                 onClick={onClose}
                 className="
                   rounded-xl border border-slate-200 bg-emerald-600 px-4 py-2
-                  font-extrabold text-white transition hover:scale-[1.02] hover:brightness-95
+                  font-semibold text-white transition hover:scale-[1.02] hover:brightness-95
                 "
                 type="button"
               >
                 Đóng
               </button>
             </div>
+
+            {previewImage ? (
+              <div
+                className="fixed inset-0 z-[1600] bg-black/85 flex items-center justify-center p-4"
+                onClick={() => setPreviewImage(null)}
+              >
+                <img
+                  src={previewImage}
+                  alt="preview"
+                  className="max-h-[90vh] max-w-[92vw] rounded-2xl object-contain"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            ) : null}
           </div>
         </motion.div>
       ) : null}

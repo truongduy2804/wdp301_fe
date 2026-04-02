@@ -12,7 +12,6 @@ import {
   Clock,
   Images,
   Leaf,
-  ExternalLink,
   AlertTriangle,
   FileText,
 } from "lucide-react";
@@ -210,11 +209,6 @@ export default function ReportDetailModal({
   const lat = report?.latitude ?? null;
   const lng = report?.longitude ?? null;
 
-  const googleMapUrl = useMemo(() => {
-    if (lat == null || lng == null) return null;
-    return `https://www.google.com/maps?q=${lat},${lng}`;
-  }, [lat, lng]);
-
   const osmEmbedUrl = useMemo(() => {
     if (lat == null || lng == null) return null;
     const d = 0.004;
@@ -350,6 +344,7 @@ export default function ReportDetailModal({
   }, [reduceMotion]);
 
   const citizen = report?.citizen ?? null;
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   return (
     <AnimatePresence>
@@ -381,7 +376,7 @@ export default function ReportDetailModal({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="m-0 text-lg sm:text-xl font-extrabold text-white">
+                    <h2 className="m-0 text-lg sm:text-xl font-semibold text-white">
                       Chi tiết đơn{" "}
                       {report ? `#${report.id}` : meta?.id ? `#${meta.id}` : ""}
                     </h2>
@@ -393,18 +388,6 @@ export default function ReportDetailModal({
                     <span className="truncate">
                       {geoName ?? report?.address ?? meta?.address ?? "—"}
                     </span>
-
-                    {googleMapUrl ? (
-                      <a
-                        href={googleMapUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Maps
-                      </a>
-                    ) : null}
                   </div>
                 </div>
 
@@ -470,32 +453,33 @@ export default function ReportDetailModal({
                             <div
                               className={`
               rounded-2xl border px-4 py-3
-              ${leftMs == null
-                                  ? "border-slate-200 bg-white"
-                                  : expired
-                                    ? "border-slate-200 bg-white"
-                                    : "border-rose-200 bg-rose-50"
-                                }
+              ${
+                leftMs == null
+                  ? "border-slate-200 bg-white"
+                  : expired
+                    ? "border-slate-200 bg-white"
+                    : "border-rose-200 bg-rose-50"
+              }
             `}
                             >
                               {isCountdownSyncing ? (
-                                <div className="text-sm font-extrabold text-slate-500">
+                                <div className="text-sm font-semibold text-slate-500">
                                   Đang đồng bộ...
                                 </div>
                               ) : leftMs == null ? (
-                                <div className="text-sm font-extrabold text-slate-700">
+                                <div className="text-sm font-semibold text-slate-700">
                                   —
                                 </div>
                               ) : expired ? (
-                                <div className="text-sm font-extrabold text-slate-500">
+                                <div className="text-sm font-semibold text-slate-500">
                                   Đơn đã hết hạn
                                 </div>
                               ) : (
                                 <div className="flex items-center justify-between gap-3">
-                                  <div className="text-sm font-bold text-slate-700">
+                                  <div className="text-sm font-semibold text-slate-700">
                                     Đơn hết hạn sau
                                   </div>
-                                  <div className="tabular-nums text-lg font-extrabold text-rose-700">
+                                  <div className="tabular-nums text-lg font-semibold text-rose-700">
                                     {formatCountdown(leftMs)}
                                   </div>
                                 </div>
@@ -525,7 +509,7 @@ export default function ReportDetailModal({
                           name={(citizen as any)?.fullName ?? null}
                         />
                         <div className="min-w-0">
-                          <div className="font-extrabold text-slate-900 truncate">
+                          <div className="font-semibold text-slate-900 truncate">
                             {(citizen as any)?.fullName ?? "—"}
                           </div>
                           <div className="mt-1 flex flex-col gap-1 text-sm text-slate-600">
@@ -630,7 +614,7 @@ export default function ReportDetailModal({
                                 value={w.wasteType as any}
                                 className="!px-2.5 !py-1"
                               />
-                              <span className="tabular-nums text-sm font-extrabold text-emerald-700">
+                              <span className="tabular-nums text-sm font-semibold text-emerald-700">
                                 {w.weightKg} kg
                               </span>
                             </div>
@@ -660,11 +644,10 @@ export default function ReportDetailModal({
                           ].join(" ")}
                         >
                           {report.images.map((url, i) => (
-                            <a
+                            <button
                               key={`${url}-${i}`}
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
+                              type="button"
+                              onClick={() => setPreviewImage(url)}
                               className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
                             >
                               <img
@@ -678,7 +661,7 @@ export default function ReportDetailModal({
                                 ].join(" ")}
                               />
                               <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                            </a>
+                            </button>
                           ))}
                         </div>
                       ) : (
@@ -692,19 +675,6 @@ export default function ReportDetailModal({
                     <SectionCard
                       title="Bản đồ"
                       icon={<MapPin className="h-4 w-4 text-emerald-700" />}
-                      right={
-                        googleMapUrl ? (
-                          <a
-                            href={googleMapUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-2 text-sm font-extrabold text-emerald-700 hover:underline"
-                          >
-                            <MapPin className="h-4 w-4" />
-                            Mở Google Maps
-                          </a>
-                        ) : null
-                      }
                     >
                       {osmEmbedUrl ? (
                         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -730,7 +700,7 @@ export default function ReportDetailModal({
                 onClick={onClose}
                 className="
                   rounded-xl border border-slate-200 bg-emerald-600 px-4 py-2
-                  font-extrabold text-slate-100
+                  font-semibold text-slate-100
                   hover:brightness-90 hover:scale-[1.02] transition
                 "
                 type="button"
@@ -739,6 +709,20 @@ export default function ReportDetailModal({
               </button>
             </div>
           </div>
+
+          {previewImage ? (
+            <div
+              className="fixed inset-0 z-[1600] bg-black/85 flex items-center justify-center p-4"
+              onClick={() => setPreviewImage(null)}
+            >
+              <img
+                src={previewImage}
+                alt="preview"
+                className="max-h-[90vh] max-w-[92vw] rounded-2xl object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          ) : null}
         </motion.div>
       ) : null}
     </AnimatePresence>
@@ -780,7 +764,7 @@ function SectionCard({
               {icon}
             </span>
           ) : null}
-          <div className="font-extrabold text-slate-900 truncate">{title}</div>
+          <div className="font-semibold text-slate-900 truncate">{title}</div>
         </div>
         {right ? <div className="shrink-0">{right}</div> : null}
       </div>
@@ -797,11 +781,11 @@ function InfoRow(props: {
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-      <div className="flex items-center gap-2 text-xs font-extrabold text-slate-500">
+      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
         <span className="text-slate-500">{props.icon}</span>
         {props.label}
       </div>
-      <div className="mt-1 text-sm font-extrabold text-slate-900">
+      <div className="mt-1 text-sm font-semibold text-slate-900">
         {props.value}
       </div>
     </div>
@@ -824,9 +808,7 @@ function Avatar({ src, name }: { src: string | null; name: string | null }) {
   if (!src || broken) {
     return (
       <div className="h-12 w-12 rounded-2xl border border-slate-200 bg-slate-100 grid place-items-center">
-        <span className="text-sm font-extrabold text-slate-700">
-          {initials}
-        </span>
+        <span className="text-sm font-semibold text-slate-700">{initials}</span>
       </div>
     );
   }

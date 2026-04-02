@@ -192,7 +192,7 @@ function RecentTransactionsPreview({
             </div>
 
             <div>
-              <div className="text-lg font-bold text-slate-900">
+              <div className="text-lg font-semibold text-slate-900">
                 Lịch sử giao dịch gần đây
               </div>
               <div className="text-sm text-slate-500">
@@ -222,7 +222,7 @@ function RecentTransactionsPreview({
               <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-slate-400 border border-slate-200">
                 <ReceiptText className="h-6 w-6" />
               </div>
-              <div className="mt-3 text-base font-bold text-slate-800">
+              <div className="mt-3 text-base font-semibold text-slate-800">
                 Chưa có giao dịch nào
               </div>
               <div className="mt-1 text-sm text-slate-500">
@@ -275,7 +275,7 @@ function RecentTransactionsPreview({
                         key={item.id}
                         className="hover:bg-slate-50/80 transition"
                       >
-                        <td className="px-4 py-4 font-bold text-slate-900 break-words">
+                        <td className="px-4 py-4 font-semibold text-slate-900 break-words">
                           {item.referenceCode}
                         </td>
 
@@ -287,7 +287,7 @@ function RecentTransactionsPreview({
                           {item.planName || "—"}
                         </td>
 
-                        <td className="px-4 py-4 font-bold text-slate-900 whitespace-nowrap">
+                        <td className="px-4 py-4 font-semibold text-slate-900 whitespace-nowrap">
                           {formatNumber(Number(item.amount || 0))}{" "}
                           {item.currency || "VND"}
                         </td>
@@ -726,7 +726,7 @@ export default function EnterpriseSubscription() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <Badge tone="amber">Chờ thanh toán</Badge>
-                      <div className="font-bold text-slate-900 truncate">
+                      <div className="font-semibold text-slate-900 truncate">
                         Bạn có 1 giao dịch đang chờ
                       </div>
                     </div>
@@ -750,7 +750,7 @@ export default function EnterpriseSubscription() {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 truncate">
+                  <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900 truncate">
                     {enterpriseName}
                   </div>
 
