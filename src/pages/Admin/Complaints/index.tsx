@@ -173,12 +173,8 @@ export default function AdminComplaints() {
     });
   }, [q, status, list]);
 
-  const contextImages = selected
-    ? [
-      ...(selected.context.images?.citizen ?? []),
-      ...(selected.context.images?.collector ?? []),
-    ]
-    : [];
+  const citizenContextImages = selected?.context.images?.citizen ?? [];
+  const collectorContextImages = selected?.context.images?.collector ?? [];
 
   const handleRespond = async (
     targetId: number,
