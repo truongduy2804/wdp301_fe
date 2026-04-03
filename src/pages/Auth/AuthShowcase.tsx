@@ -46,7 +46,7 @@ const BrandMark = ({
       {textMode !== "none" && (
         <div className={isStack ? "" : "leading-none"}>
           <div className="font-bold text-2xl text-slate-900">
-            ECO<span className="text-emerald-600">NET</span>
+            Green<span className="text-emerald-600">point</span>
           </div>
           {isStack && (
             <div className="mt-1 text-xs font-medium text-slate-600">
