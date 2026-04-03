@@ -173,12 +173,8 @@ export default function AdminComplaints() {
     });
   }, [q, status, list]);
 
-  const contextImages = selected
-    ? [
-      ...(selected.context.images?.citizen ?? []),
-      ...(selected.context.images?.collector ?? []),
-    ]
-    : [];
+  const citizenContextImages = selected?.context.images?.citizen ?? [];
+  const collectorContextImages = selected?.context.images?.collector ?? [];
 
   const handleRespond = async (
     targetId: number,
@@ -669,29 +665,72 @@ export default function AdminComplaints() {
                       )}
                     </DetailSectionCard>
 
-                    <DetailSectionCard title="Hình ảnh" icon={<Images className="h-4 w-4 text-indigo-700" />}>
-                      {contextImages.length ? (
-                        <div className="grid grid-cols-2 gap-3 overflow-auto custom-scrollbar pr-1 max-h-72">
-                          {contextImages.map((url, i) => (
-                            <button
-                              key={`${url}-${i}`}
-                              onClick={() => openLightbox(contextImages, i)}
-                              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
-                            >
-                              <img
-                                src={url}
-                                alt={`context-${selected.id}-${i}`}
-                                loading="lazy"
-                                decoding="async"
-                                className="w-full h-[150px] object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                              />
-                              <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                            </button>
-                          ))}
+                    <DetailSectionCard title="Hình ảnh liên quan" icon={<Images className="h-4 w-4 text-indigo-700" />}>
+                      <div className="space-y-4">
+                        {/* Ảnh từ người dân */}
+                        <div>
+                          <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700">
+                            <User className="h-3 w-3" />
+                            Ảnh từ người dân ({citizenContextImages.length})
+                          </div>
+                          {citizenContextImages.length ? (
+                            <div className="grid grid-cols-2 gap-3 overflow-auto custom-scrollbar pr-1 max-h-48">
+                              {citizenContextImages.map((url, i) => (
+                                <button
+                                  key={`citizen-${url}-${i}`}
+                                  onClick={() => openLightbox(citizenContextImages, i)}
+                                  className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                                >
+                                  <img
+                                    src={url}
+                                    alt={`citizen-context-${selected.id}-${i}`}
+                                    loading="lazy"
+                                    decoding="async"
+                                    className="w-full h-[120px] object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                                  />
+                                  <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-xs text-slate-400 text-center italic">
+                              Không có ảnh từ người dân
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="text-slate-500">—</div>
-                      )}
+
+                        {/* Ảnh từ tài xế */}
+                        <div>
+                          <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-700">
+                            <Truck className="h-3 w-3" />
+                            Ảnh từ tài xế ({collectorContextImages.length})
+                          </div>
+                          {collectorContextImages.length ? (
+                            <div className="grid grid-cols-2 gap-3 overflow-auto custom-scrollbar pr-1 max-h-48">
+                              {collectorContextImages.map((url, i) => (
+                                <button
+                                  key={`collector-${url}-${i}`}
+                                  onClick={() => openLightbox(collectorContextImages, i)}
+                                  className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                                >
+                                  <img
+                                    src={url}
+                                    alt={`collector-context-${selected.id}-${i}`}
+                                    loading="lazy"
+                                    decoding="async"
+                                    className="w-full h-[120px] object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                                  />
+                                  <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-xs text-slate-400 text-center italic">
+                              Không có ảnh từ tài xế
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </DetailSectionCard>
                   </div>
 
@@ -726,7 +765,7 @@ export default function AdminComplaints() {
                     <div className="space-y-3">
                       {selected.status === "OPEN" && (
                         <div className="flex justify-end">
-                          
+
                         </div>
                       )}
                       <textarea
