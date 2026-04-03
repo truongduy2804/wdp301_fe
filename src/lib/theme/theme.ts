@@ -1,6 +1,6 @@
 // lib/theme.ts
-export const LOGO = "/image/ECONET_LOGO.png";
-export const LOGO_ONLY = "/image/ECONET_ONLY_SYMBOL.png";
+export const LOGO = "/image/logo.jpg";
+export const LOGO_ONLY = "/image/logo.jpg";
 export const HERO_IMG =
   "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1600&auto=format&fit=crop";
 

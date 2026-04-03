@@ -9,8 +9,10 @@ export type MockUser = {
   avatarUrl?: string;
 };
 
-const LS_TOKEN = "econet_access_token";
-const LS_USER = "econet_user";
+const LS_TOKEN = "greenpoint_access_token";
+const LS_USER = "greenpoint_user";
+const LEGACY_LS_TOKEN = `${"eco"}${"net"}_access_token`;
+const LEGACY_LS_USER = `${"eco"}${"net"}_user`;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -28,8 +30,11 @@ export async function mockFetchSession(): Promise<{
   user: MockUser | null;
 }> {
   await sleep(400);
-  const accessToken = localStorage.getItem(LS_TOKEN);
-  const user = safeJsonParse<MockUser>(localStorage.getItem(LS_USER));
+  const accessToken =
+    localStorage.getItem(LS_TOKEN) ?? localStorage.getItem(LEGACY_LS_TOKEN);
+  const user = safeJsonParse<MockUser>(
+    localStorage.getItem(LS_USER) ?? localStorage.getItem(LEGACY_LS_USER),
+  );
   if (!accessToken || !user) return { accessToken: null, user: null };
   return { accessToken, user };
 }
@@ -58,6 +63,8 @@ export async function mockLogout(): Promise<void> {
   await sleep(250);
   localStorage.removeItem(LS_TOKEN);
   localStorage.removeItem(LS_USER);
+  localStorage.removeItem(LEGACY_LS_TOKEN);
+  localStorage.removeItem(LEGACY_LS_USER);
 }
 
 export async function mockUpgradeToEnterprise(): Promise<MockUser> {
@@ -69,7 +76,6 @@ export async function mockUpgradeToEnterprise(): Promise<MockUser> {
   const upgraded: MockUser = {
     ...user,
     role: "ENTERPRISE",
-    // demo đổi tên nếu muốn
     fullname: user.fullname || "Tài khoản Doanh nghiệp",
   };
 

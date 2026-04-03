@@ -83,7 +83,7 @@ export default function NotFoundPage() {
 
           <div className="pt-4 text-center border-t border-slate-200/60">
             <p className="text-xs text-slate-500">
-              © EcoNet. Tất cả quyền được bảo lưu.
+              © Greenpoint. Tất cả quyền được bảo lưu.
             </p>
           </div>
         </div>

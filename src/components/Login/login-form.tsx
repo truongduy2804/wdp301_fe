@@ -38,7 +38,7 @@ export default function LoginForm() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-emerald-700">
-                GreenPoint
+                Greenpoint
               </h1>
               <p className="text-sm text-gray-600">Bảo vệ Môi Trường</p>
             </div>

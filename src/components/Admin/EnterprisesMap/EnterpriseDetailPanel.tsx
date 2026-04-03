@@ -297,7 +297,7 @@ const EnterpriseDetailPanel: React.FC<EnterpriseDetailPanelProps> = ({
                             <Wifi className="w-4 h-4" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase">Tài xế trong ca làm</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase">Người thu gom trong ca làm</p>
                             <p className="text-sm font-bold text-emerald-700">{enterprise.stats.onlineCollectors || 0}</p>
                           </div>
                         </div>
@@ -307,7 +307,7 @@ const EnterpriseDetailPanel: React.FC<EnterpriseDetailPanelProps> = ({
                             <WifiOff className="w-4 h-4" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase">Tài xế ngoài ca làm</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase">Người thu gom ngoài ca làm</p>
                             <p className="text-sm font-bold text-slate-600">{enterprise.stats.offlineCollectors || 0}</p>
                           </div>
                         </div>

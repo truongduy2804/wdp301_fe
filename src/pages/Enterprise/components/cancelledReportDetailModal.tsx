@@ -616,8 +616,9 @@ export default function CancelledReportDetailModal({
                           <iframe
                             title="cancelled-report-map"
                             src={osmEmbedUrl}
-                            className="h-[360px] w-full"
+                            className="h-[360px] w-full pointer-events-none"
                             loading="lazy"
+                            aria-hidden="true"
                           />
                         </div>
                       ) : (

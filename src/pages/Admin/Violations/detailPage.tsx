@@ -229,7 +229,7 @@ export default function ViolationDetailModal({
                                             <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                                                 {/* Left: Collector Evidence */}
                                                 <SectionCard
-                                                    title={`Bằng chứng từ ${item.reporter.role === 'COLLECTOR' ? 'Tài xế' : item.reporter.role}`}
+                                                    title={`Bằng chứng từ ${item.reporter.role === 'COLLECTOR' ? 'Người thu gom' : item.reporter.role}`}
                                                     icon={<ShieldBan className="h-4 w-4 text-rose-600" />}
                                                 >
                                                     <div className="space-y-3 text-sm">
@@ -245,7 +245,7 @@ export default function ViolationDetailModal({
                                                         />
                                                         <InfoRow
                                                             icon={<FileText className="h-4 w-4" />}
-                                                            label="Lý do từ Tài xế"
+                                                            label="Lý do từ Người thu gom"
                                                             value={
                                                                 <span className={`font-semibold ${item.collectorReason ? "text-rose-600" : "text-slate-500 italic"}`}>
                                                                     {item.collectorReason || "Không có"}

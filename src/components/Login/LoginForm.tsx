@@ -41,7 +41,7 @@ export default function LoginForm() {
                 Đăng nhập
               </h3>
               <p className="text-gray-600 font-medium">
-                Chào mừng bạn đến với GreenPoint
+                Chào mừng bạn đến với Greenpoint
               </p>
             </div>
 

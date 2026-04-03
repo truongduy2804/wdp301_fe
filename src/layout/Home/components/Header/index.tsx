@@ -58,7 +58,7 @@ const Brand: React.FC = () => (
   <Link
     to={endPoint.HOMEPAGE}
     className="flex items-center gap-3 group select-none"
-    aria-label="ECONET"
+    aria-label="Greenpoint"
   >
     <div className="relative">
       <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-emerald-600 via-green-600 to-lime-600 shadow-sm ring-1 ring-emerald-200/40">
@@ -71,7 +71,7 @@ const Brand: React.FC = () => (
 
     <div className="leading-tight">
       <div className="text-[17px] font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors">
-        ECONET
+        Greenpoint
       </div>
       <div className="hidden sm:block text-[11px] text-slate-600">
         Kết nối thu gom • tái chế • theo khu vực

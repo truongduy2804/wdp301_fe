@@ -12,6 +12,46 @@ import { translateStatus } from "@/utils/statusTranslation";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
+const VIETNAM_MAINLAND_BOUNDS: [[number, number], [number, number]] = [
+  [8.17, 102.14],
+  [23.39, 109.46],
+];
+
+const VIETNAM_MAINLAND_CENTER: [number, number] = [16.0, 106.0];
+const VIETNAM_MAINLAND_MIN_ZOOM = 8;
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
+
+const clampToVietnamMainland = (lat: number, lng: number) => ({
+  lat: clamp(lat, VIETNAM_MAINLAND_BOUNDS[0][0], VIETNAM_MAINLAND_BOUNDS[1][0]),
+  lng: clamp(lng, VIETNAM_MAINLAND_BOUNDS[0][1], VIETNAM_MAINLAND_BOUNDS[1][1]),
+});
+
+const VietnamViewportLimiter: React.FC = () => {
+  const map = useMap();
+
+  useEffect(() => {
+    const targetZoom = Math.max(
+      VIETNAM_MAINLAND_MIN_ZOOM,
+      map.getBoundsZoom(VIETNAM_MAINLAND_BOUNDS, false),
+    );
+
+    map.fitBounds(VIETNAM_MAINLAND_BOUNDS, {
+      padding: [24, 24],
+      animate: false,
+    });
+
+    if (map.getZoom() < targetZoom) {
+      map.setZoom(targetZoom, { animate: false });
+    }
+
+    map.setMinZoom(targetZoom);
+  }, [map]);
+
+  return null;
+};
+
 const DefaultIcon = L.icon({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
@@ -73,7 +113,8 @@ const MapController: React.FC<{
 
   useEffect(() => {
     if (flyTo) {
-      map.flyTo([flyTo.lat, flyTo.lng], 16, {
+      const target = clampToVietnamMainland(flyTo.lat, flyTo.lng);
+      map.flyTo([target.lat, target.lng], 16, {
         duration: 2,
       });
     }
@@ -96,17 +137,23 @@ const MapComponent: React.FC<MapComponentProps> = ({
   return (
     <div className="w-full h-full">
       <MapContainer
-        center={[10.7769, 106.7009]} // Default Ho Chi Minh City
-        zoom={13}
+        center={VIETNAM_MAINLAND_CENTER}
+        zoom={VIETNAM_MAINLAND_MIN_ZOOM}
+        minZoom={VIETNAM_MAINLAND_MIN_ZOOM}
+        maxBounds={VIETNAM_MAINLAND_BOUNDS}
+        maxBoundsViscosity={1}
+        worldCopyJump={false}
         style={{ height: "100%", width: "100%" }}
         zoomControl={false} // Customizing zoom control location or hiding it
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          noWrap
         />
 
         <MapController flyTo={flyTo} />
+  <VietnamViewportLimiter />
 
         {(enterprises || []).map((ent) => (
           <Marker

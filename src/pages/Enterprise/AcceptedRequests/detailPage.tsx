@@ -498,14 +498,14 @@ export default function ReportDetailModal({
                     </SectionCard>
 
                     <SectionCard
-                      title="Thông tin tài xế được gán"
+                      title="Thông tin Người thu gom được gán"
                       icon={<Truck className="h-4 w-4 text-indigo-700" />}
                     >
                       {collector ? (
                         <div className="space-y-3">
                           <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4">
                             <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-700">
-                              Đơn đã được gán cho tài xế
+                              Đơn đã được gán cho Người thu gom
                             </div>
 
                             <PersonBlock
@@ -523,7 +523,7 @@ export default function ReportDetailModal({
                         </div>
                       ) : (
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                          Đơn này chưa được gán cho tài xế nào.
+                          Đơn này chưa được gán cho Người thu gom nào.
                         </div>
                       )}
                     </SectionCard>
@@ -598,7 +598,7 @@ export default function ReportDetailModal({
 
                     {isCompleted ? (
                       <SectionCard
-                        title="Hình ảnh từ tài xế"
+                        title="Hình ảnh từ Người thu gom"
                         icon={<Images className="h-4 w-4 text-indigo-700" />}
                       >
                         {shipperFeedbackImages.length ? (
@@ -622,7 +622,7 @@ export default function ReportDetailModal({
                             ))}
                           </div>
                         ) : (
-                          <div className="text-slate-500">Tài xế không cung cấp ảnh.</div>
+                          <div className="text-slate-500">Người thu gom không cung cấp ảnh.</div>
                         )}
                       </SectionCard>
                     ) : null}
@@ -631,7 +631,7 @@ export default function ReportDetailModal({
                   {hasActualReport ? (
                     <div className="mt-4">
                       <SectionCard
-                        title="So sánh báo cáo công dân và kết quả từ tài xế"
+                        title="So sánh báo cáo công dân và kết quả từ Người thu gom"
                         icon={
                           <CheckCircle2 className="h-4 w-4 text-emerald-700" />
                         }
@@ -686,7 +686,7 @@ export default function ReportDetailModal({
                           <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4">
                             <div className="flex items-center justify-between gap-2">
                               <div className="text-sm font-semibold text-slate-900">
-                                Tài xế xác nhận thực tế
+                                Người thu gom xác nhận thực tế
                               </div>
                               <span className="inline-flex items-center rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-xs font-semibold text-emerald-700">
                                 Thực tế
@@ -747,7 +747,7 @@ export default function ReportDetailModal({
 
                           <div className="mt-3 text-sm text-slate-600 leading-relaxed">
                             Hệ thống đối chiếu dữ liệu công dân khai báo với dữ
-                            liệu thực tế do tài xế xác nhận sau khi hoàn thành
+                            liệu thực tế do Người thu gom xác nhận sau khi hoàn thành
                             đơn.
                           </div>
                         </div>
@@ -765,8 +765,9 @@ export default function ReportDetailModal({
                           <iframe
                             title="map"
                             src={osmEmbedUrl}
-                            className="h-[360px] w-full"
+                            className="h-[360px] w-full pointer-events-none"
                             loading="lazy"
+                            aria-hidden="true"
                           />
                         </div>
                       ) : (

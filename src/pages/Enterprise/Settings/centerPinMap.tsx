@@ -3,6 +3,13 @@ import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
 type LatLng = { lat: number; lng: number };
 
+const VIETNAM_MAINLAND_BOUNDS: [[number, number], [number, number]] = [
+  [8.17, 102.14],
+  [23.39, 109.46],
+];
+
+const VIETNAM_MAINLAND_MIN_ZOOM = 8;
+
 function SetViewOnValue({
   value,
   minZoom = 15,
@@ -99,12 +106,17 @@ export default function CenterPinMap({
       <MapContainer
         center={[value.lat, value.lng]}
         zoom={zoom}
+        minZoom={VIETNAM_MAINLAND_MIN_ZOOM}
+        maxBounds={VIETNAM_MAINLAND_BOUNDS}
+        maxBoundsViscosity={1}
+        worldCopyJump={false}
         scrollWheelZoom
         className="h-full w-full"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          noWrap
         />
 
         <SetViewOnValue value={value} minZoom={15} />

@@ -20,11 +20,11 @@ const BrandMark: React.FC<Props> = ({
   showBadge = true,
 
   textMode = "none",
-  brandName = "ECONET",
+  brandName = "Greenpoint",
   tagline,
   textClassName = "text-3xl font-bold leading-none text-slate-900",
 
-  accentSuffix = "NET",
+  accentSuffix = "point",
   accentClassName = "text-emerald-600",
 }) => {
   const reduced = useReducedMotion();
@@ -62,7 +62,7 @@ const BrandMark: React.FC<Props> = ({
     >
       <img
         src="/image/logo.jpg"
-        alt="ECONET Logo"
+        alt="Greenpoint Logo"
         className={`${sizeClassName} object-contain`}
       />
     </motion.div>

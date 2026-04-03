@@ -231,7 +231,7 @@ function PasswordHints({ pw }: { pw: string }) {
 
       <div className="mt-3 text-xs text-slate-500">
         Ví dụ:{" "}
-        <span className="font-semibold text-slate-700">EcoNet@2026!</span>{" "}
+        <span className="font-semibold text-slate-700">Greenpoint@2026!</span>{" "}
         (tránh dùng thông tin dễ đoán như tên, ngày sinh).
       </div>
     </div>

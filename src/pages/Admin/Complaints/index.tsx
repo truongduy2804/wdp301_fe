@@ -341,7 +341,7 @@ export default function AdminComplaints() {
                     <th className="px-4 py-3">Loại khiếu nại</th>
                     <th className="px-4 py-3">Trạng thái</th>
                     <th className="px-4 py-3">Người dân</th>
-                    <th className="px-4 py-3">Tài xế</th>
+                    <th className="px-4 py-3">Người thu gom</th>
                     <th className="px-4 py-3">Báo cáo</th>
                     <th className="px-4 py-3 text-right">Hành động</th>
                   </tr>
@@ -590,11 +590,11 @@ export default function AdminComplaints() {
                       </div>
                     </DetailSectionCard>
 
-                    <DetailSectionCard title="Thông tin tài xế được gán" icon={<Truck className="h-4 w-4 text-indigo-700" />}>
+                    <DetailSectionCard title="Thông tin Người thu gom được gán" icon={<Truck className="h-4 w-4 text-indigo-700" />}>
                       {selected.collector ? (
                         <div className="space-y-3">
                           <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4">
-                            <div className="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-700">Đơn đã được gán cho tài xế</div>
+                            <div className="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-700">Đơn đã được gán cho Người thu gom</div>
                             <div className="flex items-center gap-3">
                               <div className="h-12 w-12 rounded-full overflow-hidden border border-slate-200 bg-white shrink-0">
                                 {selected.collector.avatar ? (
@@ -632,7 +632,7 @@ export default function AdminComplaints() {
                         </div>
                       ) : (
                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                          Chưa có tài xế liên quan.
+                          Chưa có Người thu gom liên quan.
                         </div>
                       )}
                     </DetailSectionCard>

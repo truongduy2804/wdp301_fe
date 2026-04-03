@@ -255,7 +255,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 style={{ animationDelay: "0.8s" }}
               >
                 <p className="text-xs text-gray-500 hover:text-teal-600 transition-colors duration-300">
-                  © EcoNet. Tất cả quyền được bảo lưu.
+                  © Greenpoint. Tất cả quyền được bảo lưu.
                 </p>
               </div>
             </div>

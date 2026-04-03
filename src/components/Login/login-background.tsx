@@ -41,7 +41,7 @@ export default function LoginBackground() {
                 <Leaf className="w-8 h-8 text-white animate-float" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-gray-900">GreenPoint</h1>
+                <h1 className="text-4xl font-bold text-gray-900">Greenpoint</h1>
                 <p className="text-gray-600 text-sm">
                   Thu gom rác chuyên nghiệp
                 </p>

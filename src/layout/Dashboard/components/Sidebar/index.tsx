@@ -522,8 +522,8 @@ export default function Sidebar({
             sizeClassName="h-14 w-14"
             textClassName="text-2xl font-bold leading-none text-slate-900"
             textMode="inline"
-            brandName="ECONET"
-            accentSuffix="NET"
+            brandName="Greenpoint"
+            accentSuffix="point"
             accentClassName="text-emerald-600"
           />
         </div>
@@ -721,7 +721,7 @@ export default function Sidebar({
               <span
                 className={`text-[12px] lg:text-[13px] font-semibold uppercase tracking-wide ${UI.footerTitle}`}
               >
-                Hệ thống EcoNet
+                Hệ thống Greenpoint
               </span>
             </div>
           </div>

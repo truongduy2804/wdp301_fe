@@ -89,7 +89,7 @@ export const TopEnterpriseTable: React.FC<TopEnterpriseTableProps> = ({
                 <p className="text-sm font-bold text-slate-900">{formatNumber(enterprise.completedReports)}</p>
               </div>
               <div className="rounded-lg bg-slate-50 p-2">
-                <p className="text-[11px] text-slate-500">Tài xế</p>
+                <p className="text-[11px] text-slate-500">Người thu gom</p>
                 <p className="text-sm font-bold text-slate-900">{formatNumber(enterprise.collectorsCount ?? 0)}</p>
               </div>
             </div>
@@ -113,7 +113,7 @@ export const TopEnterpriseTable: React.FC<TopEnterpriseTableProps> = ({
               <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Doanh nghiệp</th>
               <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Tổng đơn</th>
               <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Hoàn thành</th>
-              <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Tài xế</th>
+              <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Người thu gom</th>
               <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Tỷ lệ</th>
             </tr>
           </thead>

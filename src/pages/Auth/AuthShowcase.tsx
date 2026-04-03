@@ -341,8 +341,8 @@ const AuthShowcase: React.FC = () => {
               <BrandMarks
                 sizeClassName="h-16 w-16"
                 textMode="inline"
-                brandName="ECONET"
-                accentSuffix="NET"
+                brandName="Greenpoint"
+                accentSuffix="point"
                 accentClassName="text-emerald-600"
               />
             </div>

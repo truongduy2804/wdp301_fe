@@ -681,8 +681,9 @@ export default function ReportDetailModal({
                           <iframe
                             title="map"
                             src={osmEmbedUrl}
-                            className="h-[360px] w-full"
+                            className="h-[360px] w-full pointer-events-none"
                             loading="lazy"
+                            aria-hidden="true"
                           />
                         </div>
                       ) : (
