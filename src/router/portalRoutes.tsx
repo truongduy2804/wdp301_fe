@@ -21,6 +21,7 @@ import AdminRedemptions from "@/pages/Admin/Redemptions";
 import AdminUserManagement from "@/pages/Admin/UserManagement";
 import AdminEnterprisesManagement from "@/pages/Admin/EnterprisesManagement";
 import AdminSubscriptionPlans from "@/pages/Admin/SubscriptionPlans";
+import AdminPaymentsRevenue from "@/pages/Admin/Payments";
 
 // Enterprise Pages
 import EnterpriseDashboard from "@/pages/Enterprise/Statistics";
@@ -91,6 +92,10 @@ export const portalRoutes: PortalRoute[] = [
       {
         path: endPoint.ADMIN_CHILD.SUBSCRIPTION_PLANS,
         element: <AdminSubscriptionPlans />,
+      },
+      {
+        path: endPoint.ADMIN_CHILD.PAYMENTS,
+        element: <AdminPaymentsRevenue />,
       },
     ],
   },

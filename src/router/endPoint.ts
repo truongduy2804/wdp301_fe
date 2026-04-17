@@ -55,6 +55,7 @@ const endPoint = {
     GIFTS: "gifts",
     REDEMPTIONS: "redemptions",
     SUBSCRIPTION_PLANS: "subscription-plans",
+    PAYMENTS: "payments",
     USERS: "users",
     ENTERPRISES: "enterprises",
   },

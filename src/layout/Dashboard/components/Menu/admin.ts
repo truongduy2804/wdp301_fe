@@ -8,6 +8,7 @@ import {
   History,
   Building2,
   CreditCard,
+  CircleDollarSign,
 } from "lucide-react";
 import { makeMenu, type RawItem } from "./utils";
 import type { MenuItem } from "./type";
@@ -32,6 +33,7 @@ export function adminMenu(root: string, locale: Locale = "vi"): MenuItem[] {
     [t.enterpriseMap, Users, `/${endPoint.ADMIN_CHILD.ENTERPRISE_MAP}`],
     [t.giftManagement, Gift, `/${endPoint.ADMIN_CHILD.GIFTS}`],
     [t.subscriptionPlans, CreditCard, `/${endPoint.ADMIN_CHILD.SUBSCRIPTION_PLANS}`],
+    [t.paymentsRevenue, CircleDollarSign, `/${endPoint.ADMIN_CHILD.PAYMENTS}`],
     [t.redemptionHistory, History, `/${endPoint.ADMIN_CHILD.REDEMPTIONS}`],
   ];
 
